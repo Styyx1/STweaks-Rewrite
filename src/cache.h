@@ -6,6 +6,7 @@ namespace Cache
 	inline uintptr_t IsBlockingAddress;
 	inline uintptr_t HasSpellAddress;
 	inline uintptr_t PlayerSingletonAddress;
+	inline uintptr_t getUnarmedWeaponAddress;
 
 	// https://github.com/colinswrath/BladeAndBlunt/blob/main/include/Cache.h
 	inline void CacheAddLibAddresses()
@@ -24,6 +25,8 @@ namespace Cache
 		// 1.6 = 403521
 		// 1.5 = 517014
 		PlayerSingletonAddress = REL::ID(403521).address();
+
+		getUnarmedWeaponAddress = REL::ID(401061).address();
 	}
 
 	inline RE::PlayerCharacter* GetPlayerSingleton()

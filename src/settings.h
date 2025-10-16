@@ -23,6 +23,9 @@ namespace Config {
         static inline REX::TOML::Bool enable_quest_item_nerf{ "Toggles", "bEnableQuestItemNerf", true };
         static inline REX::TOML::Bool allow_curse_swapping{ "Toggles", "bAllowCurseSwaps", true };
 		static inline REX::TOML::Bool enable_resist_changes{ "Toggles", "bEnableResistChanges", true };
+        static inline REX::TOML::Bool enable_cast_stamina{ "Toggles", "bEnableCastStamina", true };
+        static inline REX::TOML::Bool enable_attack_stamina{ "Toggles", "bEnableAttackStamina", true };
+        static inline REX::TOML::Bool interupt_cast_on_hit{ "Toggles", "bInteruptCastOnHit", true };
 
         static inline REX::TOML::F32 sneak_height_modifier{ "SettingValues", "fSneakJumpModifier", 0.25f };
         static inline REX::TOML::I32 weapon_upper_range{ "SettingValues", "iUpperRangeWeapons", 15 };
@@ -31,6 +34,8 @@ namespace Config {
         static inline REX::TOML::I32 magic_lower_range{ "SettingValues", "iLowerRangeMagic", 15 };
         static inline REX::TOML::F32 curse_chance{ "SettingValues", "fCurseChance", 1.0f };
         static inline REX::TOML::F64 curse_swap_cooldown{ "SettingValues", "fCurseSwapCooldown", 60.0 };
+        static inline REX::TOML::F64 base_stamina_cost_attacks{ "SettingValues", "fBaseStaminaCostMelee", 10.0 };
+        static inline REX::TOML::F64 resist_reduction_value{ "SettingValues", "fResistReduceValue", 20.0 };
 
         /*void LoadSettings();
 		void SaveSettings();*/

@@ -114,6 +114,35 @@ namespace Hooks
 		static inline REL::HookVFT _Hook9{ RE::VTABLE_ArrowProjectile[0], 0xB5, GetGravityArrow };
     };
 
+    class StaminaAttackCost {
+    public:
+        static void InstallH12();
+    private:
+        static constexpr float MIN_COST = 5.0f;
+        static constexpr float MAX_COST = 40.0f;
+        static constexpr float AVERAGE_WEAPON_WEIGHT = 12.5f;
+        static constexpr float WEIGHT_SCALING = 1.15f;
+        static constexpr float SKILL_SCALING = 1.10f;
+
+
+        static float GetAttackCost(RE::ActorValueOwner* a_owner, RE::BGSAttackData* attack);
+        static float GetWeightMult(RE::Actor* actor, float weight, RE::ActorValue av_to_use);
+
+        static inline REL::Hook _Hook12{ REL::ID(38603), 0x171, &GetAttackCost };
+    };
+
+    class LoadWithResistance {
+    public:
+        static void InstallH13();
+
+    private:
+        static constexpr uint16_t LEVEL_CAP = 5;
+        static RE::NiAVObject* LoadActor(RE::Actor* a_this, bool arg);
+        static inline REL::HookVFT _Hook13{ RE::VTABLE_Character[0], 0x06A, &LoadActor };
+    };
+
+
+
     static RE::ActorValue LookupActorValueByName(const char* av_name)
     {
         // SE: 0x3E1450, AE: 0x3FC5A0, VR: ---

@@ -15,68 +15,89 @@ namespace Hooks {
 		PreventCast::InstallH7();
 		PlayerPotionUsed::InstallH8();
 		HighGravityArrows::InstallH9();
+        StaminaAttackCost::InstallH12();
+        LoadWithResistance::InstallH13();
 
 	}
 
-	void CombatHit::InstallH0()
-	{
-		if (!Config::Settings::enable_damage_ranges.GetValue()) {
-			_Hook0.Disable();
-		}
-	}
-	void AdjustActiveEffect::InstallH2() {
-		if (!Config::Settings::enable_damage_ranges.GetValue()) {
-			_Hook2.Disable();
-		}
-	}
-	void MainUpdate::InstallH1()
-	{
-		if (!Settings::enable_sneak_stamina.GetValue()) {
-			_Hook1.Disable();
-		}
-	}
+    void CombatHit::InstallH0()
+    {
+        if (!Config::Settings::enable_damage_ranges.GetValue()) {
+            _Hook0.Disable();
+        }
+    }
 
-	void JumpHeight::InstallH3()
-	{
-		if (!Settings::enable_mass_based_jump_height.GetValue() || !Settings::enable_sneak_jump_limit.GetValue()) {
-			_Hook3.Disable();
-		}
-	}
+    void AdjustActiveEffect::InstallH2() 
+    {
+        if (!Config::Settings::enable_damage_ranges.GetValue()) {
+            _Hook2.Disable();
+        }
+    }
 
-	void DealtMeleeDamage::InstallH4()
-	{
-		if (!Settings::enable_foll_change.GetValue() || !Settings::enable_diseases.GetValue()) {
-			_Hook4.Disable();
-		}
-	}
+    void MainUpdate::InstallH1()
+    {
+        if (!Settings::enable_sneak_stamina.GetValue()) {
+            _Hook1.Disable();
+        }
+    }
 
-	void NPCFade::InstallH6()
-	{
-		if (!Settings::enable_fading_actors.GetValue()) {
-			_Hook6.Disable();
-		}
-	}
+    void JumpHeight::InstallH3()
+    {
+        if (!Settings::enable_mass_based_jump_height.GetValue() && !Settings::enable_sneak_jump_limit.GetValue()) {
+            _Hook3.Disable();
+        }
+    }
 
-	void PreventCast::InstallH7()
-	{
-		if (!Settings::enable_diseases.GetValue()) {
-			_Hook7.Disable();
-		}
-	}
+    void DealtMeleeDamage::InstallH4()
+    {
+        if (!Settings::enable_foll_change.GetValue() && !Settings::enable_diseases.GetValue()) {
+            _Hook4.Disable();
+        }
+    }
 
-	void PlayerPotionUsed::InstallH8()
-	{
-		if (!Settings::enable_diseases.GetValue()) {
-			_Hook8.Disable();
-		}
-	}
+    void NPCFade::InstallH6()
+    {
+        if (!Settings::enable_fading_actors.GetValue()) {
+            _Hook6.Disable();
+        }
+    }
 
-	void HighGravityArrows::InstallH9()
-	{
-		if (!Settings::enable_diseases.GetValue()) {
-			_Hook9.Disable();
-		}
-	}
+    void PreventCast::InstallH7()
+    {
+        if (!Settings::enable_diseases.GetValue() && !Settings::enable_cast_stamina.GetValue() && !Settings::interupt_cast_on_hit.GetValue()) {
+            _Hook7.Disable();
+        }
+    }
+
+    void PlayerPotionUsed::InstallH8()
+    {
+        if (!Settings::enable_diseases.GetValue()) {
+            _Hook8.Disable();
+        }
+    }
+
+    void HighGravityArrows::InstallH9()
+    {
+        if (!Settings::enable_diseases.GetValue()) {
+            _Hook9.Disable();
+        }
+    }
+
+    void StaminaAttackCost::InstallH12()
+    {
+        if (!Settings::enable_attack_stamina.GetValue()) {
+            _Hook12.Disable();
+        }
+    }
+
+    void LoadWithResistance::InstallH13()
+    {
+        if (!Settings::enable_resist_changes.GetValue()) {
+            _Hook13.Disable();
+        }
+    }
+
+
     bool wasEnraged = false;
     float CombatHit::WeaponTypeModifier(RE::TESObjectWEAP* a_weap, float f_in)
     {
@@ -120,8 +141,8 @@ namespace Hooks {
         {
             if (player->IsGodMode())
             {
-                if (Forms::FormConstants::sneak_stamina_spell)
-                    player->RemoveSpell(Forms::FormConstants::sneak_stamina_spell);
+                if (player->HasSpell(Forms::FormLoader::sneak_stamina_spell))
+                    player->RemoveSpell(Forms::FormLoader::sneak_stamina_spell);
             }
             else
             {
@@ -130,9 +151,13 @@ namespace Hooks {
                 case 1:
                     if (player->IsSneaking() && Utility::IsMoving(player) && Settings::enable_sneak_stamina.GetValue() || player->IsSneaking() && HasRangedWeaponDrawn(player) && Settings::enable_sneak_stamina.GetValue())
                     {
-                        if (!Utility::HasSpell(player, Forms::FormConstants::sneak_stamina_spell))
+                        REX::INFO("Player is moving or has bow out");
+                        if (!Utility::HasSpell(player, Forms::FormLoader::sneak_stamina_spell))
                         {
-                            player->AddSpell(Forms::FormConstants::sneak_stamina_spell);
+                            REX::INFO("try to add Spell to Player");
+                            player->AddSpell(Forms::FormLoader::sneak_stamina_spell);
+                            //Utility::ApplySpell(player, player, Forms::FormConstants::sneak_stamina_spell);
+                            REX::INFO("Added Spell to Player");
                         }
                         if (player->GetActorValue(RE::ActorValue::kStamina) <= 5 && player->GetActorValue(RE::ActorValue::kStamina) > 0)
                         {
@@ -140,9 +165,10 @@ namespace Hooks {
                             player->DrawWeaponMagicHands(false);
                         }
                     }
-                    else if (Utility::HasSpell(player, Forms::FormConstants::sneak_stamina_spell))
+                    else if (Utility::HasSpell(player, Forms::FormLoader::sneak_stamina_spell))
                     {
-                        player->RemoveSpell(Forms::FormConstants::sneak_stamina_spell);
+                        player->RemoveSpell(Forms::FormLoader::sneak_stamina_spell);
+                        REX::INFO("Removed stamina spell from player");
                     }
 
                     break;
@@ -182,10 +208,7 @@ namespace Hooks {
             {
                 if (auto damage_ranges = Utility::GetRandomFloat(Utility::CalcPerc(Settings::magic_lower_range.GetValue(), false), Utility::CalcPerc(Settings::magic_upper_range.GetValue(), true)))
                 {
-                    REX::DEBUG("original damag is: {}", a_this->magnitude);
-                    REX::DEBUG("damage_ranges is {}", damage_ranges);
                     a_this->magnitude *= damage_ranges;
-                    REX::DEBUG("spell damage is {}", a_this->magnitude);
                 }
             }
         }
@@ -377,6 +400,25 @@ namespace Hooks {
                 return false;
             }
         }
+        if (Config::Settings::enable_cast_stamina.GetValue()) {
+            float cost = 5;
+            float type_factor = 4.0;
+
+            if (a_spell && a_spell->GetCastingType() == RE::MagicSystem::CastingType::kConcentration)
+                type_factor = 10.f;
+
+            cost = a_this->GetCurrentSpellCost() / type_factor;
+            if (actor->GetActorValue(RE::ActorValue::kStamina) < cost) {
+                return false;
+            }
+            if (a_this->state == RE::MagicCaster::State::kCharging) {
+                if (actor == Cache::GetPlayerSingleton() && Cache::GetPlayerSingleton()->IsGodMode()) {
+                    return _Hook7(a_this, a_spell, a_dualCast, a_effectStrength, a_reason, a_useBaseValueForCost);
+                }
+                actor->DamageActorValue(RE::ActorValue::kStamina, cost);
+            }   
+        }
+
         return _Hook7(a_this, a_spell, a_dualCast, a_effectStrength, a_reason, a_useBaseValueForCost);
     }
 
@@ -418,6 +460,97 @@ namespace Hooks {
             }
         }
         return _Hook9(a_this);
+    }
+
+    
+
+    float StaminaAttackCost::GetAttackCost(RE::ActorValueOwner* a_owner, RE::BGSAttackData* attack)
+    {
+        auto actor = skyrim_cast<RE::Actor*>(a_owner);
+        if (attack->data.flags.any(RE::AttackData::AttackFlag::kBashAttack)) {
+            auto weapon = Utility::getWieldingWeapon(actor);
+            auto leftH = Utility::GetWeapon(actor, true);
+            auto shield = Utility::GetShield(actor);
+            if (!leftH || !shield || leftH->IsHandToHandMelee() || weapon == Utility::GetUnarmedWeapon()) {
+                return 1.0f;
+            }
+            float weight = 1.0f;
+            if(leftH)
+                weight = leftH->GetWeight();
+            if (shield)
+                weight = shield->GetWeight();
+            auto av = RE::ActorValue::kNone;
+
+            if (leftH) {
+                if (leftH->IsArmor()) {
+                    if (leftH->As<RE::TESObjectARMO>()->IsLightArmor()) 
+                    {
+                        av = RE::ActorValue::kLightArmor;
+                    }
+                    else if (leftH->As<RE::TESObjectARMO>()->IsHeavyArmor())
+                    {
+                        av = RE::ActorValue::kHeavyArmor;
+                    }
+                }
+                if (leftH->IsWeapon()) {
+                    av = leftH->As<RE::TESObjectWEAP>()->weaponData.skill.get();
+                }
+            }
+                
+            return GetWeightMult(actor, weight, av);
+        }
+        else {
+            auto weap = Utility::getWieldingWeapon(actor);
+            float weight = 1.0f;
+            RE::ActorValue av = RE::ActorValue::kOneHanded;
+            if (weap && !weap->IsHandToHandMelee() && weap != Utility::GetUnarmedWeapon()) {
+                av = weap->As<RE::TESObjectWEAP>()->weaponData.skill.get();
+                weight = weap->GetWeight();
+            }
+                
+            REX::INFO("attacker {} has weapon weight of {} and uses av {}", actor->GetName(), weight, RE::ActorValueToString(av));
+
+            return GetWeightMult(actor, weight, av);
+        }
+    }
+
+
+
+    float StaminaAttackCost::GetWeightMult(RE::Actor* actor, float weight, RE::ActorValue av_to_use)
+    {
+        auto lvl = actor->GetActorValue(av_to_use);
+        auto equip_weight = weight;
+
+        if (equip_weight < 0.5f)
+            equip_weight = 0.5f;
+
+        float weightRatio = equip_weight / AVERAGE_WEAPON_WEIGHT;
+        float weightMultiplier = std::pow(weightRatio, WEIGHT_SCALING);
+
+        float skillFrac = std::clamp(lvl / 100.0f, 0.0f, 1.0f);
+        float skillReduction = 0.6 * std::pow(skillFrac, SKILL_SCALING);
+        float skillFactor = std::clamp(1.0f - skillReduction, 0.0f, 1.0f);
+
+        float cost = Config::Settings::base_stamina_cost_attacks.GetValue() * weightMultiplier * skillFactor;
+
+        cost = std::clamp(cost, MIN_COST, MAX_COST);
+        return cost;
+    }
+
+    RE::NiAVObject* LoadWithResistance::LoadActor(RE::Actor* a_this, bool arg)
+    {
+        auto actor = _Hook13(a_this, arg);
+        auto player = Cache::GetPlayerSingleton();
+        if (a_this == player)
+            return actor;
+        else {
+            auto player_level = player->GetLevel();
+            if (player_level <= LEVEL_CAP && a_this->GetLevel() >= player_level && a_this->GetActorValue(RE::ActorValue::kResistMagic) >= 0) {
+                a_this->SetActorValue(RE::ActorValue::kResistMagic, a_this->GetActorValue(RE::ActorValue::kResistMagic) - Config::Settings::resist_reduction_value.GetValue());
+            }
+            
+        }
+        return actor;
     }
 
 }

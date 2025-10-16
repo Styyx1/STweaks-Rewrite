@@ -27,6 +27,12 @@ namespace Forms {
         constexpr const char* bow_curse_key = "curse_bow";
         constexpr const char* jump_curse_key = "curse_jump";
 
+       
+
+	}
+	struct FormLoader : REX::Singleton<FormLoader> {
+
+        bool disease_mod_active = false;
         static inline RE::SpellItem* sneak_stamina_spell{ nullptr };
         static inline RE::SpellItem* health_curse{ nullptr };
         static inline RE::SpellItem* stamina_curse{ nullptr };
@@ -37,11 +43,6 @@ namespace Forms {
         static inline RE::SpellItem* jump_curse{ nullptr };
 
         static inline std::vector<RE::SpellItem*> curse_list{};
-
-	}
-	struct FormLoader : REX::Singleton<FormLoader> {
-
-        bool disease_mod_active = false;
 
 		void LoadForms();
 	};

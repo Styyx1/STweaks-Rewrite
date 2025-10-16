@@ -79,23 +79,19 @@ public:
     // https://github.com/D7ry/valhallaCombat/blob/48fb4c3b9bb6bbaa691ce41dbd33f096b74c07e3/src/include/Utils.cpp#L10
     inline static RE::TESObjectWEAP* getWieldingWeapon(RE::Actor* a_actor)
     {
-        bool dual_wielding = false;
         auto weapon = a_actor->GetAttackingWeapon();
         if (weapon)
         {
-            dual_wielding = false;
             return weapon->object->As<RE::TESObjectWEAP>();
         }
         auto rhs = a_actor->GetEquippedObject(false);
         if (rhs && rhs->IsWeapon())
         {
-            dual_wielding = false;
             return rhs->As<RE::TESObjectWEAP>();
         }
         auto lhs = a_actor->GetEquippedObject(true);
         if (lhs && lhs->IsWeapon())
         {
-            dual_wielding = false;
             return lhs->As<RE::TESObjectWEAP>();
         }
 
@@ -478,7 +474,7 @@ public:
                 return;
 
             // If there's already a curse, dispel it  effectEnd will handle restoration
-            for (auto& curse : Forms::FormConstants::curse_list) {
+            for (auto& curse : Forms::FormLoader::curse_list) {
                 if (curse && actor->HasSpell(curse)) {
                     CleanseCurse(actor);
                     break;
@@ -497,7 +493,7 @@ public:
             public:
                 RE::BSContainer::ForEachResult Visit(RE::SpellItem* a_spell) override
                 {
-                    for (auto& curse : Forms::FormConstants::curse_list) {
+                    for (auto& curse : Forms::FormLoader::curse_list) {
                         if (a_spell == curse) {
                             foundCurse = curse;
                             return RE::BSContainer::ForEachResult::kStop; // found one, done
@@ -543,4 +539,101 @@ public:
                 return false;
         }
     };
+
+    inline static RE::TESObjectWEAP* GetUnarmedWeapon()
+    {
+        auto** singleton{ reinterpret_cast<RE::TESObjectWEAP**>(Cache::getUnarmedWeaponAddress) };
+        return *singleton;
+    }
+
+    inline static RE::TESObjectWEAP* GetWeapon(RE::Actor* a, bool left)
+    {
+        if (auto _weap = a->GetEquippedObject(left)) {
+            if (auto weap = _weap->As<RE::TESObjectWEAP>(); weap && weap->IsWeapon()) {
+                return weap;
+            }
+        }
+
+        return GetUnarmedWeapon();
+    }
+
+    static inline RE::TESObjectARMO* GetShield(RE::Actor* a)
+    {
+        if (auto _shield = a->GetEquippedObject(true)) {
+            if (auto shield = _shield->As<RE::TESObjectARMO>()) {
+                return shield->GetSlotMask() == RE::BGSBipedObjectForm::BipedObjectSlot::kShield ? shield : nullptr;
+            }
+        }
+
+        return nullptr;
+    }
+
+    static inline float GetDefenseToolWeight(RE::Actor* a)
+    {
+        if (auto shield = GetShield(a)) {
+            return shield->GetWeight();
+        }
+        else {
+            return GetWeapon(a, false)->GetWeight();
+        }
+    }
+
+    static inline float GetOffensiveToolWeight(RE::Actor* a, bool left, bool bash) {
+        return bash ? GetDefenseToolWeight(a) : GetWeapon(a, left)->GetWeight();
+    }
+
+    static inline void InterruptCaster(RE::Actor* a_actor)
+    {
+        RE::SourceActionMap::DoAction(a_actor, RE::DEFAULT_OBJECT::kActionVoiceInterrupt);
+        RE::SourceActionMap::DoAction(a_actor, RE::DEFAULT_OBJECT::kActionRightInterrupt);
+        RE::SourceActionMap::DoAction(a_actor, RE::DEFAULT_OBJECT::kActionLeftInterrupt);
+
+        /*switch (a_castingSource)
+        {
+        case RE::MagicSystem::CastingSource::kLeftHand:
+            RE::SourceActionMap::DoAction(a_actor, RE::DEFAULT_OBJECT::kActionLeftInterrupt);
+            break;
+        case RE::MagicSystem::CastingSource::kRightHand:
+            RE::SourceActionMap::DoAction(a_actor, RE::DEFAULT_OBJECT::kActionRightInterrupt);
+            break;
+        case RE::MagicSystem::CastingSource::kOther:
+            RE::SourceActionMap::DoAction(a_actor, RE::DEFAULT_OBJECT::kActionVoiceInterrupt);
+            break;
+        default:
+            break;
+        }*/
+    }
+
+    struct CastInterruptTimer {
+        Timer attackTimer;      // tracks the 1.5s interrupt window
+        Timer cooldownTimer;    // tracks the 12s cooldown
+        bool attackActive{ false };
+        bool cooldownActive{ false };
+
+        void OnHit() {
+            // Only allow new interrupt if not on cooldown
+            if (!cooldownActive) {
+                attackActive = true;
+                attackTimer.Reset();
+                attackTimer.Start();
+            }
+        }
+
+        void Update() {
+            if (attackActive && attackTimer.ElapsedSeconds() >= 1.5) {
+                attackActive = false;
+                cooldownActive = true;
+                cooldownTimer.Reset();
+                cooldownTimer.Start();
+            }
+
+            if (cooldownActive && cooldownTimer.ElapsedSeconds() >= 12.0) {
+                cooldownActive = false;
+                cooldownTimer.Stop();
+            }
+        }
+
+        bool IsAttackActive() const { return attackActive; }
+    };
+
 };

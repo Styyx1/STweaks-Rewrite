@@ -8,6 +8,8 @@ namespace Events
 {
     void RegisterEvents();
 
+    using EventResult = RE::BSEventNotifyControl;
+
     class HitEventHandler : public REX::Singleton<HitEventHandler>,
         public RE::BSTEventSink<RE::TESHitEvent>
     {
@@ -39,6 +41,5 @@ namespace Events
     public:
         static void RegisterApplyEffect();
     };
-
 
 }

@@ -19,7 +19,14 @@ namespace Events
         {
             return EventResult::kContinue;
         }
+        auto spell_item = RE::TESForm::LookupByID<RE::SpellItem>(a_event->source);
 
+        if (!a_event->flags.any(HitFlag::kHitBlocked)) {
+            if (defender->IsCasting(nullptr) && Config::Settings::interupt_cast_on_hit.GetValue()) {
+                if(!spell_item || spell_item->GetCastingType() != RE::MagicSystem::CastingType::kConcentration)
+                defender->InterruptCast(true);
+            }
+        }
 
         if (!a_event->flags.any(HitFlag::kBashAttack))
         {
@@ -32,7 +39,7 @@ namespace Events
                         chance *= 0.10f;
                     }
                     if (Utility::Curses::ShouldApplyCurse(chance)) {
-                        Utility::Curses::ApplyRandomCurse(defender, Forms::FormConstants::curse_list);
+                        Utility::Curses::ApplyRandomCurse(defender, Forms::FormLoader::curse_list);
                     }
                 }
             }
@@ -85,7 +92,7 @@ namespace Events
 
         if (penalty_storage + newPenaltyMag > maxAllowedPenalty) {
             newPenaltyMag = maxAllowedPenalty - penalty_storage;
-            newPenaltyMag = std::max(0.0f, newPenaltyMag);  // Prevent going negative
+            newPenaltyMag = std::max(0.0f, newPenaltyMag);
         }
 
         penalty_storage += newPenaltyMag;
@@ -140,4 +147,6 @@ namespace Events
 
         REX::INFO("registered Apply Effect Event");
     }
+
+    
 }
