@@ -1,0 +1,67 @@
+# ==========================================
+# STweaks Configuration File
+# Default Path: Data/SKSE/Plugins/stweaks.toml
+# ==========================================
+
+[DebugLogging]
+# Enables or disables debug log messages
+bDebugLoggingEnable = false
+
+
+[Toggles]
+# Enables expanded damage range mechanics
+bEnableDamageRanges = true
+
+# Enables jump height limitation while sneaking
+bEnableSneakJumpLimit = true
+
+# Makes jump height scale with actor mass
+bMassBasedJump = true
+
+# Applies stamina cost to sneaking
+bEnableSneakStamina = false
+
+# Applies follower damage scaling changes
+bEnableFollowerDamageChange = true
+
+# Enables ethereal (ghost/spirit) state handling
+bEnableEtherealChange = true
+
+# Allows normal sneak attacks without special perks
+bEnableNormalSneakAttack = true
+
+# Enables diseases in gameplay
+bEnableDiseases = true
+
+# Enables actor fading effects
+bEnableFadingActors = true
+
+# Applies nerfs to quest items’ damage or effects
+bEnableQuestItemNerf = true
+
+# Allows curse effects to be swapped between actors
+bAllowCurseSwaps = true
+
+# Enables changes to resistances (e.g., fire/frost/shock)
+bEnableResistChanges = true
+
+
+[SettingValues]
+# Sneak jump height multiplier (0.25 = 25% of normal)
+fSneakJumpModifier = 0.25
+
+# Maximum allowed random variance for weapon damage
+iUpperRangeWeapons = 15
+# Minimum allowed random variance for weapon damage
+iLowerRangeWeapons = 15
+
+# Maximum allowed random variance for magic damage
+iUpperRangeMagic = 15
+# Minimum allowed random variance for magic damage
+iLowerRangeMagic = 15
+
+# Base probability (in %) that a curse effect is applied
+fCurseChance = 1.0
+
+# Cooldown duration (in seconds) before curse swapping is allowed again
+fCurseSwapCooldown = 60.0

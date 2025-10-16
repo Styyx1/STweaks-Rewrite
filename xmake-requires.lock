@@ -9,7 +9,15 @@
                 commit = "30bf09689d5f65e9ea4e3904ceb675f8f04f0789",
                 url = "https://github.com/xmake-io/xmake-repo.git"
             },
-            version = "3.30.5"
+            version = "3.31.6-msvc6"
+        },
+        ["nlohmann_json#31fecfc4"] = {
+            repo = {
+                branch = "master",
+                commit = "a46d11e468ec2c04e387d09bb3dde26c4824f29c",
+                url = "https://gitlab.com/tboox/xmake-repo.git"
+            },
+            version = "v3.12.0"
         },
         ["spdlog#9c36f0a9"] = {
             repo = {
@@ -18,6 +26,14 @@
                 url = "https://github.com/xmake-io/xmake-repo.git"
             },
             version = "v1.15.3"
+        },
+        ["toml11#31fecfc4"] = {
+            repo = {
+                branch = "master",
+                commit = "d557ccb28de6284dff4e7a174e1681f5b386c2d5",
+                url = "https://gitlab.com/tboox/xmake-repo.git"
+            },
+            version = "v4.4.0"
         }
     }
 }
