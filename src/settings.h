@@ -36,6 +36,7 @@ namespace Config {
         static inline REX::TOML::F64 curse_swap_cooldown{ "SettingValues", "fCurseSwapCooldown", 60.0 };
         static inline REX::TOML::F64 base_stamina_cost_attacks{ "SettingValues", "fBaseStaminaCostMelee", 10.0 };
         static inline REX::TOML::F64 resist_reduction_value{ "SettingValues", "fResistReduceValue", 20.0 };
+        static inline REX::TOML::F64 magic_stamina_cost_divider{ "SettingValue", "fMagicStamCostDivider", 2.0 };
 
         /*void LoadSettings();
 		void SaveSettings();*/

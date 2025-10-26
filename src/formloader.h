@@ -20,6 +20,7 @@ namespace Forms {
         const int melee_weakness_curse_ID = 0x10;
         const int bow_weakness_curse_ID = 0x13;
         const int jump_curse_ID = 0x16;
+        const int spell_allow_list_ID = 0x21;
 
         constexpr const char* cure_keyword = "cleanse_curse";
         constexpr const char* curse_keyword = "stweaks_curse";
@@ -41,8 +42,10 @@ namespace Forms {
         static inline RE::SpellItem* melee_damage_curse{ nullptr };
         static inline RE::SpellItem* bow_damage_curse{ nullptr };
         static inline RE::SpellItem* jump_curse{ nullptr };
+        static inline RE::BGSListForm* spell_allow_list{ nullptr };
 
         static inline std::vector<RE::SpellItem*> curse_list{};
+        static inline std::vector<RE::SpellItem*> spell_allow_vector{};
 
 		void LoadForms();
 	};

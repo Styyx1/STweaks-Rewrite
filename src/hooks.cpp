@@ -395,17 +395,17 @@ namespace Hooks {
         auto actor = a_this->actor;
         const char* curse_word = "curse_silence";
         if (Utility::ActiveEffectHasNewDiseaseKeyword(actor, Forms::FormConstants::silence_key)) {
-            if (a_spell && a_spell->GetFormType() != RE::FormType::AlchemyItem && a_spell->GetFormType() != RE::FormType::Enchantment) {
+            if (a_spell && a_spell->GetFormType() != RE::FormType::AlchemyItem && a_spell->GetFormType() != RE::FormType::Enchantment && !Forms::FormLoader::spell_allow_list->HasForm(a_spell)) {
                 InterruptActor(actor, a_this->GetCastingSource());
                 return false;
             }
         }
         if (Config::Settings::enable_cast_stamina.GetValue()) {
             float cost = 5;
-            float type_factor = 4.0;
+            float type_factor = Config::Settings::magic_stamina_cost_divider.GetValue();
 
             if (a_spell && a_spell->GetCastingType() == RE::MagicSystem::CastingType::kConcentration)
-                type_factor = 10.f;
+                type_factor *= 2.0f;
 
             cost = a_this->GetCurrentSpellCost() / type_factor;
             if (actor->GetActorValue(RE::ActorValue::kStamina) < cost) {
