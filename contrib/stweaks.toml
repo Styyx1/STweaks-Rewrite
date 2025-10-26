@@ -19,7 +19,7 @@ bEnableSneakJumpLimit = true
 bMassBasedJump = true
 
 # Applies stamina cost to sneaking
-bEnableSneakStamina = false
+bEnableSneakStamina = true
 
 # Applies follower damage scaling changes
 bEnableFollowerDamageChange = true
@@ -43,7 +43,7 @@ bEnableQuestItemNerf = true
 bAllowCurseSwaps = true
 
 # Enables changes to resistances (e.g., fire/frost/shock)
-bEnableResistChanges = true
+bEnableResistChanges = false
 
 
 [SettingValues]

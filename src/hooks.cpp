@@ -17,7 +17,6 @@ namespace Hooks {
 		HighGravityArrows::InstallH9();
         StaminaAttackCost::InstallH12();
         LoadWithResistance::InstallH13();
-
 	}
 
     void CombatHit::InstallH0()
@@ -321,7 +320,6 @@ namespace Hooks {
                 }
             }
         }
-
         return false;
     }
 
@@ -395,7 +393,7 @@ namespace Hooks {
         auto actor = a_this->actor;
         const char* curse_word = "curse_silence";
         if (Utility::ActiveEffectHasNewDiseaseKeyword(actor, Forms::FormConstants::silence_key)) {
-            if (a_spell && a_spell->GetFormType() != RE::FormType::AlchemyItem && a_spell->GetFormType() != RE::FormType::Enchantment && !Forms::FormLoader::spell_allow_list->HasForm(a_spell)) {
+            if (a_spell && a_spell->GetFormType() != RE::FormType::AlchemyItem && a_spell->GetFormType() != RE::FormType::Enchantment && !Forms::FormLoader::spell_allow_list->HasForm(a_spell)) { // && a_spell->GetSpellType() == RE::MagicSystem::SpellType::kSpell
                 InterruptActor(actor, a_this->GetCastingSource());
                 return false;
             }
@@ -460,9 +458,7 @@ namespace Hooks {
             }
         }
         return _Hook9(a_this);
-    }
-
-    
+    }   
 
     float StaminaAttackCost::GetAttackCost(RE::ActorValueOwner* a_owner, RE::BGSAttackData* attack)
     {
@@ -513,9 +509,6 @@ namespace Hooks {
             return GetWeightMult(actor, weight, av);
         }
     }
-
-
-
     float StaminaAttackCost::GetWeightMult(RE::Actor* actor, float weight, RE::ActorValue av_to_use)
     {
         auto lvl = actor->GetActorValue(av_to_use);
@@ -547,11 +540,9 @@ namespace Hooks {
             auto player_level = player->GetLevel();
             if (player_level <= LEVEL_CAP && a_this->GetLevel() >= player_level && a_this->GetActorValue(RE::ActorValue::kResistMagic) >= 0) {
                 a_this->SetActorValue(RE::ActorValue::kResistMagic, a_this->GetActorValue(RE::ActorValue::kResistMagic) - Config::Settings::resist_reduction_value.GetValue());
-            }
-            
+            }            
         }
         return actor;
     }
-
 }
 

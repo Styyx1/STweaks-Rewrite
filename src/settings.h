@@ -1,5 +1,6 @@
 #pragma once
 #include <nlohmann/json.hpp>
+#undef ERROR
 
 namespace Config {
     namespace SettingConstants {
@@ -27,7 +28,7 @@ namespace Config {
         static inline REX::TOML::Bool enable_attack_stamina{ "Toggles", "bEnableAttackStamina", true };
         static inline REX::TOML::Bool interupt_cast_on_hit{ "Toggles", "bInteruptCastOnHit", true };
 
-        static inline REX::TOML::F32 sneak_height_modifier{ "SettingValues", "fSneakJumpModifier", 0.25f };
+        static inline REX::TOML::F32 sneak_height_modifier{ "SettingValues", "fSneakJumpModifier", 0.55f };
         static inline REX::TOML::I32 weapon_upper_range{ "SettingValues", "iUpperRangeWeapons", 15 };
         static inline REX::TOML::I32 weapon_lower_range{ "SettingValues", "iLowerRangeWeapons", 15 };
         static inline REX::TOML::I32 magic_upper_range{ "SettingValues", "iUpperRangeMagic", 15 };
