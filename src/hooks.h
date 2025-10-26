@@ -141,8 +141,6 @@ namespace Hooks
         static inline REL::HookVFT _Hook13{ RE::VTABLE_Character[0], 0x06A, &LoadActor };
     };
 
-
-
     static RE::ActorValue LookupActorValueByName(const char* av_name)
     {
         // SE: 0x3E1450, AE: 0x3FC5A0, VR: ---

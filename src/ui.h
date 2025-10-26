@@ -10,9 +10,7 @@ namespace UI {
 
         void RestoreFromSettings();
         void RestoreDefaults();
-
         void HelpMarker(const char* desc);
-        void SettingButton(const char* button_desc, const char* tooltip_desc);
 
         //main title 
         inline str TitleText = "sTweaks"; // f717   f4fe
@@ -72,7 +70,7 @@ namespace UI {
         inline str Title_SectionToggles = "Mod Toggles";
         inline str Button_Toggles = FontAwesome::UnicodeToUtf8(0xf14a) + " Toggles";
         inline str Tooltip_TogglesGeneral = "Toggle various options of the mod. This requires you to save the settings and restart the game";
-        inline str NOTE_Restart = "The toggles on this page require you to save the settings and to restart your game.\nThis may not work if you have a sTweaks_custom.toml file to overwrite settings";
+        inline str NOTE_Restart = "The toggles on this page require you to save the settings and to restart your game.\nThis will not change settings in your stweaks_custom.toml which will always have priority for the settings";
         //setting
         inline str tog = "Toggle ";
         inline str Button_DamageRanges_Toggles = tog + "Damage Ranges";
@@ -87,6 +85,7 @@ namespace UI {
         inline str Button_AttackStamina_Toggles = tog + "Attack Stamina Cost";
         inline str Button_InteruptCast_Toggles = tog + "Interupt Spell Casting";
         inline str Button_MagicStamina_Toggles = tog + "Magic Stamina Cost";
+        inline str Button_FollowerDamage_Toggles = tog + " Follower Damage Changes";
 
         inline str Tooltip_DamageRanges_Toggles = "Damage Ranges: \nYour attacks don't always deal the same damage.";
         inline str Tooltip_SneakJump_Toggles = "Sneak Jump Limit: \nLowers the jump height while you're sneaking";
@@ -96,10 +95,11 @@ namespace UI {
         inline str Tooltip_FadeOutActors_Toggles = "Actor Fade Out: \nActors become invisible when they're further away (not an actual invisibility effect)";
         inline str Tooltip_QuestItemNerf_Toggles = "Quest Weapon Nerf: \nQuest items don't weight anything, so in a setup where carry weight is important, those are free backup weapons.";
         inline str Tooltip_Curses_Toggles = "Curses: \nThis toggles the Curse mechanic of the mod, please check the modpage to read about them";
-        inline str Tooltip_ResistChange_Toggles = "Resistance Reduction: \nEnemies with a higher or equal level as the player \nget their magic resistance lowered to make early game magic a bit easier if needed.";
+        inline str Tooltip_ResistChange_Toggles = "Resistance Reduction: \nEnemies with a higher or equal level as the player \nget their magic resistance lowered to make early game magic a bit easier if needed.\n Only up to player level 5";
         inline str Tooltip_AttackStamina_Toggles = "Attack Stamina Cost: \nNormal attacks cost stamina.";
         inline str Tooltip_InteruptCast_Toggles = "Interupt Spell Casting: \nAttacks will interupt casting of spells";
         inline str Tooltip_MagicStamina_Toggles = "Magic Stamina Cost: \nCasting spells will cost stamina based on the magicka cost of the spells";
+        inline str Tooltip_FollowerDamage_Toggles = "Follower Damage Changes: The more followers you have, the less damage your party deals. \nScales with Speechcraft to offset the nerf";
 
         inline bool damage_ranges_temp;
         inline bool sneak_jump_limit_temp;
@@ -113,6 +113,7 @@ namespace UI {
         inline bool spell_stamina_cost_temp;
         inline bool attack_stamina_cost_temp;
         inline bool interupt_cast_temp;
+        inline bool follower_damage_temp;
 
         void __stdcall RenderToggles();
         void SetToggleDefaults();

@@ -67,13 +67,6 @@ namespace UI {
         }
     }
 
-    void STWEAKSMenu::SettingButton(const char* button_desc, const char* tooltip_desc)
-    {
-        ImGui::Button(button_desc);
-        ImGui::SameLine();
-        HelpMarker(tooltip_desc);
-    }
-
     void __stdcall UI::STWEAKSMenu::Render() {      
 
         // Jump Height
@@ -178,6 +171,8 @@ namespace UI {
         if (ImGui::SliderFloat(Button_ResistanceChangeValue.c_str(), &resist_change_temp, 0.0, 50.0f, "%.2f%%")) {
             Config::Settings::resist_reduction_value.SetValue(resist_change_temp);
         }
+        ImGui::SameLine();
+        HelpMarker(Tooltip_ResistanceChange.c_str());
 
         //Save Config and Default Settings
         FontAwesome::PushSolid();
@@ -185,6 +180,7 @@ namespace UI {
         ImGui::Text(Title_System.c_str());
         if (ImGui::Button(Button_SaveSettings.c_str())) {
             Config::Settings::GetSingleton()->SaveSettings();
+            //Config::Settings::GetSingleton()->SaveToCustom();
         }
         ImGui::SameLine();
         if (ImGui::Button(Button_ResetSettings.c_str())) {
@@ -277,26 +273,32 @@ namespace UI {
         ImGui::SameLine();
         HelpMarker(Tooltip_MagicStamina_Toggles.c_str());
 
+        if (ImGui::Checkbox(Button_FollowerDamage_Toggles.c_str(), &follower_damage_temp)) {
+            Config::Settings::enable_foll_change.SetValue(follower_damage_temp);
+        }
+        ImGui::SameLine();
+        HelpMarker(Tooltip_FollowerDamage_Toggles.c_str());
+
+
         //Save Config and Default Settings
         FontAwesome::PushSolid();
         ImGui::NewLine();
         ImGui::Text(Title_System.c_str());
         if (ImGui::Button(Button_SaveSettings.c_str())) {
             Config::Settings::GetSingleton()->SaveSettings();
+            //Config::Settings::GetSingleton()->SaveToCustom();
         }
         ImGui::SameLine();
         if (ImGui::Button(Button_ResetSettings.c_str())) {
             STWEAKSMenu::SetToggleDefaults();
         }
-
-
         FontAwesome::Pop();
 
     }
     void STWEAKSMenu::SetToggleDefaults()
     {
         using set = Config::Settings;
-        //toggles
+
         damage_ranges_temp = true;
         set::enable_damage_ranges.SetValue(damage_ranges_temp);
         sneak_jump_limit_temp = true;
@@ -321,6 +323,8 @@ namespace UI {
         set::enable_attack_stamina.SetValue(attack_stamina_cost_temp);
         interupt_cast_temp = true;
         set::interupt_cast_on_hit.SetValue(interupt_cast_temp);
+        follower_damage_temp = true;
+        set::enable_foll_change.SetValue(follower_damage_temp);
     }
     void STWEAKSMenu::LoadTogglesFromSettings()
     {
@@ -338,6 +342,7 @@ namespace UI {
         spell_stamina_cost_temp = set::enable_cast_stamina.GetValue();
         attack_stamina_cost_temp = set::enable_attack_stamina.GetValue();
         interupt_cast_temp = set::interupt_cast_on_hit.GetValue();
+        follower_damage_temp = set::enable_foll_change.GetValue();
     }
 }
 

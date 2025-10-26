@@ -1,67 +1,69 @@
 # ==========================================
 # STweaks Configuration File
 # Default Path: Data/SKSE/Plugins/stweaks.toml
+# note: path is case sensitive
 # ==========================================
 
 [DebugLogging]
-# Enables or disables debug log messages
+# Enable or disable debug messages in the log
 bDebugLoggingEnable = false
 
+[SettingValues]
+# =====================
+# General Settings
+# =====================
+# Multiplier for jump height while sneaking
+fSneakJumpModifier = 0.55
+# Upper damage range for weapons
+iUpperRangeWeapons = 15
+# Lower damage range for weapons
+iLowerRangeWeapons = 15
+# Upper damage range for magic
+iUpperRangeMagic = 15
+# Lower damage range for magic
+iLowerRangeMagic = 15
+# Base chance for curses to trigger
+fCurseChance = 1.0
+# Cooldown (seconds) for curse swapping
+fCurseSwapCooldown = 60.0
+# Base stamina cost for melee attacks
+fBaseStaminaCostMelee = 20.0
+# Reduces magic resistance of all NPCs on load by amount
+fResistReduceValue = 20.0
+# Divisor to calculate the stamina cost of spells based on their magicka cost. SpellCost / this value = stamina cost
+fMagicStamCostDivider = 2.0
 
 [Toggles]
-# Enables expanded damage range mechanics
+# =====================
+# Feature Toggles
+# =====================
+# Enable melee & magic damage randomization ranges
 bEnableDamageRanges = true
-
-# Enables jump height limitation while sneaking
-bEnableSneakJumpLimit = true
-
-# Makes jump height scale with actor mass
-bMassBasedJump = true
-
-# Applies stamina cost to sneaking
-bEnableSneakStamina = true
-
-# Applies follower damage scaling changes
+# Followers use adjusted damage calculations
 bEnableFollowerDamageChange = true
-
-# Enables ethereal (ghost/spirit) state handling
-bEnableEtherealChange = true
-
-# Allows normal sneak attacks without special perks
-bEnableNormalSneakAttack = true
-
-# Enables diseases in gameplay
+# Enable disease effects in gameplay
 bEnableDiseases = true
-
-# Enables actor fading effects
+# Restrict jumping while sneaking
+bEnableSneakJumpLimit = true
+# Scale jump height based on actor mass
+bMassBasedJump = true
+# Modify ethereal state behavior
+bEnableEtherealChange = true
+# Sneaking drains stamina over time
+bEnableSneakStamina = true
+# Fade out actors when disabled
 bEnableFadingActors = true
-
-# Applies nerfs to quest items’ damage or effects
+# Nerf quest item stats if applicable
 bEnableQuestItemNerf = true
-
-# Allows curse effects to be swapped between actors
+# Allow swapping curses during gameplay
 bAllowCurseSwaps = true
-
-# Enables changes to resistances (e.g., fire/frost/shock)
+# Reduces MagicResist of higher level enemies until PlayerLevel 5
 bEnableResistChanges = false
+# Casting spells consumes stamina
+bEnableCastStamina = true
+# Melee attacks consume stamina
+bEnableAttackStamina = true
+# Getting hit interrupts spellcasting
+bInteruptCastOnHit = true
 
 
-[SettingValues]
-# Sneak jump height multiplier (0.25 = 25% of normal)
-fSneakJumpModifier = 0.25
-
-# Maximum allowed random variance for weapon damage
-iUpperRangeWeapons = 15
-# Minimum allowed random variance for weapon damage
-iLowerRangeWeapons = 15
-
-# Maximum allowed random variance for magic damage
-iUpperRangeMagic = 15
-# Minimum allowed random variance for magic damage
-iLowerRangeMagic = 15
-
-# Base probability (in %) that a curse effect is applied
-fCurseChance = 1.0
-
-# Cooldown duration (in seconds) before curse swapping is allowed again
-fCurseSwapCooldown = 60.0

@@ -18,7 +18,6 @@ namespace Config {
         static inline REX::TOML::Bool enable_sneak_stamina{ "Toggles", "bEnableSneakStamina", true };
         static inline REX::TOML::Bool enable_foll_change{ "Toggles", "bEnableFollowerDamageChange", true };
         static inline REX::TOML::Bool enable_etheral_change{ "Toggles", "bEnableEtherealChange", true };
-        static inline REX::TOML::Bool enable_normal_sneak_attack{ "Toggles", "bEnableNormalSneakAttack", true };
         static inline REX::TOML::Bool enable_diseases{ "Toggles", "bEnableDiseases", true };
         static inline REX::TOML::Bool enable_fading_actors{ "Toggles", "bEnableFadingActors", true };
         static inline REX::TOML::Bool enable_quest_item_nerf{ "Toggles", "bEnableQuestItemNerf", true };
@@ -37,7 +36,7 @@ namespace Config {
         static inline REX::TOML::F64 curse_swap_cooldown{ "SettingValues", "fCurseSwapCooldown", 60.0 };
         static inline REX::TOML::F64 base_stamina_cost_attacks{ "SettingValues", "fBaseStaminaCostMelee", 10.0 };
         static inline REX::TOML::F64 resist_reduction_value{ "SettingValues", "fResistReduceValue", 20.0 };
-        static inline REX::TOML::F64 magic_stamina_cost_divider{ "SettingValue", "fMagicStamCostDivider", 2.0 };
+        static inline REX::TOML::F64 magic_stamina_cost_divider{ "SettingValues", "fMagicStamCostDivider", 2.0 };
 
         /*void LoadSettings();
 		void SaveSettings();*/
@@ -57,6 +56,15 @@ namespace Config {
             toml->Init(Config::SettingConstants::toml_path_default.data(), Config::SettingConstants::toml_path_custom.data());
             toml->Save();
         }
+
+        //not happy with how it saves every setting even if the custom file had only 1 overwrite. maybe i'll revisit the idea at some point
+        inline void SaveToCustom() {
+            REX::INFO("Save Custom settings...");
+            const auto toml = REX::TOML::SettingStore::GetSingleton();
+            toml->Init(Config::SettingConstants::toml_path_custom.data(), Config::SettingConstants::toml_path_custom.data());
+            toml->Save();
+        }
+
     };
 
     namespace Exceptions {
