@@ -150,15 +150,11 @@ namespace Hooks {
                 case 1:
                     if (player->IsSneaking() && Utility::IsMoving(player) && Settings::enable_sneak_stamina.GetValue() || player->IsSneaking() && HasRangedWeaponDrawn(player) && Settings::enable_sneak_stamina.GetValue())
                     {
-                        REX::INFO("Player is moving or has bow out");
                         if (!Utility::HasSpell(player, Forms::FormLoader::sneak_stamina_spell))
                         {
-                            REX::INFO("try to add Spell to Player");
                             player->AddSpell(Forms::FormLoader::sneak_stamina_spell);
-                            //Utility::ApplySpell(player, player, Forms::FormConstants::sneak_stamina_spell);
-                            REX::INFO("Added Spell to Player");
                         }
-                        if (player->GetActorValue(RE::ActorValue::kStamina) <= 5 && player->GetActorValue(RE::ActorValue::kStamina) > 0)
+                        if (player->GetActorValue(RE::ActorValue::kStamina) <= 5 && player->GetActorValue(RE::ActorValue::kStamina) > 0 && HasRangedWeaponDrawn(player))
                         {
                             player->actorState2.weaponState = RE::WEAPON_STATE::kWantToSheathe;
                             player->DrawWeaponMagicHands(false);
@@ -167,7 +163,6 @@ namespace Hooks {
                     else if (Utility::HasSpell(player, Forms::FormLoader::sneak_stamina_spell))
                     {
                         player->RemoveSpell(Forms::FormLoader::sneak_stamina_spell);
-                        REX::INFO("Removed stamina spell from player");
                     }
 
                     break;
@@ -492,7 +487,6 @@ namespace Hooks {
                     av = leftH->As<RE::TESObjectWEAP>()->weaponData.skill.get();
                 }
             }
-                
             return GetWeightMult(actor, weight, av);
         }
         else {
@@ -503,10 +497,10 @@ namespace Hooks {
                 av = weap->As<RE::TESObjectWEAP>()->weaponData.skill.get();
                 weight = weap->GetWeight();
             }
-                
-            REX::INFO("attacker {} has weapon weight of {} and uses av {}", actor->GetName(), weight, RE::ActorValueToString(av));
+            float ret = GetWeightMult(actor, weight, av);
+            RE::BGSEntryPoint::HandleEntryPoint(RE::BGSPerkEntry::EntryPoint::kModPowerAttackStamina, actor, weap, &ret);            
 
-            return GetWeightMult(actor, weight, av);
+            return ret;
         }
     }
     float StaminaAttackCost::GetWeightMult(RE::Actor* actor, float weight, RE::ActorValue av_to_use)

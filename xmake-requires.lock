@@ -26,14 +26,6 @@
                 url = "https://github.com/xmake-io/xmake-repo.git"
             },
             version = "v1.15.3"
-        },
-        ["toml11#31fecfc4"] = {
-            repo = {
-                branch = "master",
-                commit = "d557ccb28de6284dff4e7a174e1681f5b386c2d5",
-                url = "https://gitlab.com/tboox/xmake-repo.git"
-            },
-            version = "v4.4.0"
         }
     }
 }
