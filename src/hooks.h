@@ -100,7 +100,7 @@ namespace Hooks
 
     private:
         static constexpr float MIN_COST = 5.0f;
-        static constexpr float MAX_COST = 40.0f;
+        static constexpr float MAX_COST = 50.0f;
         static constexpr float AVERAGE_WEAPON_WEIGHT = 12.5f;
         static constexpr float WEIGHT_SCALING = 1.15f;
         static constexpr float SKILL_SCALING = 1.10f;
