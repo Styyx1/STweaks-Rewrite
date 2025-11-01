@@ -69,8 +69,8 @@ namespace UI {
         // Title
         inline str Title_SectionToggles = "Mod Toggles";
         inline str Button_Toggles = FontAwesome::UnicodeToUtf8(0xf14a) + " Toggles";
-        inline str Tooltip_TogglesGeneral = "Toggle various options of the mod. This requires you to save the settings and restart the game";
-        inline str NOTE_Restart = "The toggles on this page require you to save the settings and to restart your game.\nThis will not change settings in your stweaks_custom.toml which will always have priority for the settings";
+        inline str Tooltip_TogglesGeneral = "Toggle various options of the mod";
+        inline str NOTE_Restart = "This will not change settings in your stweaks_custom.toml which will always have priority for the settings";
         //setting
         inline str tog = "Toggle ";
         inline str Button_DamageRanges_Toggles = tog + "Damage Ranges";

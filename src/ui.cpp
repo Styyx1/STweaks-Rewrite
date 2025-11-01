@@ -1,4 +1,6 @@
 #include "ui.h"
+#include "utility.h"
+#include "cache.h"
 
 namespace UI {
 	void Register()
@@ -180,7 +182,6 @@ namespace UI {
         ImGui::Text(Title_System.c_str());
         if (ImGui::Button(Button_SaveSettings.c_str())) {
             Config::Settings::GetSingleton()->SaveSettings();
-            //Config::Settings::GetSingleton()->SaveToCustom();
         }
         ImGui::SameLine();
         if (ImGui::Button(Button_ResetSettings.c_str())) {
@@ -230,6 +231,7 @@ namespace UI {
         }
         ImGui::SameLine();
         HelpMarker(Tooltip_SneakStamina_Toggles.c_str());
+
         ImGui::SameLine();
         if (ImGui::Checkbox(Button_FadeOutActors_Toggles.c_str(), &fade_out_actors_temp)) {
             Config::Settings::enable_fading_actors.SetValue(fade_out_actors_temp);
@@ -245,6 +247,8 @@ namespace UI {
         ImGui::SameLine();
         if (ImGui::Checkbox(Button_Curses_Toggles.c_str(), &toggle_curses_temp)) {
             Config::Settings::enable_diseases.SetValue(toggle_curses_temp);
+            Utility::Curses::CleanseCurse(Cache::GetPlayerSingleton());
+            
         }
         ImGui::SameLine();
         HelpMarker(Tooltip_Curses_Toggles.c_str());

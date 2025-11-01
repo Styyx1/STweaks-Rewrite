@@ -4,109 +4,7 @@ namespace Hooks {
 
 	using namespace Config;
 
-	void Install()
-	{
-		CombatHit::InstallH0();
-		AdjustActiveEffect::InstallH2();
-		MainUpdate::InstallH1();
-		JumpHeight::InstallH3();
-		DealtMeleeDamage::InstallH4();
-		NPCFade::InstallH6();
-		PreventCast::InstallH7();
-		PlayerPotionUsed::InstallH8();
-		HighGravityArrows::InstallH9();
-        StaminaAttackCost::InstallH12();
-        LoadWithResistance::InstallH13();
-	}
-
-    void CombatHit::InstallH0()
-    {
-        if (!Config::Settings::enable_damage_ranges.GetValue()) {
-            _Hook0.Disable();
-        }
-    }
-
-    void AdjustActiveEffect::InstallH2() 
-    {
-        if (!Config::Settings::enable_damage_ranges.GetValue()) {
-            _Hook2.Disable();
-        }
-    }
-
-    void MainUpdate::InstallH1()
-    {
-        if (!Settings::enable_sneak_stamina.GetValue()) {
-            _Hook1.Disable();
-        }
-    }
-
-    void JumpHeight::InstallH3()
-    {
-        if (!Settings::enable_mass_based_jump_height.GetValue() && !Settings::enable_sneak_jump_limit.GetValue()) {
-            _Hook3.Disable();
-        }
-    }
-
-    void DealtMeleeDamage::InstallH4()
-    {
-        if (!Settings::enable_foll_change.GetValue() && !Settings::enable_diseases.GetValue()) {
-            _Hook4.Disable();
-        }
-    }
-
-    void NPCFade::InstallH6()
-    {
-        if (!Settings::enable_fading_actors.GetValue()) {
-            _Hook6.Disable();
-        }
-    }
-
-    void PreventCast::InstallH7()
-    {
-        if (!Settings::enable_diseases.GetValue() && !Settings::enable_cast_stamina.GetValue() && !Settings::interupt_cast_on_hit.GetValue()) {
-            _Hook7.Disable();
-        }
-    }
-
-    void PlayerPotionUsed::InstallH8()
-    {
-        if (!Settings::enable_diseases.GetValue()) {
-            _Hook8.Disable();
-        }
-    }
-
-    void HighGravityArrows::InstallH9()
-    {
-        if (!Settings::enable_diseases.GetValue()) {
-            _Hook9.Disable();
-        }
-    }
-
-    void StaminaAttackCost::InstallH12()
-    {
-        if (!Settings::enable_attack_stamina.GetValue()) {
-            _Hook12.Disable();
-        }
-    }
-
-    void LoadWithResistance::InstallH13()
-    {
-        if (!Settings::enable_resist_changes.GetValue()) {
-            _Hook13.Disable();
-        }
-    }
-
-
     bool wasEnraged = false;
-    float CombatHit::WeaponTypeModifier(RE::TESObjectWEAP* a_weap, float f_in)
-    {
-        float f_out = f_in;
-
-        if (a_weap->IsOneHandedDagger())
-            f_out *= 2.0f;
-
-        return f_out;
-    }
 
     void CombatHit::RandomiseDamage(RE::Actor* a_this, RE::HitData* a_hitData)
     {
@@ -114,24 +12,30 @@ namespace Hooks {
 
         if (a_hitData->weapon && !a_hitData->weapon->IsHandToHandMelee())
         {
-            REX::DEBUG("----------------------------------------------------");
-            REX::DEBUG("started hooked damage calc for {} you got hit by: {}", a_this->GetName(), a_hitData->aggressor.get().get()->GetDisplayFullName());
             float rand_mult = Utility::GetRandomFloat(Utility::CalcPerc(Settings::weapon_lower_range.GetValue(), false), Utility::CalcPerc(Settings::weapon_upper_range.GetValue(), true));
-            REX::DEBUG("multiplier is {}", rand_mult);
             remaining *= rand_mult;
-            REX::DEBUG("new damage for melee is {}. Original damage was: {} \n", remaining, a_hitData->totalDamage);
             a_hitData->totalDamage = remaining;
         }
     }
 
     void CombatHit::CHit(RE::Actor* a_this, RE::HitData* a_hitData)
     {
-        RandomiseDamage(a_this, a_hitData);
+        if(Settings::enable_damage_ranges.GetValue())
+            RandomiseDamage(a_this, a_hitData);
         _Hook0(a_this, a_hitData);
     }
 
     void MainUpdate::PlayerUpdate(RE::PlayerCharacter* player, float a_delta)
     {
+        if (!Settings::enable_sneak_stamina.GetValue()) {
+            if (Utility::HasSpell(player, Forms::FormLoader::sneak_stamina_spell))
+            {
+                player->RemoveSpell(Forms::FormLoader::sneak_stamina_spell);
+            }
+            return _Hook1(player, a_delta);
+        }
+            
+
         if (frameCount > 10)
         {
             frameCount = 0;
@@ -191,6 +95,10 @@ namespace Hooks {
 
     void AdjustActiveEffect::thunk(RE::ActiveEffect* a_this, float a_power, bool a_onlyHostile)
     {
+        if (!Settings::enable_damage_ranges.GetValue()) {
+            _Hook2(a_this, a_power, a_onlyHostile);
+            return;
+        }
         const auto attacker = a_this->GetCasterActor();
         const auto target = a_this->GetTargetActor();
         const auto effect = a_this->GetBaseObject();
@@ -218,18 +126,24 @@ namespace Hooks {
         {
             return scale;
         }
-        float mass = actor->GetActorValue(RE::ActorValue::kMass);
+        float mass = 1.0f;
+        if (Config::Settings::enable_mass_based_jump_height.GetValue()) {
+            mass = actor->GetActorValue(RE::ActorValue::kMass);
+        }
+        
 
-        if (actor->IsSneaking())
+        if (actor->IsSneaking() && Settings::enable_sneak_jump_limit.GetValue())
         {
             scale *= Settings::sneak_height_modifier.GetValue();
         }
         float ju_modifier = (float)sqrt(1.0 / mass);
 
         float curse_modi = 1.0f;
-        if (Utility::ActiveEffectHasNewDiseaseKeyword(actor, Forms::FormConstants::jump_curse_key)) {
-            curse_modi = 0.5f;
-        }
+        if (Config::Settings::enable_diseases.GetValue()) {
+            if (Utility::ActiveEffectHasNewDiseaseKeyword(actor, Forms::FormConstants::jump_curse_key)) {
+                curse_modi = 0.5f;
+            }
+        }        
 
         return scale *= ju_modifier * curse_modi;
     }
@@ -320,9 +234,11 @@ namespace Hooks {
 
     void OnEffectEndHook::OnEffectEnd(RE::ScriptEffect* a_this)
     {
-        _Hook5(a_this);
-        auto hitEv = Events::HitEventHandler::GetSingleton();
+        _Hook5(a_this);        
+        if (!Config::Settings::enable_diseases.GetValue())
+            return;
 
+        auto hitEv = Events::HitEventHandler::GetSingleton();
         if (a_this->target && a_this->GetBaseObject()->HasAnyKeywordByEditorID(Forms::FormConstants::diseases))
         {
             REX::DEBUG("curse ended");
@@ -359,6 +275,14 @@ namespace Hooks {
 
     void NPCFade::ActorUpdate(RE::Character* a_actor, float a_delta)
     {
+        if (!Config::Settings::enable_fading_actors.GetValue()) {
+            if(a_actor->GetAlpha() < 1.0)
+                a_actor->SetAlpha();
+
+            _Hook6(a_actor, a_delta);
+            return;
+        }
+
         RE::PlayerCharacter* player = Cache::GetPlayerSingleton();
         float distance_full_fade = 2400.00;
         float distance_no_fade = 1200.00f;
@@ -386,13 +310,14 @@ namespace Hooks {
     bool PreventCast::CheckCast(RE::ActorMagicCaster* a_this, RE::MagicItem* a_spell, bool a_dualCast, float* a_effectStrength, RE::MagicSystem::CannotCastReason* a_reason, bool a_useBaseValueForCost)
     {
         auto actor = a_this->actor;
-        const char* curse_word = "curse_silence";
-        if (Utility::ActiveEffectHasNewDiseaseKeyword(actor, Forms::FormConstants::silence_key)) {
-            if (a_spell && a_spell->GetFormType() != RE::FormType::AlchemyItem && a_spell->GetFormType() != RE::FormType::Enchantment && !Forms::FormLoader::spell_allow_list->HasForm(a_spell)) { // && a_spell->GetSpellType() == RE::MagicSystem::SpellType::kSpell
-                InterruptActor(actor, a_this->GetCastingSource());
-                return false;
+        if (Config::Settings::enable_diseases.GetValue()) {
+            if (Utility::ActiveEffectHasNewDiseaseKeyword(actor, Forms::FormConstants::silence_key)) {
+                if (a_spell && a_spell->GetFormType() != RE::FormType::AlchemyItem && a_spell->GetFormType() != RE::FormType::Enchantment && !Forms::FormLoader::spell_allow_list->HasForm(a_spell)) { // && a_spell->GetSpellType() == RE::MagicSystem::SpellType::kSpell
+                    InterruptActor(actor, a_this->GetCastingSource());
+                    return false;
+                }
             }
-        }
+        }       
         if (Config::Settings::enable_cast_stamina.GetValue()) {
             float cost = 5;
             float type_factor = Config::Settings::magic_stamina_cost_divider.GetValue();
@@ -445,6 +370,9 @@ namespace Hooks {
 
     float HighGravityArrows::GetGravityArrow(RE::Projectile* a_this)
     {
+        if(!Config::Settings::enable_diseases.GetValue())
+            return _Hook9(a_this);
+
         auto shooterRef = a_this->shooter.get().get();
         auto actorShooter = shooterRef ? shooterRef->As<RE::Actor>() : nullptr;
         if (actorShooter) {
@@ -457,6 +385,9 @@ namespace Hooks {
 
     float StaminaAttackCost::GetAttackCost(RE::ActorValueOwner* a_owner, RE::BGSAttackData* attack)
     {
+        if (!Config::Settings::enable_attack_stamina.GetValue()) {
+            return _Hook12(a_owner, attack);
+        }
         auto actor = skyrim_cast<RE::Actor*>(a_owner);
         if (attack->data.flags.any(RE::AttackData::AttackFlag::kBashAttack)) {
             auto weapon = Utility::getWieldingWeapon(actor);
@@ -498,8 +429,7 @@ namespace Hooks {
                 weight = weap->GetWeight();
             }
             float ret = GetWeightMult(actor, weight, av);
-            RE::BGSEntryPoint::HandleEntryPoint(RE::BGSPerkEntry::EntryPoint::kModPowerAttackStamina, actor, weap, &ret);            
-
+            RE::BGSEntryPoint::HandleEntryPoint(RE::BGSPerkEntry::EntryPoint::kModPowerAttackStamina, actor, weap, &ret);
             return ret;
         }
     }
@@ -527,6 +457,10 @@ namespace Hooks {
     RE::NiAVObject* LoadWithResistance::LoadActor(RE::Actor* a_this, bool arg)
     {
         auto actor = _Hook13(a_this, arg);
+
+        if (!Config::Settings::enable_resist_changes.GetValue())
+            return actor;
+
         auto player = Cache::GetPlayerSingleton();
         if (a_this == player)
             return actor;

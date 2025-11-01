@@ -3,15 +3,9 @@
 
 namespace Hooks
 {
-    void Install();
-
     class CombatHit
     {
-    public:
-        static void InstallH0();
-
     private:
-        static float WeaponTypeModifier(RE::TESObjectWEAP* a_weap, float f_in);
         static void RandomiseDamage(RE::Actor* a_this, RE::HitData* a_hitData);
         static void CHit(RE::Actor* a_this, RE::HitData* a_hitData);
 
@@ -21,7 +15,6 @@ namespace Hooks
     class MainUpdate
     {
     public:
-		static void InstallH1();
         static inline int frameCount = 0;
         static inline std::chrono::steady_clock::time_point sprintStartTime;
         static inline bool isSprinting = false;
@@ -36,7 +29,6 @@ namespace Hooks
     class AdjustActiveEffect
     {
     public:
-		static void InstallH2();
         static void thunk(RE::ActiveEffect* a_this, float a_power, bool a_onlyHostile);
 
     private:
@@ -46,7 +38,6 @@ namespace Hooks
     class JumpHeight
     {
     public:
-		static void InstallH3();
         static float JumpHeightGetScale(RE::TESObjectREFR* refr);
 
     private:
@@ -55,10 +46,7 @@ namespace Hooks
     };
 
     class DealtMeleeDamage
-    {
-    public:
-        static void InstallH4();
-		
+    {		
     private:
         static float MeleeDamage(RE::TESObjectWEAP* _weap, RE::ActorValueOwner* a, float DamageMult, char isbow);
         static bool ActorHasQuestObjectInHand(RE::Actor* actor);
@@ -76,7 +64,6 @@ namespace Hooks
     class NPCFade
     {
     public:
-		static void InstallH6();
         static Utility::GameDifficulty g_cachedDifficulty;
 
     private:
@@ -86,8 +73,6 @@ namespace Hooks
 
     class PreventCast
     {
-    public:
-		static void InstallH7();
     private:
         static bool CheckCast(RE::ActorMagicCaster* a_this, RE::MagicItem* a_spell, bool a_dualCast, float* a_effectStrength, RE::MagicSystem::CannotCastReason* a_reason, bool a_useBaseValueForCost);
         static void InterruptActor(RE::Actor* a_actor, RE::MagicSystem::CastingSource a_castingSource);
@@ -97,16 +82,13 @@ namespace Hooks
 
     class PlayerPotionUsed
     {
-    public:
-		static void InstallH8();
     private:
         static void PlayerUsePotion(uint64_t self, RE::AlchemyItem* alch, uint64_t extralist);
         static inline REL::Hook _Hook8{ REL::ID(40690), 0x15, PlayerUsePotion };
     };
 
     class HighGravityArrows {
-    public:
-        static void InstallH9();
+
     private:
 	
         static float GetGravityArrow(RE::Projectile* a_this);
@@ -115,15 +97,13 @@ namespace Hooks
     };
 
     class StaminaAttackCost {
-    public:
-        static void InstallH12();
+
     private:
         static constexpr float MIN_COST = 5.0f;
         static constexpr float MAX_COST = 40.0f;
         static constexpr float AVERAGE_WEAPON_WEIGHT = 12.5f;
         static constexpr float WEIGHT_SCALING = 1.15f;
         static constexpr float SKILL_SCALING = 1.10f;
-
 
         static float GetAttackCost(RE::ActorValueOwner* a_owner, RE::BGSAttackData* attack);
         static float GetWeightMult(RE::Actor* actor, float weight, RE::ActorValue av_to_use);
@@ -132,8 +112,6 @@ namespace Hooks
     };
 
     class LoadWithResistance {
-    public:
-        static void InstallH13();
 
     private:
         static constexpr uint16_t LEVEL_CAP = 5;
@@ -162,5 +140,4 @@ namespace Hooks
         REL::Relocation<func_t> target{ REL::ID(12052) };
         return target(a_list);
     }
-
 } // namespace Hooks

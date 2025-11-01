@@ -7,7 +7,7 @@ includes("extern/styyx-utils")
 
 -- set project
 set_project("stweaks")
-set_version("2.0.0")
+set_version("2.1.0")
 set_license("GPL-3.0")
 
 -- set defaults
@@ -48,7 +48,7 @@ target("stweaks")
     add_headerfiles("src/**.h")
     add_includedirs("src")
     set_pcxxheader("src/pch.h")
-    add_extrafiles("contrib/**.toml", "contrib/**.json")
+    add_extrafiles("contrib/**.toml", {public=true}, "contrib/**.json", {public=true})
 
 after_build(function(target)
     local copy = function(env, ext)
@@ -59,7 +59,9 @@ after_build(function(target)
                 os.trycp(target:targetfile(), plugins)
                 os.trycp(target:symbolfile(), plugins)
                 -- Copy .ini files or other extras
-                os.trycp("$(projectdir)/contrib/**.ini", plugins)
+                os.trycp("$(projectdir)/contrib/**.toml", plugins)
+                os.trycp("$(projectdir)/contrib/**.json", plugins)
+
             end
         end
     end
