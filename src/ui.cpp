@@ -1,352 +1,481 @@
 #include "ui.h"
-#include "utility.h"
 #include "cache.h"
+#include "utility.h"
 
-namespace UI {
-	void Register()
-	{
-        if (!SKSEMenuFramework::IsInstalled()) {
-            return;
-        }
-        SKSEMenuFramework::SetSection(STWEAKSMenu::TitleText.c_str());        
-        SKSEMenuFramework::AddSectionItem(STWEAKSMenu::Section1_Text.c_str(), STWEAKSMenu::Render);
-        SKSEMenuFramework::AddSectionItem(STWEAKSMenu::Title_SectionToggles.c_str(), STWEAKSMenu::RenderToggles);
-        STWEAKSMenu::RestoreFromSettings();
-        STWEAKSMenu::LoadTogglesFromSettings();
-	}
-
-    void STWEAKSMenu::RestoreFromSettings()
+namespace UI
+{
+void Register()
+{
+    if (!SKSEMenuFramework::IsInstalled())
     {
-        using set = Config::Settings;
-        jump_heigh_temp = set::sneak_height_modifier.GetValue();
-        curse_chance_temp = set::curse_chance.GetValue();
-        curse_swap_cooldown_temp = set::curse_swap_cooldown.GetValue();
-        base_stamina_cost_weap_temp = set::base_stamina_cost_attacks.GetValue();
-        magic_stam_modifier_temp = set::magic_stamina_cost_divider.GetValue();
-        upper_range_melee_temp = set::weapon_upper_range.GetValue();
-        upper_range_mage_temp = set::magic_upper_range.GetValue();
-        lower_range_melee_temp = set::weapon_lower_range.GetValue();
-        lower_range_mage_temp = set::magic_lower_range.GetValue();   
-        allow_curse_swap_temp = set::allow_curse_swapping.GetValue();
-        resist_change_temp = set::resist_reduction_value.GetValue();
+        return;
     }
+    SKSEMenuFramework::SetSection(Titles::MOD_NAME);
+    SKSEMenuFramework::AddSectionItem(Titles::SETTING_TAB, Settings::RenderSettings);
+    SKSEMenuFramework::AddSectionItem(Titles::TOGGLE_TAB, Toggles::RenderToggles);
+    SKSEMenuFramework::AddSectionItem(Titles::STAMINA_SYSTEM, Attributes::RenderAttributes);
+    RestoreFromSettings(true, true, true);
+}
 
-    void STWEAKSMenu::RestoreDefaults()
+void RestoreFromSettings(bool settings, bool toggles, bool attributes)
+{
+    using set = Config::Settings;
+    if (settings)
     {
-        using set = Config::Settings;
-        jump_heigh_temp = 0.55;  
-        set::sneak_height_modifier.SetValue(jump_heigh_temp);
-        curse_chance_temp = 1.0f;
-        set::curse_chance.SetValue(curse_chance_temp);
-        curse_swap_cooldown_temp = 60.0;
-        set::curse_swap_cooldown.SetValue(curse_swap_cooldown_temp);
-        base_stamina_cost_weap_temp = 20.0f;
-        set::base_stamina_cost_attacks.SetValue(base_stamina_cost_weap_temp);
-        magic_stam_modifier_temp = 2.0;
-        set::magic_stamina_cost_divider.SetValue(magic_stam_modifier_temp);
-        upper_range_melee_temp = 15;
-        set::weapon_upper_range.SetValue(upper_range_melee_temp);
-        upper_range_mage_temp = 15;
-        set::magic_upper_range.SetValue(upper_range_mage_temp);
-        lower_range_melee_temp = 15;
-        set::weapon_lower_range.SetValue(lower_range_melee_temp);
-        lower_range_mage_temp = 15;
-        set::magic_lower_range.SetValue(lower_range_mage_temp);
-        allow_curse_swap_temp = true;
-        set::allow_curse_swapping.SetValue(allow_curse_swap_temp);
-        resist_change_temp = 20.0f;
-        set::resist_reduction_value.SetValue(resist_change_temp);
+        using namespace UI::Settings::vars;
+
+        jump_height_mod = set::sneak_height_modifier.GetValue();
+        curse_chance = set::curse_chance.GetValue();
+        curse_swap_cooldown = set::curse_swap_cooldown.GetValue();
+        upper_range_melee = set::weapon_upper_range.GetValue();
+        upper_range_magic = set::magic_upper_range.GetValue();
+        lower_range_melee = set::weapon_lower_range.GetValue();
+        lower_range_magic = set::magic_lower_range.GetValue();
+        curse_swap_toggle = set::allow_curse_swapping.GetValue();
+        resistance_change_value = set::resist_reduction_value.GetValue();
     }
-
-    //https://github.com/QTR-Modding/SaveManagerSKSE/blob/af53d32f57a3fc4a0c0e22828b66e4592338826e/src/UI.cpp#L3
-    void STWEAKSMenu::HelpMarker(const char* desc) {
-        ImGui::TextDisabled("(?)");
-        if (ImGui::BeginItemTooltip()) {
-            ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-            ImGui::TextUnformatted(desc);
-            ImGui::PopTextWrapPos();
-            ImGui::EndTooltip();
-        }
-    }
-
-    void __stdcall UI::STWEAKSMenu::Render() {      
-
-        // Jump Height
-        FontAwesome::PushSolid();
-        ImGui::NewLine();
-        ImGui::Text(Title_JumpHeight.c_str());
-        ImGui::SetNextItemWidth(300.0f);
-        if (ImGui::SliderFloat(Button_JumpHeightMod.c_str(), &jump_heigh_temp, 0.0, 1.0, "%.2f")) {
-            Config::Settings::sneak_height_modifier.SetValue(jump_heigh_temp);
-        }       
-        FontAwesome::Pop();
-
-        //Curse Settings
-        FontAwesome::PushSolid();
-        ImGui::NewLine();
-        ImGui::Text(Title_Curses.c_str());        
-        
-        if (ImGui::Checkbox(Button_CurseSwapToggle.c_str(), &allow_curse_swap_temp)) {                           
-            Config::Settings::allow_curse_swapping.SetValue(allow_curse_swap_temp);            
-        }
-        ImGui::SameLine();
-        HelpMarker(Tooltip_CurseSwapToggle.c_str());
-        
-        ImGui::SetNextItemWidth(200.0);
-        if (ImGui::SliderFloat(Button_CurseChance.c_str(), &curse_chance_temp, 0.0, 100.0f, "%.2f%%")) {
-            Config::Settings::curse_chance.SetValue(curse_chance_temp);
-        }
-        ImGui::SameLine();
-        HelpMarker(Tooltip_CurseChance.c_str());
-        
-        ImGui::SetNextItemWidth(200.0);        
-        if (ImGui::SliderFloat(Button_CurseSwapCoolDown.c_str(), &curse_swap_cooldown_temp, 3.0, 120.0, "%.2fsec")) {
-            Config::Settings::curse_swap_cooldown.SetValue(curse_swap_cooldown_temp);
-        }
-        ImGui::SameLine();
-        HelpMarker(Tooltip_CurseSwapCooldown.c_str());
-        FontAwesome::Pop();
-
-        //Stamina Settings
-        FontAwesome::PushSolid();
-        ImGui::NewLine();
-        ImGui::Text(Title_Stamina.c_str());
-        
-
-        ImGui::SetNextItemWidth(200.0f);
-        if (ImGui::SliderFloat(Button_StaminaAttack.c_str(), &base_stamina_cost_weap_temp, 3.0, 50.0, "%.2f")) {
-            Config::Settings::base_stamina_cost_attacks.SetValue(base_stamina_cost_weap_temp);
-        }
-        ImGui::SameLine();
-        HelpMarker(Tooltip_StaminaAttack.c_str());
-        ImGui::SameLine();
-
-        ImGui::SetNextItemWidth(200.0f);
-        if (ImGui::SliderFloat(Button_StaminaMagic.c_str(), &magic_stam_modifier_temp, 0.1, 10.0f, "%.2f")) {
-            Config::Settings::magic_stamina_cost_divider.SetValue(magic_stam_modifier_temp);
-        }
-        ImGui::SameLine();
-        HelpMarker(Tooltip_MagicStamina.c_str());
-        FontAwesome::Pop();
-
-        // Damage Ranges
-        FontAwesome::PushSolid();
-        ImGui::NewLine();
-        ImGui::Text(Title_Ranges.c_str());
-
-        ImGui::SetNextItemWidth(200.0f);
-        if (ImGui::SliderInt(Button_UpperRangeMelee.c_str(), &upper_range_melee_temp, 0, 99, "%d%%")) {
-            Config::Settings::weapon_upper_range.SetValue(upper_range_melee_temp);
-        }
-        ImGui::SameLine();
-        HelpMarker(Tooltip_UpperRangeMelee.c_str());
-        ImGui::SameLine();
-
-        ImGui::SetNextItemWidth(200.0f);
-        if (ImGui::SliderInt(Button_LowerRangeMelee.c_str(), &lower_range_melee_temp, 0, 99, "%d%%")) {
-            Config::Settings::weapon_lower_range.SetValue(lower_range_melee_temp);
-        }
-        ImGui::SameLine();
-        HelpMarker(Tooltip_LowerRangeMelee.c_str());
-
-        //magic ranges
-        ImGui::SetNextItemWidth(200.0f);
-        if (ImGui::SliderInt(Button_UpperRangeMagic.c_str(), &upper_range_mage_temp, 0, 99, "%d%%")) {
-            Config::Settings::magic_upper_range.SetValue(upper_range_mage_temp);
-        }
-        ImGui::SameLine();
-        HelpMarker(Tooltip_UpperRangeMagic.c_str());
-        ImGui::SameLine();
-
-        ImGui::SetNextItemWidth(200.0f);
-        if (ImGui::SliderInt(Button_LowerRangeMagic.c_str(), &lower_range_mage_temp, 0, 99, "%d%%")) {
-            Config::Settings::magic_lower_range.SetValue(lower_range_mage_temp);
-        }
-        ImGui::SameLine();
-        HelpMarker(Tooltip_LowerRangeMagic.c_str());
-        
-        //resistance change
-        FontAwesome::PushSolid();
-        ImGui::NewLine();
-        ImGui::Text(Title_Resist.c_str());
-        ImGui::SetNextItemWidth(300.0f);
-        if (ImGui::SliderFloat(Button_ResistanceChangeValue.c_str(), &resist_change_temp, 0.0, 50.0f, "%.2f%%")) {
-            Config::Settings::resist_reduction_value.SetValue(resist_change_temp);
-        }
-        ImGui::SameLine();
-        HelpMarker(Tooltip_ResistanceChange.c_str());
-
-        //Save Config and Default Settings
-        FontAwesome::PushSolid();
-        ImGui::NewLine();
-        ImGui::Text(Title_System.c_str());
-        if (ImGui::Button(Button_SaveSettings.c_str())) {
-            Config::Settings::GetSingleton()->SaveSettings();
-        }
-        ImGui::SameLine();
-        if (ImGui::Button(Button_ResetSettings.c_str())) {
-            STWEAKSMenu::RestoreDefaults();
-        }
-        FontAwesome::Pop();
-    }
-    void __stdcall STWEAKSMenu::RenderToggles()
+    if (toggles)
     {
-        
-        FontAwesome::PushSolid();
-
-        ImGui::Text(Button_Toggles.c_str());
-        ImGui::SameLine();
-        HelpMarker(Tooltip_TogglesGeneral.c_str());
-
-        ImGui::NewLine();
-        ImGui::TextColored(ImVec4(1.0f, 0.2f, 0.2f, 1.0f), NOTE_Restart.c_str());
-        ImGui::NewLine();
-
-        if (ImGui::Checkbox(Button_DamageRanges_Toggles.c_str(), &damage_ranges_temp)) {
-            Config::Settings::enable_damage_ranges.SetValue(damage_ranges_temp);
-        }
-        ImGui::SameLine();
-        HelpMarker(Tooltip_DamageRanges_Toggles.c_str());
-        ImGui::SameLine();
-        if (ImGui::Checkbox(Button_EtherealChange_Toggles.c_str(), &set_ethereal_change_temp)) {
-            Config::Settings::enable_etheral_change.SetValue(set_ethereal_change_temp);
-        }
-        ImGui::SameLine();
-        HelpMarker(Tooltip_EtherealChange_Toggles.c_str());
-
-        if (ImGui::Checkbox(Button_SneakJump_Toggles.c_str(), &sneak_jump_limit_temp)) {
-            Config::Settings::enable_sneak_jump_limit.SetValue(sneak_jump_limit_temp);
-        }
-        ImGui::SameLine();
-        HelpMarker(Tooltip_SneakJump_Toggles.c_str());
-        ImGui::SameLine();
-        if (ImGui::Checkbox(Button_MassBased_Toggles.c_str(), &mass_based_jump_temp)) {
-            Config::Settings::enable_mass_based_jump_height.SetValue(mass_based_jump_temp);
-        }
-        ImGui::SameLine();
-        HelpMarker(Tooltip_MassBased_Toggles.c_str());
-
-        if (ImGui::Checkbox(Button_SneakStamina_Toggles.c_str(), &sneak_stamina_temp)) {
-            Config::Settings::enable_sneak_stamina.SetValue(sneak_stamina_temp);
-        }
-        ImGui::SameLine();
-        HelpMarker(Tooltip_SneakStamina_Toggles.c_str());
-
-        ImGui::SameLine();
-        if (ImGui::Checkbox(Button_FadeOutActors_Toggles.c_str(), &fade_out_actors_temp)) {
-            Config::Settings::enable_fading_actors.SetValue(fade_out_actors_temp);
-        }
-        ImGui::SameLine();
-        HelpMarker(Tooltip_FadeOutActors_Toggles.c_str());
-
-        if (ImGui::Checkbox(Button_QuestItemNerf_Toggles.c_str(), &quest_item_nerf_temp)) {
-            Config::Settings::enable_quest_item_nerf.SetValue(quest_item_nerf_temp);
-        }
-        ImGui::SameLine();
-        HelpMarker(Tooltip_QuestItemNerf_Toggles.c_str());
-        ImGui::SameLine();
-        if (ImGui::Checkbox(Button_Curses_Toggles.c_str(), &toggle_curses_temp)) {
-            Config::Settings::enable_diseases.SetValue(toggle_curses_temp);
-            Utility::Curses::CleanseCurse(Cache::GetPlayerSingleton());
-            
-        }
-        ImGui::SameLine();
-        HelpMarker(Tooltip_Curses_Toggles.c_str());
-
-        if (ImGui::Checkbox(Button_ResistChange_Toggles.c_str(), &toggle_resist_change_temp)) {
-            Config::Settings::enable_resist_changes.SetValue(toggle_resist_change_temp);
-        }
-        ImGui::SameLine();
-        HelpMarker(Tooltip_ResistChange_Toggles.c_str());
-        ImGui::SameLine();
-        if (ImGui::Checkbox(Button_InteruptCast_Toggles.c_str(), &interupt_cast_temp)) {
-            Config::Settings::interupt_cast_on_hit.SetValue(interupt_cast_temp);
-        }
-        ImGui::SameLine();
-        HelpMarker(Tooltip_InteruptCast_Toggles.c_str());
-
-        if (ImGui::Checkbox(Button_AttackStamina_Toggles.c_str(), &attack_stamina_cost_temp)) {
-            Config::Settings::enable_attack_stamina.SetValue(attack_stamina_cost_temp);
-        }
-        ImGui::SameLine();
-        HelpMarker(Tooltip_AttackStamina_Toggles.c_str());
-        ImGui::SameLine();
-        if (ImGui::Checkbox(Button_MagicStamina_Toggles.c_str(), &spell_stamina_cost_temp)) {
-            Config::Settings::enable_cast_stamina.SetValue(spell_stamina_cost_temp);
-        }
-        ImGui::SameLine();
-        HelpMarker(Tooltip_MagicStamina_Toggles.c_str());
-
-        if (ImGui::Checkbox(Button_FollowerDamage_Toggles.c_str(), &follower_damage_temp)) {
-            Config::Settings::enable_foll_change.SetValue(follower_damage_temp);
-        }
-        ImGui::SameLine();
-        HelpMarker(Tooltip_FollowerDamage_Toggles.c_str());
-
-
-        //Save Config and Default Settings
-        FontAwesome::PushSolid();
-        ImGui::NewLine();
-        ImGui::Text(Title_System.c_str());
-        if (ImGui::Button(Button_SaveSettings.c_str())) {
-            Config::Settings::GetSingleton()->SaveSettings();
-            //Config::Settings::GetSingleton()->SaveToCustom();
-        }
-        ImGui::SameLine();
-        if (ImGui::Button(Button_ResetSettings.c_str())) {
-            STWEAKSMenu::SetToggleDefaults();
-        }
-        FontAwesome::Pop();
-
+        using namespace UI::Toggles::vars;
+        damage_ranges = set::enable_damage_ranges.GetValue();
+        sneak_jump_limit = set::enable_sneak_jump_limit.GetValue();
+        ethereal_change = set::enable_etheral_change.GetValue();
+        mass_based_jump = set::enable_mass_based_jump_height.GetValue();
+        fade_out_actors = set::enable_fading_actors.GetValue();
+        quest_item_nerf = set::enable_quest_item_nerf.GetValue();
+        curses = set::enable_diseases.GetValue();
+        resist_change = set::enable_resist_changes.GetValue();
+        interupt_cast = set::interupt_cast_on_hit.GetValue();
+        follower_damage = set::enable_foll_change.GetValue();
+        one_shot_protec = set::one_shot_protection.GetValue();
+        enable_damage_caps = set::enable_damage_caps.GetValue();
     }
-    void STWEAKSMenu::SetToggleDefaults()
+    if (attributes)
     {
-        using set = Config::Settings;
-
-        damage_ranges_temp = true;
-        set::enable_damage_ranges.SetValue(damage_ranges_temp);
-        sneak_jump_limit_temp = true;
-        set::enable_sneak_jump_limit.SetValue(sneak_jump_limit_temp);
-        set_ethereal_change_temp = true;
-        set::enable_etheral_change.SetValue(set_ethereal_change_temp);
-        mass_based_jump_temp = true;
-        set::enable_mass_based_jump_height.SetValue(mass_based_jump_temp);
-        sneak_stamina_temp = true;
-        set::enable_sneak_stamina.SetValue(sneak_stamina_temp);
-        fade_out_actors_temp = true;
-        set::enable_fading_actors.SetValue(fade_out_actors_temp);
-        quest_item_nerf_temp = true;
-        set::enable_quest_item_nerf.SetValue(quest_item_nerf_temp);
-        toggle_curses_temp = true;
-        set::enable_diseases.SetValue(toggle_curses_temp);
-        toggle_resist_change_temp = false;
-        set::enable_resist_changes.SetValue(toggle_resist_change_temp);
-        spell_stamina_cost_temp = true;
-        set::enable_cast_stamina.SetValue(spell_stamina_cost_temp);
-        attack_stamina_cost_temp = true;
-        set::enable_attack_stamina.SetValue(attack_stamina_cost_temp);
-        interupt_cast_temp = true;
-        set::interupt_cast_on_hit.SetValue(interupt_cast_temp);
-        follower_damage_temp = true;
-        set::enable_foll_change.SetValue(follower_damage_temp);
-    }
-    void STWEAKSMenu::LoadTogglesFromSettings()
-    {
-        using set = Config::Settings;
-       
-        damage_ranges_temp = set::enable_damage_ranges.GetValue();
-        sneak_jump_limit_temp = set::enable_sneak_jump_limit.GetValue();
-        set_ethereal_change_temp = set::enable_etheral_change.GetValue();
-        mass_based_jump_temp = set::enable_mass_based_jump_height.GetValue();
-        sneak_stamina_temp = set::enable_sneak_stamina.GetValue();
-        fade_out_actors_temp = set::enable_fading_actors.GetValue();
-        quest_item_nerf_temp = set::enable_quest_item_nerf.GetValue();
-        toggle_curses_temp = set::enable_diseases.GetValue();
-        toggle_resist_change_temp = set::enable_resist_changes.GetValue();
-        spell_stamina_cost_temp = set::enable_cast_stamina.GetValue();
-        attack_stamina_cost_temp = set::enable_attack_stamina.GetValue();
-        interupt_cast_temp = set::interupt_cast_on_hit.GetValue();
-        follower_damage_temp = set::enable_foll_change.GetValue();
+        using namespace UI::Attributes;
+        vars::stamina_attack = set::base_stamina_cost_attacks.GetValue();
+        vars::stamina_magic = set::magic_stamina_cost_divider.GetValue();
+        vars::sneak_stamina = set::enable_sneak_stamina.GetValue();
+        vars::stamina_regen_toggle = set::stamina_regen_changes.GetValue();
+        vars::magicka_regen_toggle = set::magicka_regen_changes.GetValue();
+        vars::attack_stamina_toggle = set::enable_attack_stamina.GetValue();
+        vars::magic_stamina_toggle = set::enable_cast_stamina.GetValue();
+        vars::base_for_stamina_regen = set::stamina_regen_base_calc.GetValue();
+        vars::base_for_magicka_regen = set::magicka_regen_base_calc.GetValue();
     }
 }
 
+void RestoreDefaults(bool settings, bool toggles, bool attributes)
+{
+    using set = Config::Settings;
+    if (settings)
+    {
+        using namespace UI::Settings::vars;
+
+        jump_height_mod = 0.55;
+        curse_chance = 1.0f;
+        curse_swap_cooldown = 60.0;
+        upper_range_melee = 15;
+        upper_range_magic = 15;
+        lower_range_melee = 15;
+        lower_range_magic = 15;
+        curse_swap_toggle = true;
+        resistance_change_value = 20.0f;
+
+        set::sneak_height_modifier.SetValue(jump_height_mod);
+        set::curse_chance.SetValue(curse_chance);
+        set::curse_swap_cooldown.SetValue(curse_swap_cooldown);
+        set::weapon_upper_range.SetValue(upper_range_melee);
+        set::magic_upper_range.SetValue(upper_range_magic);
+        set::weapon_lower_range.SetValue(lower_range_melee);
+        set::magic_lower_range.SetValue(lower_range_magic);
+        set::allow_curse_swapping.SetValue(curse_swap_toggle);
+        set::resist_reduction_value.SetValue(resistance_change_value);
+    }
+    if (toggles)
+    {
+        using namespace UI::Toggles::vars;
+        damage_ranges = true;
+        sneak_jump_limit = true;
+        ethereal_change = true;
+        mass_based_jump = true;
+        fade_out_actors = true;
+        quest_item_nerf = true;
+        curses = true;
+        resist_change = false;
+        interupt_cast = true;
+        follower_damage = true;
+        one_shot_protec = true;
+        enable_damage_caps = true;
+
+        set::enable_damage_ranges.SetValue(damage_ranges);
+        set::enable_sneak_jump_limit.SetValue(sneak_jump_limit);
+        set::enable_etheral_change.SetValue(ethereal_change);
+        set::enable_mass_based_jump_height.SetValue(mass_based_jump);
+        set::enable_fading_actors.SetValue(fade_out_actors);
+        set::enable_quest_item_nerf.SetValue(quest_item_nerf);
+        set::enable_diseases.SetValue(curses);
+        set::enable_resist_changes.SetValue(resist_change);
+        set::interupt_cast_on_hit.SetValue(interupt_cast);
+        set::enable_foll_change.SetValue(follower_damage);
+        set::one_shot_protection.SetValue(one_shot_protec);
+        set::enable_damage_caps.SetValue(enable_damage_caps);
+    }
+
+    if (attributes)
+    {
+        using namespace UI::Attributes::vars;
+
+        stamina_attack = 20.0f;
+        stamina_magic = 2.0;
+        magic_stamina_toggle = true;
+        attack_stamina_toggle = true;
+        sneak_stamina = true;
+        stamina_regen_toggle = true;
+        magicka_regen_toggle = true;
+        base_for_stamina_regen = 150.0;
+        base_for_magicka_regen = 150.0;
+
+        set::base_stamina_cost_attacks.SetValue(stamina_attack);
+        set::magic_stamina_cost_divider.SetValue(stamina_magic);
+        set::enable_cast_stamina.SetValue(magic_stamina_toggle);
+        set::enable_attack_stamina.SetValue(attack_stamina_toggle);
+        set::enable_sneak_stamina.SetValue(sneak_stamina);
+        set::stamina_regen_changes.SetValue(stamina_regen_toggle);
+        set::magicka_regen_changes.SetValue(magicka_regen_toggle);
+        set::stamina_regen_base_calc.SetValue(base_for_stamina_regen);
+        set::magicka_regen_base_calc.SetValue(base_for_magicka_regen);
+    }
+
+    Config::Settings::GetSingleton()->UpdateSettings(true);
+}
+
+// https://github.com/QTR-Modding/SaveManagerSKSE/blob/af53d32f57a3fc4a0c0e22828b66e4592338826e/src/UI.cpp#L3
+void HelpMarker(const char *desc)
+{
+    ImGui::TextDisabled("(?)");
+    if (ImGui::BeginItemTooltip())
+    {
+        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
+        ImGui::TextUnformatted(desc);
+        ImGui::PopTextWrapPos();
+        ImGui::EndTooltip();
+    }
+}
+
+namespace Settings
+{
+void __stdcall RenderSettings()
+{
+    FontAwesome::PushSolid();
+
+    //
+    // === Jump Height ===
+    //
+    ImGui::NewLine();
+    ImGui::SeparatorText(Titles::jump_height.c_str());
+
+    ImGui::SetNextItemWidth(300.0f);
+    if (ImGui::SliderFloat(Label::jump_height_mod.c_str(), &vars::jump_height_mod, 0.0, 1.0, "%.2f"))
+    {
+        Config::Settings::sneak_height_modifier.SetValue(vars::jump_height_mod);
+    }
+    ImGui::SameLine();
+    HelpMarker(Tooltip::jump_height_mod.c_str());
+
+    //
+    // === Curse Settings ===
+    //
+    ImGui::NewLine();
+    ImGui::SeparatorText(Titles::curses.c_str());
+
+    if (ImGui::Checkbox(Label::curse_swap_toggle.c_str(), &vars::curse_swap_toggle))
+    {
+        Config::Settings::allow_curse_swapping.SetValue(vars::curse_swap_toggle);
+    }
+    ImGui::SameLine();
+    HelpMarker(Tooltip::curse_swap_toggle.c_str());
+
+    ImGui::SetNextItemWidth(200.0);
+    if (ImGui::SliderFloat(Label::curse_chance.c_str(), &vars::curse_chance, 0.0, 100.0f, "%.2f%%"))
+    {
+        Config::Settings::curse_chance.SetValue(vars::curse_chance);
+    }
+    ImGui::SameLine();
+    HelpMarker(Tooltip::curse_chance.c_str());
+
+    ImGui::SetNextItemWidth(200.0);
+    if (ImGui::SliderFloat(Label::curse_swap_cooldown.c_str(), &vars::curse_swap_cooldown, 3.0, 120.0, "%.2fsec"))
+    {
+        Config::Settings::curse_swap_cooldown.SetValue(vars::curse_swap_cooldown);
+    }
+    ImGui::SameLine();
+    HelpMarker(Tooltip::curse_swap_cooldown.c_str());
+
+    //
+    // === Damage Ranges ===
+    //
+    ImGui::NewLine();
+    ImGui::SeparatorText(Titles::ranges.c_str());
+
+    ImGui::SetNextItemWidth(200.0f);
+    if (ImGui::SliderInt(Label::upper_range_melee.c_str(), &vars::upper_range_melee, 0, 99, "%d%%"))
+    {
+        Config::Settings::weapon_upper_range.SetValue(vars::upper_range_melee);
+    }
+    ImGui::SameLine();
+    HelpMarker(Tooltip::upper_range_melee.c_str());
+
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(200.0f);
+    if (ImGui::SliderInt(Label::lower_range_melee.c_str(), &vars::lower_range_melee, 0, 99, "%d%%"))
+    {
+        Config::Settings::weapon_lower_range.SetValue(vars::lower_range_melee);
+    }
+    ImGui::SameLine();
+    HelpMarker(Tooltip::lower_range_melee.c_str());
+
+    ImGui::SetNextItemWidth(200.0f);
+    if (ImGui::SliderInt(Label::upper_range_magic.c_str(), &vars::upper_range_magic, 0, 99, "%d%%"))
+    {
+        Config::Settings::magic_upper_range.SetValue(vars::upper_range_magic);
+    }
+    ImGui::SameLine();
+    HelpMarker(Tooltip::upper_range_magic.c_str());
+
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(200.0f);
+    if (ImGui::SliderInt(Label::lower_range_magic.c_str(), &vars::lower_range_magic, 0, 99, "%d%%"))
+    {
+        Config::Settings::magic_lower_range.SetValue(vars::lower_range_magic);
+    }
+    ImGui::SameLine();
+    HelpMarker(Tooltip::lower_range_magic.c_str());
+
+    //
+    // === Resistance Change ===
+    //
+    ImGui::NewLine();
+    ImGui::SeparatorText(Titles::resist.c_str());
+
+    ImGui::SetNextItemWidth(300.0f);
+    if (ImGui::SliderFloat(Label::resistance_change_value.c_str(), &vars::resistance_change_value, 0.0, 50.0f,
+                           "%.2f%%"))
+    {
+        Config::Settings::resist_reduction_value.SetValue(vars::resistance_change_value);
+    }
+    ImGui::SameLine();
+    HelpMarker(Tooltip::resistance_change_value.c_str());
+
+    //
+    // === Save / Reset System ===
+    //
+    ImGui::NewLine();
+    ImGui::SeparatorText(Titles::system.c_str());
+
+    if (ImGui::Button(Label::save_settings.c_str()))
+    {
+        Config::Settings::GetSingleton()->UpdateSettings(true);
+    }
+
+    ImGui::SameLine();
+    if (ImGui::Button(Label::restore_defaults.c_str()))
+    {
+        RestoreDefaults(true, false);
+    }
+
+    FontAwesome::Pop();
+}
+} // namespace Settings
+namespace Toggles
+{
+void __stdcall RenderToggles()
+{
+
+    FontAwesome::PushSolid();
+
+    // === Toggles Title ===
+    ImGui::SeparatorText(Titles::toggles.c_str());
+    ImGui::TextColored(ImVec4(1.0f, 0.2f, 0.2f, 1.0f), Titles::system_note.c_str());
+    ImGui::NewLine();
+
+    // === Damage Range & Ethereal Changes ===
+    if (ImGui::Checkbox(Label::damage_ranges.c_str(), &vars::damage_ranges))
+        Config::Settings::enable_damage_ranges.SetValue(vars::damage_ranges);
+    ImGui::SameLine();
+    HelpMarker(Tooltip::damage_ranges.c_str());
+
+    ImGui::SameLine();
+    if (ImGui::Checkbox(Label::ethereal_change.c_str(), &vars::ethereal_change))
+        Config::Settings::enable_etheral_change.SetValue(vars::ethereal_change);
+    ImGui::SameLine();
+    HelpMarker(Tooltip::ethereal_change.c_str());
+
+    // === Sneak Jump & Mass Based Jump ===
+    if (ImGui::Checkbox(Label::sneak_jump_limit.c_str(), &vars::sneak_jump_limit))
+        Config::Settings::enable_sneak_jump_limit.SetValue(vars::sneak_jump_limit);
+    ImGui::SameLine();
+    HelpMarker(Tooltip::sneak_jump_limit.c_str());
+
+    ImGui::SameLine();
+    if (ImGui::Checkbox(Label::mass_based_jump.c_str(), &vars::mass_based_jump))
+        Config::Settings::enable_mass_based_jump_height.SetValue(vars::mass_based_jump);
+    ImGui::SameLine();
+    HelpMarker(Tooltip::mass_based_jump.c_str());
+
+    // === Quest Item Nerf & Curses ===
+    if (ImGui::Checkbox(Label::quest_item_nerf.c_str(), &vars::quest_item_nerf))
+        Config::Settings::enable_quest_item_nerf.SetValue(vars::quest_item_nerf);
+    ImGui::SameLine();
+    HelpMarker(Tooltip::quest_item_nerf.c_str());
+
+    ImGui::SameLine();
+    if (ImGui::Checkbox(Label::curses.c_str(), &vars::curses))
+    {
+        Config::Settings::enable_diseases.SetValue(vars::curses);
+        Utility::Curses::CleanseCurse(Cache::GetPlayerSingleton());
+    }
+    ImGui::SameLine();
+    HelpMarker(Tooltip::curses.c_str());
+
+    // === Resistance & Spell/Attack Toggles ===
+    if (ImGui::Checkbox(Label::resist_change.c_str(), &vars::resist_change))
+        Config::Settings::enable_resist_changes.SetValue(vars::resist_change);
+    ImGui::SameLine();
+    HelpMarker(Tooltip::resist_change.c_str());
+
+    ImGui::SameLine();
+    if (ImGui::Checkbox(Label::interupt_cast.c_str(), &vars::interupt_cast))
+        Config::Settings::interupt_cast_on_hit.SetValue(vars::interupt_cast);
+    ImGui::SameLine();
+    HelpMarker(Tooltip::interupt_cast.c_str());
+
+    // === Actor Fade Out & Follower Damage ===
+    if (ImGui::Checkbox(Label::fade_out_actors.c_str(), &vars::fade_out_actors))
+        Config::Settings::enable_fading_actors.SetValue(vars::fade_out_actors);
+    ImGui::SameLine();
+    HelpMarker(Tooltip::fade_out_actors.c_str());
+    ImGui::SameLine();
+
+    if (ImGui::Checkbox(Label::follower_damage.c_str(), &vars::follower_damage))
+        Config::Settings::enable_foll_change.SetValue(vars::follower_damage);
+    ImGui::SameLine();
+    HelpMarker(Tooltip::follower_damage.c_str());
+
+    // === One Shot Protection & Damage Caps ===
+    if (ImGui::Checkbox(Label::one_shot_protec.c_str(), &vars::one_shot_protec))
+    {
+
+        Config::Settings::one_shot_protection.SetValue(vars::one_shot_protec);
+    }
+    ImGui::SameLine();
+    HelpMarker(Tooltip::one_shot_protec.c_str());
+    ImGui::SameLine();
+    if (ImGui::Checkbox(Label::enable_damage_caps.c_str(),
+                        &vars::enable_damage_caps)) {
+      Config::Settings::enable_damage_caps.SetValue(vars::enable_damage_caps);
+    }
+    ImGui::SameLine();
+    HelpMarker(Tooltip::enable_damage_caps.c_str());
+
+    // === Save / Reset System ===
+    ImGui::NewLine();
+    ImGui::SeparatorText(Titles::system.c_str());
+
+    if (ImGui::Button(Label::save_settings.c_str()))
+        Config::Settings::GetSingleton()->UpdateSettings(true);
+
+    ImGui::SameLine();
+    if (ImGui::Button(Label::restore_defaults.c_str()))
+        RestoreDefaults(false, true);
+
+    FontAwesome::Pop();
+}
+
+} // namespace Toggles
+
+namespace Attributes
+{
+void __stdcall RenderAttributes()
+{
+    FontAwesome::PushSolid();
+    ImGui::SeparatorText(Titles::attributes_header.c_str());
+    ImGui::NewLine();
+
+    ImGui::SeparatorText(Titles::stamina.c_str());
+
+    ImGui::SetNextItemWidth(200.0f);
+    if (ImGui::SliderFloat(Label::stamina_attack.c_str(), &vars::stamina_attack, 3.0, 50.0, "%.2f"))
+    {
+        Config::Settings::base_stamina_cost_attacks.SetValue(vars::stamina_attack);
+    }
+    ImGui::SameLine();
+    HelpMarker(Tooltip::stamina_attack.c_str());
+
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(200.0f);
+    if (ImGui::SliderFloat(Label::stamina_magic.c_str(), &vars::stamina_magic, 0.1, 10.0f, "%.2f"))
+    {
+        Config::Settings::magic_stamina_cost_divider.SetValue(vars::stamina_magic);
+    }
+    ImGui::SameLine();
+    HelpMarker(Tooltip::stamina_magic.c_str());
+
+    if (ImGui::Checkbox(Label::attack_stamina_toggle.c_str(), &vars::attack_stamina_toggle))
+        Config::Settings::enable_attack_stamina.SetValue(vars::attack_stamina_toggle);
+    ImGui::SameLine();
+    HelpMarker(Tooltip::attack_stamina_toggle.c_str());
+
+    ImGui::SameLine();
+    if (ImGui::Checkbox(Label::magic_stamina_toggle.c_str(), &vars::magic_stamina_toggle))
+        Config::Settings::enable_cast_stamina.SetValue(vars::magic_stamina_toggle);
+    ImGui::SameLine();
+    HelpMarker(Tooltip::magic_stamina_toggle.c_str());
+
+    if (ImGui::Checkbox(Label::sneak_stamina.c_str(), &vars::sneak_stamina))
+        Config::Settings::enable_sneak_stamina.SetValue(vars::sneak_stamina);
+    ImGui::SameLine();
+    HelpMarker(Tooltip::sneak_stamina.c_str());
+
+    ImGui::NewLine();
+    ImGui::SeparatorText(Titles::regen.c_str());
+
+    if (ImGui::Checkbox(Label::stamina_regen_toggle.c_str(), &vars::stamina_regen_toggle))
+        Config::Settings::stamina_regen_changes.SetValue(vars::stamina_regen_toggle);
+    ImGui::SameLine();
+    HelpMarker(Tooltip::stamina_regen_toggle.c_str());
+
+    ImGui::SameLine();
+    if (ImGui::Checkbox(Label::magicka_regen_toggle.c_str(), &vars::magicka_regen_toggle))
+        Config::Settings::magicka_regen_changes.SetValue(vars::magicka_regen_toggle);
+    ImGui::SameLine();
+    HelpMarker(Tooltip::magicka_regen_toggle.c_str());
+
+    ImGui::SetNextItemWidth(200.0f);
+    if (ImGui::SliderFloat(Label::base_for_stamina_regen.c_str(), &vars::base_for_stamina_regen, 10.0f, 500.0f, "%.2f"))
+        Config::Settings::stamina_regen_base_calc.SetValue(vars::base_for_stamina_regen);
+    ImGui::SameLine();
+    HelpMarker(Tooltip::base_for_stamina_regen.c_str());
+
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(200.0f);
+    if (ImGui::SliderFloat(Label::base_for_magicka_regen.c_str(), &vars::base_for_magicka_regen, 10.0f, 500.0f, "%.2f"))
+        Config::Settings::magicka_regen_base_calc.SetValue(vars::base_for_magicka_regen);
+    ImGui::SameLine();
+    HelpMarker(Tooltip::base_for_magicka_regen.c_str());
+
+    // === Save / Reset System ===
+    ImGui::NewLine();
+    ImGui::SeparatorText(Titles::system.c_str());
+
+    if (ImGui::Button(Label::save_settings.c_str()))
+        Config::Settings::GetSingleton()->UpdateSettings(true);
+
+    ImGui::SameLine();
+    if (ImGui::Button(Label::restore_defaults.c_str()))
+        RestoreDefaults(false, false, true);
+
+    FontAwesome::Pop();
+}
+} // namespace Attributes
+} // namespace UI

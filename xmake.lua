@@ -19,7 +19,6 @@ add_rules("mode.debug", "mode.releasedbg")
 add_rules("plugin.vsxmake.autoupdate")
 
 -- set policies
-set_policy("build.optimization.lto", true)
 set_policy("package.requires_lock", true)
 
 -- packages

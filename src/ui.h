@@ -1,122 +1,220 @@
 #pragma once
 #include "API/SKSEMenuFramework.h"
 #include "settings.h"
-namespace UI {
+namespace UI
+{
+void RestoreFromSettings(bool settings, bool toggles = false, bool attributes = false);
+void RestoreDefaults(bool settings, bool toggles = false, bool attributes = false);
+void HelpMarker(const char *desc);
 
-    using str = std::string;
+using str = std::string;
 
-    void Register();
-    namespace STWEAKSMenu {
+void Register();
 
-        void RestoreFromSettings();
-        void RestoreDefaults();
-        void HelpMarker(const char* desc);
+namespace Titles
+{
+inline str MOD_NAME = "sTweaks";
+inline str SETTING_TAB = "Settings";
+inline str TOGGLE_TAB = "Toggles";
+inline str STAMINA_SYSTEM = "Attribute Settings";
+} // namespace Titles
+namespace Settings
+{
 
-        //main title 
-        inline str TitleText = "sTweaks"; // f717   f4fe
-        inline str Section1_Text = "Settings";
-        // setting names
-        inline str Button_JumpHeightMod = "Jump Height Modifier";
-        inline str Button_CurseChance = "Curse Chance";
-        inline str Button_CurseSwapCoolDown = "Curse Swap Cooldown";
-        inline str Button_CurseSwapToggle = "Allow Curse Swapping?";
-        inline str Button_StaminaAttack = "Stamina Cost Attacks";
-        inline str Button_StaminaMagic = "Magic Stamina Cost Modifier";
-        inline str Button_UpperRangeMelee = "Melee Upper Range";
-        inline str Button_UpperRangeMagic = "Magic Upper Range";
-        inline str Button_LowerRangeMelee = "Melee Lower Range";
-        inline str Button_LowerRangeMagic = "Magic Lower Range";
-        inline str Button_ResistanceChangeValue = "Magic Resistance Change";
-        //Tooltips
-        inline str Tooltip_JumpHeightMod = "Reduces the jump height while sneaking with the set modifier";
-        inline str Tooltip_CurseChance = "Chance to get afflicted by a curse when hit with any spell. Half the chance for getting hit by concentration spells";
-        inline str Tooltip_CurseSwapCooldown = "The amount of time it takes before a curse can be re-afflicted, means, swapped";
-        inline str Tooltip_CurseSwapToggle = "Toggles the swapping of a curse. If not toggled, the cooldown is ignored";
-        inline str Tooltip_StaminaAttack = "Base Stamina cost for normal attacks";
-        inline str Tooltip_MagicStamina = "Spell cost modifier to define stamina cost of spells. Formula is Spell Cost divided by modifier";
-        inline str Tooltip_UpperRangeMelee = "Upper range of melee damage in percent. This means damage dealt and received.";
-        inline str Tooltip_LowerRangeMelee = "Lower range of melee damage in percent. This means damage dealt and received.";
-        inline str Tooltip_UpperRangeMagic = "Upper range of magic damage in percent. This means damage dealt and received.";
-        inline str Tooltip_LowerRangeMagic = "Lower range of magic damage in percent. This means damage dealt and received.";
-        inline str Tooltip_ResistanceChange = "lowers the magic resistance of enemies by the set amount. Up to player level 5 \n and only for enemies with the same or a higher level as the player. \n Should make early game as mage a bit easier";
+void __stdcall RenderSettings();
 
-        //titles
-        inline str Title_Curses = FontAwesome::UnicodeToUtf8(0xf717) + " Curses";
-        inline str Title_JumpHeight = FontAwesome::UnicodeToUtf8(0xf52e) + " Jump Height";
-        inline str Title_Stamina = FontAwesome::UnicodeToUtf8(0xf241) + " Stamina";
-        inline str Title_Ranges = FontAwesome::UnicodeToUtf8(0xf338) + " Damage Ranges";
-        inline str Title_Resist = FontAwesome::UnicodeToUtf8(0xe05d) + " Lower Resistance";
-        
-        //system settings
-        inline str Title_System = FontAwesome::UnicodeToUtf8(0xf390) + " System";
-        inline str Button_SaveSettings = FontAwesome::UnicodeToUtf8(0xf0c7) + " Save Settings";
-        inline str Button_ResetSettings = FontAwesome::UnicodeToUtf8(0xf0e2) + " Reset Settings";
+namespace Titles
+{
+inline str jump_height = FontAwesome::UnicodeToUtf8(0xf52e) + " Jump Height";
+inline str curses = FontAwesome::UnicodeToUtf8(0xf717) + " Curses";
+inline str stamina = FontAwesome::UnicodeToUtf8(0xf241) + " Stamina";
+inline str ranges = FontAwesome::UnicodeToUtf8(0xf338) + " Damage Ranges";
+inline str resist = FontAwesome::UnicodeToUtf8(0xe05d) + " Lower Resistance";
+inline str system = FontAwesome::UnicodeToUtf8(0xf390) + " System";
+} // namespace Titles
+namespace Label
+{
+inline str jump_height_mod = "Jump Height Modifier";
+inline str curse_chance = "Curse Chance";
+inline str curse_swap_cooldown = "Curse Swap Cooldown";
+inline str curse_swap_toggle = "Allow Curse Swapping?";
+inline str upper_range_melee = "Melee Upper Range";
+inline str upper_range_magic = "Magic Upper Range";
+inline str lower_range_melee = "Melee Lower Range";
+inline str lower_range_magic = "Magic Lower Range";
+inline str resistance_change_value = "Magic Resistance Change";
 
-        inline float jump_heigh_temp;
-        inline float curse_chance_temp;
-        inline float curse_swap_cooldown_temp;
-        inline float base_stamina_cost_weap_temp;
-        inline float magic_stam_modifier_temp;
-        inline int upper_range_melee_temp;
-        inline int upper_range_mage_temp;
-        inline int lower_range_melee_temp;
-        inline int lower_range_mage_temp;
-        inline bool allow_curse_swap_temp;
-        inline float resist_change_temp;
+inline str save_settings = FontAwesome::UnicodeToUtf8(0xf0c7) + " Save Settings";
+inline str restore_defaults = FontAwesome::UnicodeToUtf8(0xf0e2) + " Reset Settings";
 
-        void __stdcall Render();
-        // Toggles
-        // Title
-        inline str Title_SectionToggles = "Mod Toggles";
-        inline str Button_Toggles = FontAwesome::UnicodeToUtf8(0xf14a) + " Toggles";
-        inline str Tooltip_TogglesGeneral = "Toggle various options of the mod";
-        inline str NOTE_Restart = "This will not change settings in your stweaks_custom.toml which will always have priority for the settings";
-        //setting
-        inline str tog = "Toggle ";
-        inline str Button_DamageRanges_Toggles = tog + "Damage Ranges";
-        inline str Button_SneakJump_Toggles = tog + "Sneak Jump Limit";
-        inline str Button_EtherealChange_Toggles = tog + "Ethereal Changes";
-        inline str Button_MassBased_Toggles = tog + "Mass Based Jump";
-        inline str Button_SneakStamina_Toggles = tog + "Sneak Stamina Cost";
-        inline str Button_FadeOutActors_Toggles = tog + "Actor Fade Out";
-        inline str Button_QuestItemNerf_Toggles = tog + "Quest Weapon Nerf";
-        inline str Button_Curses_Toggles = tog + "Curses";
-        inline str Button_ResistChange_Toggles = tog + "Resistance Reduction";
-        inline str Button_AttackStamina_Toggles = tog + "Attack Stamina Cost";
-        inline str Button_InteruptCast_Toggles = tog + "Interupt Spell Casting";
-        inline str Button_MagicStamina_Toggles = tog + "Magic Stamina Cost";
-        inline str Button_FollowerDamage_Toggles = tog + " Follower Damage Changes";
+} // namespace Label
+namespace Tooltip
+{
+inline str jump_height_mod = "Reduces the jump height while sneaking with the set modifier";
+inline str curse_chance = "Chance to get afflicted by a curse when hit with any spell. Half the chance for getting hit "
+                          "by concentration spells";
+inline str curse_swap_cooldown = "The amount of time it takes before a curse can be re-afflicted, means, swapped";
+inline str curse_swap_toggle = "Toggles the swapping of a curse. If not toggled, the cooldown is ignored";
+inline str upper_range_melee = "Upper range of melee damage in percent. This means damage dealt and received.";
+inline str lower_range_melee = "Lower range of melee damage in percent. This means damage dealt and received.";
+inline str upper_range_magic = "Upper range of magic damage in percent. This means damage dealt and received.";
+inline str lower_range_magic = "Lower range of magic damage in percent. This means damage dealt and received.";
+inline str resistance_change_value =
+    "Lowers the magic resistance of enemies by the set amount. Up to player level 5 \n and only for enemies with the "
+    "same or a higher level as the player. \n Should make early game as mage a bit easier";
 
-        inline str Tooltip_DamageRanges_Toggles = "Damage Ranges: \nYour attacks don't always deal the same damage.";
-        inline str Tooltip_SneakJump_Toggles = "Sneak Jump Limit: \nLowers the jump height while you're sneaking";
-        inline str Tooltip_EtherealChange_Toggles = "Ethereal Changes: \nIn vanilla, the first hit, that breaks the ethereal effect can still cause damage. This fixes it.";
-        inline str Tooltip_MassBased_Toggles = "Mass Based Jump: \nJump height changes depending on your mass";
-        inline str Tooltip_SneakStamina_Toggles = "Sneak Stamina Cost: \nSneaking and moving costs stamina. So does sneaking with a bow equipped even without moving (to nerf the godlike Skyrim Stealth Archer)";
-        inline str Tooltip_FadeOutActors_Toggles = "Actor Fade Out: \nActors become invisible when they're further away (not an actual invisibility effect)";
-        inline str Tooltip_QuestItemNerf_Toggles = "Quest Weapon Nerf: \nQuest items don't weight anything, so in a setup where carry weight is important, those are free backup weapons.";
-        inline str Tooltip_Curses_Toggles = "Curses: \nThis toggles the Curse mechanic of the mod, please check the modpage to read about them";
-        inline str Tooltip_ResistChange_Toggles = "Resistance Reduction: \nEnemies with a higher or equal level as the player \nget their magic resistance lowered to make early game magic a bit easier if needed.\n Only up to player level 5";
-        inline str Tooltip_AttackStamina_Toggles = "Attack Stamina Cost: \nNormal attacks cost stamina.";
-        inline str Tooltip_InteruptCast_Toggles = "Interupt Spell Casting: \nAttacks will interupt casting of spells";
-        inline str Tooltip_MagicStamina_Toggles = "Magic Stamina Cost: \nCasting spells will cost stamina based on the magicka cost of the spells";
-        inline str Tooltip_FollowerDamage_Toggles = "Follower Damage Changes: The more followers you have, the less damage your party deals. \nScales with Speechcraft to offset the nerf";
+} // namespace Tooltip
+namespace vars
+{
+inline float jump_height_mod;
+inline float curse_chance;
+inline float curse_swap_cooldown;
+inline int upper_range_melee;
+inline int upper_range_magic;
+inline int lower_range_melee;
+inline int lower_range_magic;
+inline bool curse_swap_toggle;
+inline float resistance_change_value;
 
-        inline bool damage_ranges_temp;
-        inline bool sneak_jump_limit_temp;
-        inline bool set_ethereal_change_temp;
-        inline bool mass_based_jump_temp;
-        inline bool sneak_stamina_temp;
-        inline bool fade_out_actors_temp;
-        inline bool quest_item_nerf_temp;
-        inline bool toggle_curses_temp;
-        inline bool toggle_resist_change_temp;
-        inline bool spell_stamina_cost_temp;
-        inline bool attack_stamina_cost_temp;
-        inline bool interupt_cast_temp;
-        inline bool follower_damage_temp;
+} // namespace vars
 
-        void __stdcall RenderToggles();
-        void SetToggleDefaults();
-        void LoadTogglesFromSettings();
-    } 
-};
+} // namespace Settings
+
+namespace Attributes
+{
+void __stdcall RenderAttributes();
+namespace Titles
+{
+inline str attributes = "Attributes";
+inline str attributes_header = FontAwesome::UnicodeToUtf8(0xf6cf) + " Attributes";
+inline str stamina = FontAwesome::UnicodeToUtf8(0xf241) + " Stamina";
+inline str magicka = FontAwesome::UnicodeToUtf8(0xf6e8) + " Magicka";
+inline str health = FontAwesome::UnicodeToUtf8(0xf21e) + " Health";
+inline str system = FontAwesome::UnicodeToUtf8(0xf390) + " System";
+inline str regen = FontAwesome::UnicodeToUtf8(0xf4be) + " Regeneration";
+
+
+} // namespace Titles
+namespace Label
+{
+inline str stamina_attack = "Stamina Cost Attacks";
+inline str stamina_magic = "Magic Stamina Cost Modifier";
+inline str sneak_stamina = "Sneak Stamina Cost";
+inline str magic_stamina_toggle = "Magic Stamina Cost";
+inline str attack_stamina_toggle = "Attack Stamina Cost";
+inline str base_for_stamina_regen = "Stamina Regen Rate Base";
+inline str base_for_magicka_regen = "Magicka Regen Rate Base";
+inline str stamina_regen_toggle = "Toggle Stamina Regen";
+inline str magicka_regen_toggle = "Toggle Magicka Regen";
+
+inline str save_settings =
+    FontAwesome::UnicodeToUtf8(0xf0c7) + " Save Settings";
+inline str restore_defaults =
+    FontAwesome::UnicodeToUtf8(0xf0e2) + " Reset Settings";
+} // namespace Label
+namespace Tooltip
+{
+inline str stamina_attack = "Base Stamina cost for normal attacks";
+inline str stamina_magic = "Spell cost modifier to define stamina cost of "
+                           "spells. Formula is Spell Cost divided by modifier";
+inline str sneak_stamina = "Sneak Stamina Cost:\nSneaking and moving costs stamina. Sneaking with a "
+                           "bow equipped "
+                           "also consumes stamina (to nerf the godlike stealth archer).";
+inline str magic_stamina_toggle = "Magic Stamina Cost:\nCasting spells costs stamina "
+                                  "based on their magicka cost.";
+inline str attack_stamina_toggle = "Attack Stamina Cost:\nNormal attacks consume stamina.";
+inline str base_for_stamina_regen = "Base used for stamina regen instead of max stamina";
+inline str base_for_magicka_regen = "Base used for magicka regen instead of max magicka";
+inline str stamina_regen_toggle = "Toggle changes to Stamina Regen calculations";
+inline str magicka_regen_toggle = "Toggle changes to Magicka Regen calculations";
+} // namespace Tooltip
+namespace vars
+{
+inline float stamina_attack;
+inline float stamina_magic;
+inline bool sneak_stamina;
+inline bool magic_stamina_toggle;
+inline bool attack_stamina_toggle;
+inline float base_for_stamina_regen;
+inline float base_for_magicka_regen;
+inline bool stamina_regen_toggle;
+inline bool magicka_regen_toggle;
+
+} // namespace vars
+
+} // namespace Attributes
+
+namespace Toggles
+{
+
+void __stdcall RenderToggles();
+
+namespace Titles
+{
+inline str toggles = FontAwesome::UnicodeToUtf8(0xf14a) + " Toggles";
+inline str system = FontAwesome::UnicodeToUtf8(0xf390) + " System";
+
+
+inline str system_note = "This will not change settings in your stweaks_custom.toml "
+                         "which will always have priority for the settings";
+} // namespace Titles
+namespace Label
+{
+inline str damage_ranges = "Damage Ranges";
+inline str sneak_jump_limit = "Sneak Jump Limit";
+inline str ethereal_change = "Ethereal Changes";
+inline str mass_based_jump = "Mass Based Jump";
+inline str fade_out_actors = "Actor Fade Out";
+inline str quest_item_nerf = "Quest Weapon Nerf";
+inline str curses = "Curses";
+inline str resist_change = "Resistance Reduction";
+inline str interupt_cast = "Interupt Spell Casting";
+inline str follower_damage = "Follower Damage Changes";
+inline str one_shot_protec = "One Hit Protection";
+inline str enable_damage_caps = "Damage Caps";
+
+inline str save_settings = FontAwesome::UnicodeToUtf8(0xf0c7) + " Save Settings";
+inline str restore_defaults = FontAwesome::UnicodeToUtf8(0xf0e2) + " Reset Settings";
+} // namespace Label
+namespace Tooltip
+{
+inline str damage_ranges = "Damage Ranges:\nYour attacks don't always deal the same damage.";
+inline str sneak_jump_limit = "Sneak Jump Limit:\nLowers the jump height while you're sneaking.";
+inline str ethereal_change = "Ethereal Changes:\nIn vanilla, the first hit that breaks the ethereal "
+                             "effect can still cause damage. This fixes it.";
+inline str mass_based_jump = "Mass Based Jump:\nJump height changes depending on your mass.";
+inline str fade_out_actors = "Actor Fade Out:\nActors become invisible when they're far away "
+                             "(not an actual invisibility effect).";
+inline str quest_item_nerf = "Quest Weapon Nerf:\nQuest items don't weigh anything in vanilla. "
+                             "This makes them behave more realistically when weight matters.";
+inline str curses = "Curses:\nToggles the Curse mechanic. See modpage for details.";
+inline str resist_change = "Resistance Reduction:\nEnemies with higher or equal level as the player "
+                           "get reduced magic resistance up to player level 5.\nHelps early game "
+                           "mages.";
+inline str interupt_cast = "Interupt Spell Casting:\nAttacks will interrupt spell casting.";
+inline str follower_damage = "Follower Damage Changes:\nThe more followers you have, the less damage "
+                             "your party deals.\nSpeechcraft offsets this reduction.";
+inline str one_shot_protec =
+    "Prevents NPCs and you from being one-hit except by melee sneak attacks";
+inline str enable_damage_caps =
+    "Caps damage to 5 times the base weapon damage for normal attacks and 10 "
+    "times for power attacks. Does not cap sneak attack damage";
+} // namespace Tooltip
+namespace vars
+{
+inline bool damage_ranges;
+inline bool sneak_jump_limit;
+inline bool ethereal_change;
+inline bool mass_based_jump;
+inline bool fade_out_actors;
+inline bool quest_item_nerf;
+inline bool curses;
+inline bool resist_change;
+inline bool interupt_cast;
+inline bool follower_damage;
+inline bool one_shot_protec;
+inline bool enable_damage_caps;
+} // namespace vars
+} // namespace Toggles
+
+}; // namespace UI

@@ -42,7 +42,7 @@ SKSE_PLUGIN_LOAD(const SKSE::LoadInterface* a_skse)
     }
 
     SKSE::GetMessagingInterface()->RegisterListener(Listener);
-    Config::Settings::GetSingleton()->LoadSettings();
+    Config::Settings::GetSingleton()->UpdateSettings();
     UI::Register();
 
 	return true;
