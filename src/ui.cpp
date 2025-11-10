@@ -181,9 +181,7 @@ void __stdcall RenderSettings()
 {
     FontAwesome::PushSolid();
 
-    //
     // === Jump Height ===
-    //
     ImGui::NewLine();
     ImGui::SeparatorText(Titles::jump_height.c_str());
 
@@ -195,9 +193,7 @@ void __stdcall RenderSettings()
     ImGui::SameLine();
     HelpMarker(Tooltip::jump_height_mod.c_str());
 
-    //
     // === Curse Settings ===
-    //
     ImGui::NewLine();
     ImGui::SeparatorText(Titles::curses.c_str());
 
@@ -224,9 +220,7 @@ void __stdcall RenderSettings()
     ImGui::SameLine();
     HelpMarker(Tooltip::curse_swap_cooldown.c_str());
 
-    //
     // === Damage Ranges ===
-    //
     ImGui::NewLine();
     ImGui::SeparatorText(Titles::ranges.c_str());
 
@@ -264,9 +258,7 @@ void __stdcall RenderSettings()
     ImGui::SameLine();
     HelpMarker(Tooltip::lower_range_magic.c_str());
 
-    //
     // === Resistance Change ===
-    //
     ImGui::NewLine();
     ImGui::SeparatorText(Titles::resist.c_str());
 
@@ -279,9 +271,7 @@ void __stdcall RenderSettings()
     ImGui::SameLine();
     HelpMarker(Tooltip::resistance_change_value.c_str());
 
-    //
     // === Save / Reset System ===
-    //
     ImGui::NewLine();
     ImGui::SeparatorText(Titles::system.c_str());
 
@@ -392,14 +382,12 @@ void __stdcall RenderToggles()
 
     // === Level Up Low Levels ===
 
-    if (ImGui::Checkbox(Label::level_up_lows.c_str(), &vars::level_up_lows)) {
-      Config::Settings::level_up_low_levels.SetValue(vars::level_up_lows);
+    if (ImGui::Checkbox(Label::level_up_lows.c_str(), &vars::level_up_lows))
+    {
+        Config::Settings::level_up_low_levels.SetValue(vars::level_up_lows);
     }
     ImGui::SameLine();
     HelpMarker(Tooltip::level_up_lows.c_str());
-
-
-
 
     // === Save / Reset System ===
     ImGui::NewLine();
@@ -492,32 +480,28 @@ void __stdcall RenderAttributes()
     ImGui::Text(Titles::magicka.c_str());
 
     ImGui::SetNextItemWidth(200.0f);
-    if (ImGui::SliderFloat(Label::min_cast_speed.c_str(), &vars::min_cast_speed, 0.05, vars::max_cast_speed,
-                           " % .2fsec "))
+    if (ImGui::SliderFloat(Label::min_cast_speed.c_str(), &vars::min_cast_speed, 0.05, vars::max_cast_speed, " % .2f "))
     {
-      Config::Settings::min_cast_speed.SetValue(vars::min_cast_speed);
+        Config::Settings::min_cast_speed.SetValue(vars::min_cast_speed);
     }
     ImGui::SameLine();
     HelpMarker(Tooltip::min_cast_speed.c_str());
 
     ImGui::SameLine();
     ImGui::SetNextItemWidth(200.f);
-    if (ImGui::SliderFloat(Label::max_cast_speed.c_str(), &vars::max_cast_speed,
-                           vars::min_cast_speed, 7.0f, " % .2fsec ")) {
-      Config::Settings::max_cast_speed.SetValue(vars::max_cast_speed);
+    if (ImGui::SliderFloat(Label::max_cast_speed.c_str(), &vars::max_cast_speed, vars::min_cast_speed, 7.0f, " % .2f "))
+    {
+        Config::Settings::max_cast_speed.SetValue(vars::max_cast_speed);
     }
     ImGui::SameLine();
     HelpMarker(Tooltip::max_cast_speed.c_str());
 
-    if (ImGui::Checkbox(Label::toggle_cast_speed.c_str(),
-                        &vars::toggle_cast_speed)) {
-      Config::Settings::enable_skill_based_cast_speed.SetValue(
-          vars::toggle_cast_speed);
+    if (ImGui::Checkbox(Label::toggle_cast_speed.c_str(), &vars::toggle_cast_speed))
+    {
+        Config::Settings::enable_skill_based_cast_speed.SetValue(vars::toggle_cast_speed);
     }
     ImGui::SameLine();
     HelpMarker(Tooltip::toggle_cast_speed.c_str());
-
-
 
     // === Save / Reset System ===
     ImGui::NewLine();

@@ -129,8 +129,8 @@ inline str stamina_regen_toggle = "Toggle changes to Stamina Regen calculations"
 inline str magicka_regen_toggle = "Toggle changes to Magicka Regen calculations";
 
 inline str toggle_cast_speed = "Toggle Skill based casting speed changes";
-inline str min_cast_speed = "Minimum casting speed at low skill level";
-inline str max_cast_speed = "Maximum casting speed at high skill level";
+inline str min_cast_speed = "Minimum casting speed Multiplier at low skill level. \nThe lower the value, the lower the casting speed at low skill levels";
+inline str max_cast_speed = "Maximum casting speed Multiplier at high skill level. \nThe higher the value, the higher the casting speed at high skill levels";
 
 } // namespace Tooltip
 namespace vars

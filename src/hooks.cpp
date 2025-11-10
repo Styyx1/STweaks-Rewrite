@@ -86,6 +86,14 @@ float JumpHeight::JumpHeightGetScale(RE::TESObjectREFR *refr)
     {
         return scale;
     }
+
+    float stamina = actor->GetActorValue(RE::ActorValue::kStamina);
+    static float jump_cost = 15.f;
+    if (stamina < jump_cost)
+      return 0.0;
+    actor->DamageActorValue(RE::ActorValue::kStamina, jump_cost);
+
+
     float mass = 1.0f;
     if (Config::Settings::enable_mass_based_jump_height.GetValue())
     {
@@ -173,7 +181,7 @@ void NPCFade::ActorUpdate(RE::Character *a_actor, float a_delta)
     float minAlpha = 0.05f;
 
     auto difficulty_level = player->difficulty;
-    float difficultyMult = static_cast<float>(difficulty_level) / 5.0f; // 0.0 - 1.0
+    float difficultyMult = static_cast<float>(difficulty_level) / 5.0f; 
 
     if (float distance = a_actor->GetDistance(player); distance >= distance_full_fade && a_actor->GetHighProcess() &&
                                                        a_actor->GetHighProcess()->lightLevel <= light_level_threshold)
@@ -222,7 +230,7 @@ bool PreventCast::CheckCast(RE::ActorMagicCaster *a_this, RE::MagicItem *a_spell
             if (a_spell && a_spell->GetFormType() != RE::FormType::AlchemyItem &&
                 a_spell->GetFormType() != RE::FormType::Enchantment &&
                 !Forms::FormLoader::spell_allow_list->HasForm(a_spell))
-            { // && a_spell->GetSpellType() == RE::MagicSystem::SpellType::kSpell
+            { 
                 InterruptActor(actor, a_this->GetCastingSource());
                 return false;
             }
@@ -405,22 +413,7 @@ RE::NiAVObject *LoadWithResistance::LoadActor(RE::Actor *a_this, bool arg)
             auto npc_level = a_this->GetLevel();
             if (npc_level + 10 < player_level)
             {
-
-               auto base_data = a_this->GetBaseObject()->As<RE::TESActorBaseData>();
-
-
-              //auto baseData =
-              //    a_this->GetBaseObject()->As<RE::TESActorBaseData>();
-               ActorUtil::ActorSetLevel(base_data, player_level - 10);
-              ActorUtil::CalculateNPC(RE::TESDataHandler::GetSingleton());
-              ActorUtil::ManageActorLevelUP(a_this);
-              REX::INFO("trying to set the level");
-
-
-                /*const auto scriptFactory = RE::IFormFactory::GetConcreteFormFactoryByType<RE::Script>();
-                const auto script = scriptFactory ? scriptFactory->Create() : nullptr;
-                script->SetCommand(std::format("SetLevel {}", player_level - 10));
-                script->CompileAndRun(a_this);*/
+              ActorUtil::SetNPCLevel(a_this, player_level - 10);
             }
         }
     }
@@ -474,8 +467,6 @@ void AntiOneShot::ModAV(RE::Actor *a_this, RE::ACTOR_VALUE_MODIFIER a_modifier, 
     REX::INFO("{} modified health damage is: {}", __func__, modified);
     return _Hook22(a_this, a_modifier, a_av, modified);
 }
-// Fix for E0020: identifier "Args" is undefined and E0018: expected a ')'
-// Add template parameter Args to the function definition
 
 void Hooks::SpellCap::ApplyPerkEntrySpellMag(RE::BGSPerkEntry::EntryPoint a_entry, RE::Actor *caster,
                                              RE::SpellItem *spell, RE::Actor *target, float &damage)
@@ -694,10 +685,8 @@ void CastingSpeed::CasterUpdate(RE::ActorMagicCaster *a_this, float a_delta)
             }
             float time_origin = a_this->currentSpell->GetChargeTime();
             float new_time = GetCastingSpeedMult(actor->GetActorValue(spell->GetAssociatedSkill()));
-            float k = new_time > 0.00001f ? 1.0 / new_time : 1000000.0f;
-            REX::INFO("time is: {} and new_time is: {}", k, new_time);
 
-            return _Hook25(a_this, a_delta * k);
+            return _Hook25(a_this, a_delta * new_time);
         }
     }
     return _Hook25(a_this, a_delta);

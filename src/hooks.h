@@ -101,7 +101,6 @@ class StaminaRegenAdjuster
   public:
   private:
     static float GetStamBase(RE::Character *a_char, RE::ActorValue a_av);
-    // AE ID: 38460 AE Offset: 0x117
     static inline REL::Hook _Hook21{REL::ID(38459), 0x26, &GetStamBase};
 };
 
@@ -132,9 +131,9 @@ class CastingSpeed
   static inline float GetCastingSpeedMult(float skillLevel) 
   {
     skillLevel = std::clamp(skillLevel, 0.0f, 100.0f);
-    float min_time = Config::Settings::min_cast_speed.GetValue();
-    float max_time = Config::Settings::max_cast_speed.GetValue();
-    return std::lerp(max_time,min_time, skillLevel / 100.0f);
+    float min_speed = Config::Settings::min_cast_speed.GetValue();
+    float max_speed = Config::Settings::max_cast_speed.GetValue();
+    return std::lerp(min_speed,max_speed, skillLevel / 100.0f);
   }
 
     static inline REL::HookVFT _Hook25{RE::VTABLE_ActorMagicCaster[0], 0x1d, CasterUpdate};
@@ -142,7 +141,6 @@ class CastingSpeed
 
 static RE::ActorValue LookupActorValueByName(const char *av_name)
 {
-    // SE: 0x3E1450, AE: 0x3FC5A0, VR: ---
     using func_t = decltype(&LookupActorValueByName);
     REL::Relocation<func_t> func{REL::ID(27203)};
     return func(av_name);
