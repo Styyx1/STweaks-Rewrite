@@ -113,18 +113,31 @@ class AntiOneShot
 
 class SpellCap
 {
-  static void ApplyPerkEntrySpellMag(RE::BGSPerkEntry::EntryPoint a_entry,
-                             RE::Actor *caster, RE::SpellItem *spell,
-                             RE::Actor *target, float &damage);
-  static inline REL::Hook _Hook23{REL::ID(34053), 0x60, ApplyPerkEntrySpellMag};
+    static void ApplyPerkEntrySpellMag(RE::BGSPerkEntry::EntryPoint a_entry, RE::Actor *caster, RE::SpellItem *spell,
+                                       RE::Actor *target, float &damage);
+    static inline REL::Hook _Hook23{REL::ID(34053), 0x60, ApplyPerkEntrySpellMag};
 };
 
-class DamageOut {
-  static void ApplyPerkEntryAttack(RE::BGSPerkEntry::EntryPoint a_entry,
-                             RE::Actor *attacker,
-                             RE::TESObjectWEAP *weapon,
-                             RE::TESObjectREFR *target, float &damage);
-  static inline REL::Hook _Hook24{REL::ID(44016), 0x96, ApplyPerkEntryAttack};
+class DamageOut
+{
+    static void ApplyPerkEntryAttack(RE::BGSPerkEntry::EntryPoint a_entry, RE::Actor *attacker,
+                                     RE::TESObjectWEAP *weapon, RE::TESObjectREFR *target, float &damage);
+    static inline REL::Hook _Hook24{REL::ID(44016), 0x96, ApplyPerkEntryAttack};
+};
+
+class CastingSpeed
+{
+  static void CasterUpdate(RE::ActorMagicCaster *a_this, float a_delta);
+
+  static inline float GetCastingSpeedMult(float skillLevel) 
+  {
+    skillLevel = std::clamp(skillLevel, 0.0f, 100.0f);
+    float min_time = Config::Settings::min_cast_speed.GetValue();
+    float max_time = Config::Settings::max_cast_speed.GetValue();
+    return std::lerp(max_time,min_time, skillLevel / 100.0f);
+  }
+
+    static inline REL::HookVFT _Hook25{RE::VTABLE_ActorMagicCaster[0], 0x1d, CasterUpdate};
 };
 
 static RE::ActorValue LookupActorValueByName(const char *av_name)

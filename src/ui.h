@@ -93,7 +93,6 @@ inline str health = FontAwesome::UnicodeToUtf8(0xf21e) + " Health";
 inline str system = FontAwesome::UnicodeToUtf8(0xf390) + " System";
 inline str regen = FontAwesome::UnicodeToUtf8(0xf4be) + " Regeneration";
 
-
 } // namespace Titles
 namespace Label
 {
@@ -106,11 +105,12 @@ inline str base_for_stamina_regen = "Stamina Regen Rate Base";
 inline str base_for_magicka_regen = "Magicka Regen Rate Base";
 inline str stamina_regen_toggle = "Toggle Stamina Regen";
 inline str magicka_regen_toggle = "Toggle Magicka Regen";
+inline str toggle_cast_speed = "Toggle Cast Speed";
+inline str min_cast_speed = "Min Cast Speed Modifier";
+inline str max_cast_speed = "Max Cast Speed Modifier";
 
-inline str save_settings =
-    FontAwesome::UnicodeToUtf8(0xf0c7) + " Save Settings";
-inline str restore_defaults =
-    FontAwesome::UnicodeToUtf8(0xf0e2) + " Reset Settings";
+inline str save_settings = FontAwesome::UnicodeToUtf8(0xf0c7) + " Save Settings";
+inline str restore_defaults = FontAwesome::UnicodeToUtf8(0xf0e2) + " Reset Settings";
 } // namespace Label
 namespace Tooltip
 {
@@ -127,6 +127,11 @@ inline str base_for_stamina_regen = "Base used for stamina regen instead of max 
 inline str base_for_magicka_regen = "Base used for magicka regen instead of max magicka";
 inline str stamina_regen_toggle = "Toggle changes to Stamina Regen calculations";
 inline str magicka_regen_toggle = "Toggle changes to Magicka Regen calculations";
+
+inline str toggle_cast_speed = "Toggle Skill based casting speed changes";
+inline str min_cast_speed = "Minimum casting speed at low skill level";
+inline str max_cast_speed = "Maximum casting speed at high skill level";
+
 } // namespace Tooltip
 namespace vars
 {
@@ -139,6 +144,9 @@ inline float base_for_stamina_regen;
 inline float base_for_magicka_regen;
 inline bool stamina_regen_toggle;
 inline bool magicka_regen_toggle;
+inline bool toggle_cast_speed;
+inline float min_cast_speed;
+inline float max_cast_speed;
 
 } // namespace vars
 
@@ -153,7 +161,6 @@ namespace Titles
 {
 inline str toggles = FontAwesome::UnicodeToUtf8(0xf14a) + " Toggles";
 inline str system = FontAwesome::UnicodeToUtf8(0xf390) + " System";
-
 
 inline str system_note = "This will not change settings in your stweaks_custom.toml "
                          "which will always have priority for the settings";
@@ -172,6 +179,7 @@ inline str interupt_cast = "Interupt Spell Casting";
 inline str follower_damage = "Follower Damage Changes";
 inline str one_shot_protec = "One Hit Protection";
 inline str enable_damage_caps = "Damage Caps";
+inline str level_up_lows = "Dynamic Enemy Levels";
 
 inline str save_settings = FontAwesome::UnicodeToUtf8(0xf0c7) + " Save Settings";
 inline str restore_defaults = FontAwesome::UnicodeToUtf8(0xf0e2) + " Reset Settings";
@@ -194,11 +202,10 @@ inline str resist_change = "Resistance Reduction:\nEnemies with higher or equal 
 inline str interupt_cast = "Interupt Spell Casting:\nAttacks will interrupt spell casting.";
 inline str follower_damage = "Follower Damage Changes:\nThe more followers you have, the less damage "
                              "your party deals.\nSpeechcraft offsets this reduction.";
-inline str one_shot_protec =
-    "Prevents NPCs and you from being one-hit except by melee sneak attacks";
-inline str enable_damage_caps =
-    "Caps damage to 5 times the base weapon damage for normal attacks and 10 "
-    "times for power attacks. Does not cap sneak attack damage";
+inline str one_shot_protec = "Prevents NPCs and you from being one-hit except by melee sneak attacks";
+inline str enable_damage_caps = "Caps damage to 5 times the base weapon damage for normal attacks and 10 "
+                                "times for power attacks. Does not cap sneak attack damage";
+inline str level_up_lows = "Levels up low level enemies as they spawn up to 10 levels below your level";
 } // namespace Tooltip
 namespace vars
 {
@@ -214,6 +221,7 @@ inline bool interupt_cast;
 inline bool follower_damage;
 inline bool one_shot_protec;
 inline bool enable_damage_caps;
+inline bool level_up_lows;
 } // namespace vars
 } // namespace Toggles
 

@@ -49,6 +49,7 @@ void RestoreFromSettings(bool settings, bool toggles, bool attributes)
         follower_damage = set::enable_foll_change.GetValue();
         one_shot_protec = set::one_shot_protection.GetValue();
         enable_damage_caps = set::enable_damage_caps.GetValue();
+        level_up_lows = set::level_up_low_levels.GetValue();
     }
     if (attributes)
     {
@@ -62,6 +63,9 @@ void RestoreFromSettings(bool settings, bool toggles, bool attributes)
         vars::magic_stamina_toggle = set::enable_cast_stamina.GetValue();
         vars::base_for_stamina_regen = set::stamina_regen_base_calc.GetValue();
         vars::base_for_magicka_regen = set::magicka_regen_base_calc.GetValue();
+        vars::min_cast_speed = set::min_cast_speed.GetValue();
+        vars::max_cast_speed = set::max_cast_speed.GetValue();
+        vars::toggle_cast_speed = set::enable_skill_based_cast_speed.GetValue();
     }
 }
 
@@ -107,6 +111,7 @@ void RestoreDefaults(bool settings, bool toggles, bool attributes)
         follower_damage = true;
         one_shot_protec = true;
         enable_damage_caps = true;
+        level_up_lows = true;
 
         set::enable_damage_ranges.SetValue(damage_ranges);
         set::enable_sneak_jump_limit.SetValue(sneak_jump_limit);
@@ -120,6 +125,7 @@ void RestoreDefaults(bool settings, bool toggles, bool attributes)
         set::enable_foll_change.SetValue(follower_damage);
         set::one_shot_protection.SetValue(one_shot_protec);
         set::enable_damage_caps.SetValue(enable_damage_caps);
+        set::level_up_low_levels.SetValue(level_up_lows);
     }
 
     if (attributes)
@@ -135,6 +141,9 @@ void RestoreDefaults(bool settings, bool toggles, bool attributes)
         magicka_regen_toggle = true;
         base_for_stamina_regen = 150.0;
         base_for_magicka_regen = 150.0;
+        min_cast_speed = 0.5;
+        max_cast_speed = 3.0;
+        toggle_cast_speed = true;
 
         set::base_stamina_cost_attacks.SetValue(stamina_attack);
         set::magic_stamina_cost_divider.SetValue(stamina_magic);
@@ -145,6 +154,9 @@ void RestoreDefaults(bool settings, bool toggles, bool attributes)
         set::magicka_regen_changes.SetValue(magicka_regen_toggle);
         set::stamina_regen_base_calc.SetValue(base_for_stamina_regen);
         set::magicka_regen_base_calc.SetValue(base_for_magicka_regen);
+        set::min_cast_speed.SetValue(min_cast_speed);
+        set::max_cast_speed.SetValue(max_cast_speed);
+        set::enable_skill_based_cast_speed.SetValue(toggle_cast_speed);
     }
 
     Config::Settings::GetSingleton()->UpdateSettings(true);
@@ -371,12 +383,23 @@ void __stdcall RenderToggles()
     ImGui::SameLine();
     HelpMarker(Tooltip::one_shot_protec.c_str());
     ImGui::SameLine();
-    if (ImGui::Checkbox(Label::enable_damage_caps.c_str(),
-                        &vars::enable_damage_caps)) {
-      Config::Settings::enable_damage_caps.SetValue(vars::enable_damage_caps);
+    if (ImGui::Checkbox(Label::enable_damage_caps.c_str(), &vars::enable_damage_caps))
+    {
+        Config::Settings::enable_damage_caps.SetValue(vars::enable_damage_caps);
     }
     ImGui::SameLine();
     HelpMarker(Tooltip::enable_damage_caps.c_str());
+
+    // === Level Up Low Levels ===
+
+    if (ImGui::Checkbox(Label::level_up_lows.c_str(), &vars::level_up_lows)) {
+      Config::Settings::level_up_low_levels.SetValue(vars::level_up_lows);
+    }
+    ImGui::SameLine();
+    HelpMarker(Tooltip::level_up_lows.c_str());
+
+
+
 
     // === Save / Reset System ===
     ImGui::NewLine();
@@ -463,6 +486,38 @@ void __stdcall RenderAttributes()
         Config::Settings::magicka_regen_base_calc.SetValue(vars::base_for_magicka_regen);
     ImGui::SameLine();
     HelpMarker(Tooltip::base_for_magicka_regen.c_str());
+
+    ImGui::NewLine();
+    ImGui::Separator();
+    ImGui::Text(Titles::magicka.c_str());
+
+    ImGui::SetNextItemWidth(200.0f);
+    if (ImGui::SliderFloat(Label::min_cast_speed.c_str(), &vars::min_cast_speed, 0.05, vars::max_cast_speed,
+                           " % .2fsec "))
+    {
+      Config::Settings::min_cast_speed.SetValue(vars::min_cast_speed);
+    }
+    ImGui::SameLine();
+    HelpMarker(Tooltip::min_cast_speed.c_str());
+
+    ImGui::SameLine();
+    ImGui::SetNextItemWidth(200.f);
+    if (ImGui::SliderFloat(Label::max_cast_speed.c_str(), &vars::max_cast_speed,
+                           vars::min_cast_speed, 7.0f, " % .2fsec ")) {
+      Config::Settings::max_cast_speed.SetValue(vars::max_cast_speed);
+    }
+    ImGui::SameLine();
+    HelpMarker(Tooltip::max_cast_speed.c_str());
+
+    if (ImGui::Checkbox(Label::toggle_cast_speed.c_str(),
+                        &vars::toggle_cast_speed)) {
+      Config::Settings::enable_skill_based_cast_speed.SetValue(
+          vars::toggle_cast_speed);
+    }
+    ImGui::SameLine();
+    HelpMarker(Tooltip::toggle_cast_speed.c_str());
+
+
 
     // === Save / Reset System ===
     ImGui::NewLine();

@@ -14,9 +14,9 @@ inline constexpr std::string SETTINGS = "SettingValues";
 } // namespace SettingConstants
 
 using namespace SettingConstants;
-
 struct Settings : REX::Singleton<Settings>
 {
+    // bools
     static inline REX::TOML::Bool debug_logging{"DebugLogging", "bDebugLoggingEnable", false};
     static inline REX::TOML::Bool enable_damage_ranges{TOGGLES, "bEnableDamageRanges", true};
     static inline REX::TOML::Bool enable_sneak_jump_limit{TOGGLES, "bEnableSneakJumpLimit", true};
@@ -37,6 +37,8 @@ struct Settings : REX::Singleton<Settings>
     static inline REX::TOML::Bool cap_damage_output{TOGGLES, "bToggleDamageCaps", true};
     static inline REX::TOML::Bool one_shot_protection{TOGGLES, "bEnableOneHitProtection", true};
     static inline REX::TOML::Bool enable_damage_caps{TOGGLES, "bEnableDamageCaps", true};
+    static inline REX::TOML::Bool enable_skill_based_cast_speed{TOGGLES, "bEnableSkillBasedCastSpeed", true};
+    static inline REX::TOML::Bool level_up_low_levels{TOGGLES, "bLevelUpLowLevelEnemies", true};
 
     static inline REX::TOML::F32 sneak_height_modifier{SETTINGS, "fSneakJumpModifier", 0.55f};
     static inline REX::TOML::I32 weapon_upper_range{SETTINGS, "iUpperRangeWeapons", 15};
@@ -50,6 +52,8 @@ struct Settings : REX::Singleton<Settings>
     static inline REX::TOML::F64 magic_stamina_cost_divider{SETTINGS, "fMagicStamCostDivider", 2.0};
     static inline REX::TOML::F64 stamina_regen_base_calc{SETTINGS, "fStaminaBaseValue", 150.0};
     static inline REX::TOML::F64 magicka_regen_base_calc{SETTINGS, "fMagickaBaseValue", 150.0};
+    static inline REX::TOML::F64 max_cast_speed{SETTINGS, "fMaxCastSpeedModifier", 2.0};
+    static inline REX::TOML::F64 min_cast_speed{SETTINGS, "fMinCastSpeedModifier", 0.33};
 
     inline void UpdateSettings(bool save = false)
     {

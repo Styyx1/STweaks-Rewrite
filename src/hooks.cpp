@@ -382,21 +382,46 @@ RE::NiAVObject *LoadWithResistance::LoadActor(RE::Actor *a_this, bool arg)
 {
     auto actor = _Hook13(a_this, arg);
 
-    if (!Config::Settings::enable_resist_changes.GetValue())
-        return actor;
-
     auto player = Cache::GetPlayerSingleton();
     if (a_this == player)
         return actor;
+
     else
     {
         auto player_level = player->GetLevel();
-        if (player_level <= LEVEL_CAP && a_this->GetLevel() >= player_level &&
-            a_this->GetActorValue(RE::ActorValue::kResistMagic) >= 0)
+        if (Config::Settings::enable_resist_changes.GetValue())
         {
-            a_this->SetActorValue(RE::ActorValue::kResistMagic,
-                                  a_this->GetActorValue(RE::ActorValue::kResistMagic) -
-                                      Config::Settings::resist_reduction_value.GetValue());
+            if (player_level <= LEVEL_CAP && a_this->GetLevel() >= player_level &&
+                a_this->GetActorValue(RE::ActorValue::kResistMagic) >= 0)
+            {
+                a_this->SetActorValue(RE::ActorValue::kResistMagic,
+                                      a_this->GetActorValue(RE::ActorValue::kResistMagic) -
+                                          Config::Settings::resist_reduction_value.GetValue());
+            }
+        }
+        if (Config::Settings::level_up_low_levels.GetValue())
+        {
+
+            auto npc_level = a_this->GetLevel();
+            if (npc_level + 10 < player_level)
+            {
+
+               auto base_data = a_this->GetBaseObject()->As<RE::TESActorBaseData>();
+
+
+              //auto baseData =
+              //    a_this->GetBaseObject()->As<RE::TESActorBaseData>();
+               ActorUtil::ActorSetLevel(base_data, player_level - 10);
+              ActorUtil::CalculateNPC(RE::TESDataHandler::GetSingleton());
+              ActorUtil::ManageActorLevelUP(a_this);
+              REX::INFO("trying to set the level");
+
+
+                /*const auto scriptFactory = RE::IFormFactory::GetConcreteFormFactoryByType<RE::Script>();
+                const auto script = scriptFactory ? scriptFactory->Create() : nullptr;
+                script->SetCommand(std::format("SetLevel {}", player_level - 10));
+                script->CompileAndRun(a_this);*/
+            }
         }
     }
     return actor;
@@ -484,38 +509,35 @@ void Hooks::SpellCap::ApplyPerkEntrySpellMag(RE::BGSPerkEntry::EntryPoint a_entr
     if (!detri)
         return;
 
-    REX::INFO("{} damage before any functions was: {}", __func__, damage);
-
     if (auto damage_ranges = Utility::GetRandomFloat(Utility::CalcPerc(Settings::magic_lower_range.GetValue(), false),
                                                      Utility::CalcPerc(Settings::magic_upper_range.GetValue(), true)))
     {
-        REX::INFO("{} DAMAGE BEFORE RANDOM WAS {}", __func__, damage);
         damage *= damage_ranges;
-        REX::INFO("{} Damage after random is {}", __func__, damage);
     }
 
     bool isGoodAssassin = caster->IsSneaking() && target->RequestDetectionLevel(caster) <= 0;
     if (isGoodAssassin)
     {
-        REX::INFO("{} was not seen", __func__);
         return;
     }
 
     auto health = ActorUtil::GetMaxHealth(target);
     auto curr_health = target->GetActorValue(RE::ActorValue::kHealth);
-    if (damage > health && curr_health >= health * 0.99)
-        damage = health * 0.75;
 
-    float cap = original_damage * 5;
-    if (damage > cap)
+    auto own_level = target->GetLevel();
+    auto aggressor_level = caster->GetLevel();
+
+    if (aggressor_level <= own_level + 10)
     {
-        damage = cap;
-    }
+        if (damage > health && curr_health >= health * 0.99)
+            damage = health * 0.75;
 
-    REX::INFO("{} inside apply entry func, caster is: {}, spell is: {} and "
-              "target is: {} and damage is {}",
-              __func__, caster ? caster->GetName() : "nullptr", spell ? spell->GetName() : "nullptr",
-              target ? target->GetName() : "nullptr", damage);
+        float cap = original_damage * 5;
+        if (damage > cap)
+        {
+            damage = cap;
+        }
+    }
 }
 void DamageOut::ApplyPerkEntryAttack(RE::BGSPerkEntry::EntryPoint a_entry, RE::Actor *attacker,
                                      RE::TESObjectWEAP *weapon, RE::TESObjectREFR *target, float &damage)
@@ -536,39 +558,6 @@ void DamageOut::ApplyPerkEntryAttack(RE::BGSPerkEntry::EntryPoint a_entry, RE::A
 
     if (weapon && !weapon->IsHandToHandMelee())
     {
-
-        if (actor)
-        {
-            auto max_health = ActorUtil::GetMaxHealth(actor);
-            auto curr = actor->GetActorValue(RE::ActorValue::kHealth);
-
-            auto own_level = actor->GetLevel();
-            auto aggressor_level = attacker->GetLevel();
-
-            if (aggressor_level <= own_level + 10)
-            {
-
-                if (curr >= max_health * 0.99f)
-                {
-
-                    if (!isGoodAssassin)
-                    {
-
-                        if (damage >= max_health)
-                        {
-                            damage = max_health * 0.75;
-                        }
-                    }
-                    else if (weapon->IsRanged())
-                    {
-                        if (damage >= max_health)
-                        {
-                            damage = max_health * 0.75;
-                        }
-                    }
-                }
-            }
-        }
     }
 
     RE::PlayerCharacter *player = Cache::GetPlayerSingleton();
@@ -632,7 +621,7 @@ void DamageOut::ApplyPerkEntryAttack(RE::BGSPerkEntry::EntryPoint a_entry, RE::A
         float rand_mult = Utility::GetRandomFloat(Utility::CalcPerc(Settings::weapon_lower_range.GetValue(), false),
                                                   Utility::CalcPerc(Settings::weapon_upper_range.GetValue(), true));
         damage *= rand_mult;
-    }    
+    }
 
     if (Settings::enable_quest_item_nerf.GetValue())
     {
@@ -645,16 +634,72 @@ void DamageOut::ApplyPerkEntryAttack(RE::BGSPerkEntry::EntryPoint a_entry, RE::A
         }
     }
 
+    if (actor)
+    {
+        auto max_health = ActorUtil::GetMaxHealth(actor);
+        auto curr = actor->GetActorValue(RE::ActorValue::kHealth);
+
+        auto own_level = actor->GetLevel();
+        auto aggressor_level = attacker->GetLevel();
+
+        if (aggressor_level <= own_level + 10)
+        {
+            if (curr >= max_health * 0.99f)
+            {
+                if (!isGoodAssassin)
+                {
+                    if (damage >= max_health)
+                    {
+                        damage = max_health * 0.75;
+                    }
+                }
+                else if (weapon->IsRanged())
+                {
+                    if (damage >= max_health)
+                    {
+                        damage = max_health * 0.75;
+                    }
+                }
+            }
+        }
+    }
+
     auto power_attack = attacker ? attacker->IsPowerAttacking() : false;
+    uint16_t dmg_cap = weapon && !weapon->IsHandToHandMelee() ? weapon->attackDamage * 5 : 200;
 
-    uint16_t dmg_cap =
-        weapon && !weapon->IsHandToHandMelee() ? weapon->attackDamage * 5 : 200;
+    if (power_attack)
+    {
+        dmg_cap *= 2;
+    }
+    if (damage > dmg_cap && !attacker->IsSneaking())
+    {
+        damage = dmg_cap;
+    }
+}
+// https://www.nexusmods.com/skyrimspecialedition/mods/73514 partially taken from this mod
+void CastingSpeed::CasterUpdate(RE::ActorMagicCaster *a_this, float a_delta)
+{
+    auto state = a_this->state.any(RE::ActorMagicCaster::State::kUnk01) ||
+                 a_this->state.any(RE::ActorMagicCaster::State::kUnk02);
+    if (state && Config::Settings::enable_skill_based_cast_speed.GetValue())
+    {
+        if (const auto actor = a_this->GetCasterAsActor();
+            actor && a_this->currentSpell && a_this->currentSpell->As<RE::SpellItem>())
+        {
 
-    if (power_attack) {
-      dmg_cap *= 2;
+            auto spell = a_this->currentSpell->As<RE::SpellItem>();
+            if (spell->GetCastingType() == RE::MagicSystem::CastingType::kConcentration)
+            {
+                return _Hook25(a_this, a_delta);
+            }
+            float time_origin = a_this->currentSpell->GetChargeTime();
+            float new_time = GetCastingSpeedMult(actor->GetActorValue(spell->GetAssociatedSkill()));
+            float k = new_time > 0.00001f ? 1.0 / new_time : 1000000.0f;
+            REX::INFO("time is: {} and new_time is: {}", k, new_time);
+
+            return _Hook25(a_this, a_delta * k);
+        }
     }
-    if (damage > dmg_cap && !attacker->IsSneaking()) {
-      damage = dmg_cap;
-    }
+    return _Hook25(a_this, a_delta);
 }
 } // namespace Hooks
