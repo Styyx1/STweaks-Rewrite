@@ -52,6 +52,7 @@ void RestoreFromSettings(bool settings, bool toggles, bool attributes)
         level_up_lows = set::level_up_low_levels.GetValue();
         auto_attributes = set::enable_automatic_attributes.GetValue();
         mass_equipment = set::enable_mass_equip_changes.GetValue();
+        tall_grass_sneak = set::tall_grass_sneak.GetValue();
     }
     if (attributes)
     {
@@ -117,6 +118,7 @@ void RestoreDefaults(bool settings, bool toggles, bool attributes)
         level_up_lows = true;
         auto_attributes = true;
         mass_equipment = true;
+        tall_grass_sneak = true;
 
         set::enable_damage_ranges.SetValue(damage_ranges);
         set::enable_sneak_jump_limit.SetValue(sneak_jump_limit);
@@ -133,6 +135,7 @@ void RestoreDefaults(bool settings, bool toggles, bool attributes)
         set::level_up_low_levels.SetValue(level_up_lows);
         set::enable_automatic_attributes.SetValue(auto_attributes);
         set::enable_mass_equip_changes.SetValue(mass_equipment);
+        set::tall_grass_sneak.SetValue(tall_grass_sneak);
     }
 
     if (attributes)
@@ -404,11 +407,17 @@ void __stdcall RenderToggles()
     ImGui::SameLine();
     HelpMarker(Tooltip::auto_attributes.c_str());
 
-    // === Mass Equipment Changes ===
+    // === Mass Equipment Changes & Tall Grass Sneak ===
     if (ImGui::Checkbox(Label::mass_equipment.c_str(), &vars::mass_equipment))
         Config::Settings::enable_mass_equip_changes.SetValue(vars::mass_equipment);
     ImGui::SameLine();
     HelpMarker(Tooltip::mass_equipment.c_str());
+
+    ImGui::SameLine();
+    if (ImGui::Checkbox(Label::tall_grass_sneak.c_str(), &vars::tall_grass_sneak))
+        Config::Settings::tall_grass_sneak.SetValue(vars::tall_grass_sneak);
+    ImGui::SameLine();
+    HelpMarker(Tooltip::tall_grass_sneak.c_str());
 
     // === Save / Reset System ===
     ImGui::NewLine();
@@ -470,12 +479,10 @@ void __stdcall RenderAttributes()
     HelpMarker(Tooltip::sneak_stamina.c_str());
 
     ImGui::SameLine();
-    if (ImGui::Checkbox(Label::jump_stamina_cost.c_str(),
-                        &vars::jump_stamina_cost))
-      Config::Settings::jump_stamina_cost.SetValue(vars::jump_stamina_cost);
+    if (ImGui::Checkbox(Label::jump_stamina_cost.c_str(), &vars::jump_stamina_cost))
+        Config::Settings::jump_stamina_cost.SetValue(vars::jump_stamina_cost);
     ImGui::SameLine();
     HelpMarker(Tooltip::jump_stamina_cost.c_str());
-
 
     ImGui::NewLine();
     ImGui::SeparatorText(Titles::regen.c_str());

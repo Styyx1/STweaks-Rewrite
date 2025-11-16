@@ -186,6 +186,7 @@ inline str enable_damage_caps = "Damage Caps";
 inline str level_up_lows = "Dynamic Enemy Levels";
 inline str auto_attributes = "Automatic Attributes";
 inline str mass_equipment = "Equipment affects Mass";
+inline str tall_grass_sneak = "Tall Grass Enhances Sneak";
 
 inline str save_settings = FontAwesome::UnicodeToUtf8(0xf0c7) + " Save Settings";
 inline str restore_defaults = FontAwesome::UnicodeToUtf8(0xf0e2) + " Reset Settings";
@@ -214,7 +215,8 @@ inline str enable_damage_caps = "Caps damage to 5 times the base weapon damage f
 inline str level_up_lows = "Levels up low level enemies as they spawn up to 10 levels below your level";
 inline str auto_attributes = "Automatically levels Health, Magicka, Stamina and Carry Weight if you are between 40 and 95% of their max";
 inline str mass_equipment = "Your Mass actor value changes depending how much your equipment weights. \n Note, toggling it off will only change it back once you/the NPCs equipped a new item";
-
+inline str tall_grass_sneak = "Standing on 'Tall Grass' areas while sneaking "
+                              "enhances your sneaking skills by 60%";
 
 } // namespace Tooltip
 namespace vars
@@ -234,6 +236,7 @@ inline bool enable_damage_caps;
 inline bool level_up_lows;
 inline bool auto_attributes;
 inline bool mass_equipment;
+inline bool tall_grass_sneak;
 } // namespace vars
 } // namespace Toggles
 

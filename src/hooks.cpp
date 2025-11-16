@@ -455,6 +455,8 @@ RE::NiAVObject *LoadWithResistance::LoadActor(RE::Actor *a_this, bool arg)
     {
         auto curr_mass = ActorUtil::GetMassFromInventory(a_this);
         a_this->SetActorValue(RE::ActorValue::kMass, a_this->GetBaseActorValue(RE::ActorValue::kMass));
+        float modi = a_this->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass);
+        a_this->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass, -modi);
         a_this->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass, curr_mass);
     }
 
@@ -494,6 +496,8 @@ RE::NiAVObject *LoadWithResistance::LoadPlayer(RE::Actor *a_this, bool arg)
     {
         auto curr_mass = ActorUtil::GetMassFromInventory(a_this);
         a_this->SetActorValue(RE::ActorValue::kMass, a_this->GetBaseActorValue(RE::ActorValue::kMass));
+        float modi = a_this->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass);
+        a_this->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass, -modi);
         a_this->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass, curr_mass);
     }
     return actor;
@@ -761,6 +765,8 @@ void EquipHandler::OnItemEquipped(RE::Actor *a_this, bool a_playAnim)
     {
         auto curr_mass = ActorUtil::GetMassFromInventory(a_this);
         a_this->SetActorValue(RE::ActorValue::kMass, a_this->GetBaseActorValue(RE::ActorValue::kMass));
+        float modi = a_this->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass);
+        a_this->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass, -modi);
         a_this->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass, curr_mass);
     }
     else
@@ -775,6 +781,8 @@ void EquipHandler::OnItemEquippedPlayer(RE::PlayerCharacter *a_this, bool a_play
     {
         auto curr_mass = ActorUtil::GetMassFromInventory(a_this);
         a_this->SetActorValue(RE::ActorValue::kMass, a_this->GetBaseActorValue(RE::ActorValue::kMass));
+        float modi = a_this->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass);
+        a_this->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass, -modi);
         a_this->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass, curr_mass);
     }
     else
@@ -801,7 +809,8 @@ void Detection::DoCalculateDetection(RE::Actor *a_this, RE::Actor *target, std::
     _Hook28(a_this, target, score, spotted, hasLOS, reason, lastPos, soundLvl, unk8, unk9);
     RE::BGSPerk *perk = Forms::FormLoader::tall_grass_perk;
     bool hasPerk = target->HasPerk(perk);
-    if (target->IsSneaking() && IsStandingInTallGrass(target))
+    bool isEnabled = Config::Settings::tall_grass_sneak.GetValue();
+    if (target->IsSneaking() && IsStandingInTallGrass(target) && isEnabled)
     {
         if (!hasPerk)
         {
