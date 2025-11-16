@@ -25,7 +25,7 @@ struct Settings : REX::Singleton<Settings>
     static inline REX::TOML::Bool enable_sneak_stamina{TOGGLES, "bEnableSneakStamina", true};
     static inline REX::TOML::Bool enable_foll_change{TOGGLES, "bEnableFollowerDamageChange", true};
     static inline REX::TOML::Bool enable_etheral_change{TOGGLES, "bEnableEtherealChange", true};
-    static inline REX::TOML::Bool enable_diseases{TOGGLES, "bEnableDiseases", true};
+    static inline REX::TOML::Bool enable_diseases{TOGGLES, "bEnableCurses", true};
     static inline REX::TOML::Bool enable_fading_actors{TOGGLES, "bEnableFadingActors", true};
     static inline REX::TOML::Bool enable_quest_item_nerf{TOGGLES, "bEnableQuestItemNerf", true};
     static inline REX::TOML::Bool allow_curse_swapping{TOGGLES, "bAllowCurseSwaps", true};

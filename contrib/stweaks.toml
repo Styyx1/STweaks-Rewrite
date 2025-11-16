@@ -1,69 +1,86 @@
 # ==========================================
 # STweaks Configuration File
 # Default Path: Data/SKSE/Plugins/stweaks.toml
-# note: path is case sensitive
 # ==========================================
 
 [DebugLogging]
-# Enable or disable debug messages in the log
 bDebugLoggingEnable = false
 
+
+# ==========================================
+# SETTINGS — NUMERIC VALUES
+# ==========================================
 [SettingValues]
-# =====================
-# General Settings
-# =====================
-# Multiplier for jump height while sneaking
+
+# Sneak / Movement
 fSneakJumpModifier = 0.55
-# Upper damage range for weapons
+
+# Weapon & Magic Ranges
 iUpperRangeWeapons = 15
-# Lower damage range for weapons
 iLowerRangeWeapons = 15
-# Upper damage range for magic
 iUpperRangeMagic = 15
-# Lower damage range for magic
 iLowerRangeMagic = 15
-# Base chance for curses to trigger
-fCurseChance = 1.0
-# Cooldown (seconds) for curse swapping
-fCurseSwapCooldown = 60.0
-# Base stamina cost for melee attacks
+
+# Combat Costs / Scaling
 fBaseStaminaCostMelee = 20.0
-# Reduces magic resistance of all NPCs on load by amount
-fResistReduceValue = 20.0
-# Divisor to calculate the stamina cost of spells based on their magicka cost. SpellCost / this value = stamina cost
 fMagicStamCostDivider = 2.0
 
+# Casting Speed
+fMaxCastSpeedModifier = 3.0
+fMinCastSpeedModifier = 0.50
+
+# Resistances
+fResistReduceValue = 20.0
+
+# Misc Gameplay Flow
+fCurseChance = 1.0
+fCurseSwapCooldown = 60.0
+
+# Regen/Base Attributes
+fStaminaBaseValue = 150.0
+fMagickaBaseValue = 150.0
+
+
+# ==========================================
+# TOGGLES — FEATURE ENABLE/DISABLE
+# ==========================================
 [Toggles]
-# =====================
-# Feature Toggles
-# =====================
-# Enable melee & magic damage randomization ranges
+
+# Core Combat Logic
 bEnableDamageRanges = true
-# Followers use adjusted damage calculations
-bEnableFollowerDamageChange = true
-# Enable disease effects in gameplay
-bEnableDiseases = true
-# Restrict jumping while sneaking
-bEnableSneakJumpLimit = true
-# Scale jump height based on actor mass
-bMassBasedJump = true
-# Modify ethereal state behavior
-bEnableEtherealChange = true
-# Sneaking drains stamina over time
-bEnableSneakStamina = true
-# Fade out actors when disabled
-bEnableFadingActors = true
-# Nerf quest item stats if applicable
-bEnableQuestItemNerf = true
-# Allow swapping curses during gameplay
-bAllowCurseSwaps = true
-# Reduces MagicResist of higher level enemies until PlayerLevel 5
-bEnableResistChanges = false
-# Casting spells consumes stamina
+bToggleDamageCaps = true
+bEnableDamageCaps = true
+bEnableOneHitProtection = true
+
+# Stamina / Magicka Systems
 bEnableCastStamina = true
-# Melee attacks consume stamina
 bEnableAttackStamina = true
-# Getting hit interrupts spellcasting
+bChangeStaminaRegen = true
+bChangeMagickaRegen = true
+bEnableSneakStamina = true
+bEnableJumpStaminaCost = true
+
+# Sneak, Movement, Visibility
+bEnableSneakJumpLimit = true
+bEnableTallGrassEnhancesSneak = true
+
+# Actor Behavior / Gameplay
+bEnableFadingActors = true
+bEnableCurses = true
+bEnableMassChangesWithEquipment = true
+bMassBasedJump = true
+
+# Magic & Perks
+bEnableSkillBasedCastSpeed = true
 bInteruptCastOnHit = true
 
+# Quest / Item / Progression
+bEnableQuestItemNerf = true
+bAllowCurseSwaps = true
+bLevelUpLowLevelEnemies = true
+bEnableAutoAttributes = true
+bEnableFollowerDamageChange = true
+
+# Creature / Special Effects
+bEnableEtherealChange = true
 
