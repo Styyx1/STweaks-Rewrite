@@ -1,6 +1,6 @@
 {
-    "quest_weapon_exceptions": [
-        "0x800|Dawnguard.esm",
-        "0x22F0F|Skyrim.esm"
-    ]
+  "quest_weapon_exceptions": [
+    "Dawnguard.esm|0x800",
+    "Skyrim.esm|0x22F0F"
+  ]
 }

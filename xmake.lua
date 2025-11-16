@@ -48,6 +48,7 @@ target("stweaks")
     add_includedirs("src")
     set_pcxxheader("src/pch.h")
     add_extrafiles("contrib/**.toml", {public=true}, "contrib/**.json", {public=true})
+    add_includedirs("extern/clib-util/include", {public = true})
 
 after_build(function(target)
     local copy = function(env, ext)

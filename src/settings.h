@@ -9,6 +9,7 @@ namespace SettingConstants
 inline constexpr std::string_view TOML_PATH_DEFAULT = "Data/SKSE/Plugins/stweaks.toml";
 inline constexpr std::string_view TOML_PATH_CUSTOM = "Data/SKSE/Plugins/stweaks_custom.toml";
 inline constexpr std::string_view JSON_PATH = "Data/SKSE/Plugins/stweaks_exceptions.json";
+inline constexpr std::string_view JSON_PATH_LAND = "Data/SKSE/Plugins/stweaks_tallGrass.json";
 inline constexpr std::string TOGGLES = "Toggles";
 inline constexpr std::string SETTINGS = "SettingValues";
 } // namespace SettingConstants
@@ -71,21 +72,88 @@ struct Settings : REX::Singleton<Settings>
 
 namespace Exceptions
 {
-
-static inline std::set<RE::TESObjectWEAP *> weapon_exceptions;
-
-static inline RE::TESForm *GetFormFromString(const std::string &spellName)
+struct Sets
 {
-    std::istringstream ss{spellName};
-    std::string plugin, id;
-    std::getline(ss, id, '|');
-    std::getline(ss, plugin);
+    static inline std::set<RE::TESObjectWEAP *> weapon_exceptions;
+    static inline std::set<RE::TESLandTexture *> land_textures;
+};
 
-    RE::FormID rawFormID;
-    std::istringstream(id) >> std::hex >> rawFormID;
+static inline RE::TESForm *GetFormFromString(const std::string &formIDstring)
+{
+    if (formIDstring.empty())
+    {
+        REX::WARN("Empty form string");
+        return nullptr;
+    }
 
-    auto dataHandler = RE::TESDataHandler::GetSingleton();
-    return dataHandler->LookupForm(rawFormID, plugin);
+    if (formIDstring.find('|') != std::string::npos)
+    {
+        std::istringstream ss{formIDstring};
+        std::string plugin, id;
+        std::getline(ss, plugin, '|');
+        std::getline(ss, id);
+
+        if (plugin.empty() || id.empty())
+        {
+            return nullptr;
+        }
+
+        RE::FormID rawFormID{};
+        std::istringstream(id) >> std::hex >> rawFormID;
+
+        if (!rawFormID)
+        {
+            return nullptr;
+        }
+
+        if (auto *dataHandler = RE::TESDataHandler::GetSingleton())
+        {
+            auto *form = dataHandler->LookupForm(rawFormID, plugin);
+            return form;
+        }
+        return nullptr;
+    }
+
+    if (auto *form = RE::TESForm::LookupByEditorID(formIDstring))
+    {
+        return form;
+    }
+
+    REX::WARN("Could not find form '{}'", formIDstring);
+    return nullptr;
+}
+
+static inline void LoadTallGrass(const std::string &configFilePath)
+{
+    std::ifstream file(configFilePath);
+    if (!file.is_open())
+    {
+        REX::ERROR("Failed to open the file: {}", configFilePath);
+        return;
+    }
+    nlohmann::json j;
+    file >> j;
+    if (j.contains("TallGrass") && j["TallGrass"].is_array())
+    {
+        for (const auto &str : j["TallGrass"])
+        {
+            const std::string &formStr = str.get<std::string>();
+            REX::INFO("Loading Tall Grass: {}", formStr);
+
+            RE::TESForm *form = GetFormFromString(formStr);
+            if (form && form->GetFormType() == RE::FormType::LandTexture)
+            {
+                Sets::land_textures.insert(form->As<RE::TESLandTexture>());
+                REX::INFO("loaded {} as land texture", editorID::get_editorID(form));
+            }
+            else
+            {
+                REX::WARN("Invalid or non-land texture form: {}", formStr);
+            }
+        }
+    }
+
+    REX::INFO("Loaded {} land textures from {}.", Sets::land_textures.size(), configFilePath);
 }
 
 static inline void LoadExceptionWeapons(const std::string &configFilePath)
@@ -111,7 +179,7 @@ static inline void LoadExceptionWeapons(const std::string &configFilePath)
             RE::TESForm *form = GetFormFromString(formStr);
             if (form && form->GetFormType() == RE::FormType::Weapon)
             {
-                weapon_exceptions.insert(form->As<RE::TESObjectWEAP>());
+                Sets::weapon_exceptions.insert(form->As<RE::TESObjectWEAP>());
                 REX::INFO("loaded {} as exception", form->GetName());
             }
             else
@@ -121,17 +189,28 @@ static inline void LoadExceptionWeapons(const std::string &configFilePath)
         }
     }
 
-    REX::INFO("Loaded {} weapons from {}.", weapon_exceptions.size(), configFilePath);
+    REX::INFO("Loaded {} weapons from {}.", Sets::weapon_exceptions.size(), configFilePath);
 }
 
 static void LoadJson()
 {
     LoadExceptionWeapons(JSON_PATH.data());
+    LoadTallGrass(JSON_PATH_LAND.data());
 }
 
 inline static bool IsQuestWeaponException(RE::TESObjectWEAP *form)
 {
-    return form && weapon_exceptions.contains(form);
+    REX::INFO("checking exceptions");
+    if (Sets::weapon_exceptions.empty())
+        REX::INFO("weapon exceptions is empty");
+
+    return form && Sets::weapon_exceptions.contains(form);
+}
+inline static bool IsTallGrass(RE::TESLandTexture *form)
+{
+    if (Sets::land_textures.empty())
+        REX::INFO("land textures is empty");
+    return form && Sets::land_textures.contains(form);
 }
 } // namespace Exceptions
 

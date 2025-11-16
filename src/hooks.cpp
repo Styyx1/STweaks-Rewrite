@@ -159,23 +159,20 @@ float JumpHeight::JumpHeightGetScale(RE::TESObjectREFR *refr)
             curse_modi = 0.5f;
         }
     }
-    if (Config::Settings::jump_stamina_cost.GetValue()) {
-      float min_cost = 10.0f;
-      float max_cost = 50.0f;
-      float max_mass = 80.0f;
+    if (Config::Settings::jump_stamina_cost.GetValue())
+    {
+        float min_cost = 10.0f;
+        float max_cost = 50.0f;
+        float max_mass = 80.0f;
 
-      float jump_cost =
-          min_cost +
-          (max_cost - min_cost) *
-              std::min(actor->GetActorValue(RE::ActorValue::kMass), max_mass) /
-              max_mass;
+        float jump_cost = min_cost + (max_cost - min_cost) *
+                                         std::min(actor->GetActorValue(RE::ActorValue::kMass), max_mass) / max_mass;
 
-      float stamina = actor->GetActorValue(RE::ActorValue::kStamina);
-      if (stamina < jump_cost)
-        return 0.0;
-      actor->DamageActorValue(RE::ActorValue::kStamina, jump_cost);
+        float stamina = actor->GetActorValue(RE::ActorValue::kStamina);
+        if (stamina < jump_cost)
+            return 0.0;
+        actor->DamageActorValue(RE::ActorValue::kStamina, jump_cost);
     }
-    
 
     return scale *= ju_modifier * curse_modi;
 }
@@ -731,7 +728,8 @@ void DamageOut::ApplyPerkEntryAttack(RE::BGSPerkEntry::EntryPoint a_entry, RE::A
         damage = dmg_cap;
     }
 }
-// https://www.nexusmods.com/skyrimspecialedition/mods/73514 partially taken from this mod
+// https://www.nexusmods.com/skyrimspecialedition/mods/73514 partially taken
+// from this mod
 void CastingSpeed::CasterUpdate(RE::ActorMagicCaster *a_this, float a_delta)
 {
     auto state = a_this->state.any(RE::ActorMagicCaster::State::kUnk01) ||
@@ -785,4 +783,58 @@ void EquipHandler::OnItemEquippedPlayer(RE::PlayerCharacter *a_this, bool a_play
     }
 }
 
+static void ArgumentDump(RE::Actor *a_this, RE::Actor *target, std::int32_t &score, bool &spotted, bool &hasLOS,
+                         std::int32_t &reason, std::int32_t &soundLvl, float &unk8, float &unk9)
+{
+    auto this_name = a_this ? a_this->GetName() : "null";
+    auto targ_name = target->GetName();
+    REX::INFO("argument dump: a_this: {}, target: {}, "
+              "score: {}, spotted: {}, hasLOS: {}, reason: "
+              "{}, soundLvl: {}, unk8: {}, unk9: {}",
+              this_name, targ_name, score, spotted, hasLOS, reason, soundLvl, unk8, unk9);
+};
+
+void Detection::DoCalculateDetection(RE::Actor *a_this, RE::Actor *target, std::int32_t &score, bool &spotted,
+                                     bool &hasLOS, std::int32_t &reason, RE::NiPoint3 &lastPos, std::int32_t &soundLvl,
+                                     float &unk8, float &unk9)
+{
+    _Hook28(a_this, target, score, spotted, hasLOS, reason, lastPos, soundLvl, unk8, unk9);
+    RE::BGSPerk *perk = Forms::FormLoader::tall_grass_perk;
+    bool hasPerk = target->HasPerk(perk);
+    if (target->IsSneaking() && IsStandingInTallGrass(target))
+    {
+        if (!hasPerk)
+        {
+            target->AddPerk(perk);
+            REX::INFO("added {} to {}", perk->GetName(), target->GetName());
+        }
+        return;
+    }
+    if (hasPerk)
+        target->RemovePerk(perk);
+}
+
+inline bool Detection::IsStandingInTallGrass(RE::Actor *target)
+{
+    if (!target || !target->IsPlayerRef())
+        return false;
+    const auto cell = target->GetParentCell();
+    if (!cell)
+        return false;
+    if (!cell->IsExteriorCell())
+        return false;
+    const auto tes = RE::TES::GetSingleton();
+    if (!tes)
+        return false;
+    auto landscapeTexture = tes->GetLandTexture(target->GetPosition());
+    if (!landscapeTexture)
+        return false;
+    // const auto edid = editorID::get_editorID(landscapeTexture);
+    //  REX::INFO("current landscape texture is: {}", edid);
+    if (Config::Exceptions::IsTallGrass(landscapeTexture))
+    {
+        return true;
+    }
+    return false;
+}
 } // namespace Hooks

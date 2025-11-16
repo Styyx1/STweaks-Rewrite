@@ -11,12 +11,15 @@ void Forms::FormLoader::LoadForms()
             sneak_stamina_spell = dh->LookupForm<RE::SpellItem>(Forms::FormConstants::sneak_stamina_spell_ID,
                                                                 Forms::FormConstants::mod_name);
             REX::INFO("sneak spell is: {}", sneak_stamina_spell->GetName());
+            tall_grass_perk =
+                dh->LookupForm<RE::BGSPerk>(Forms::FormConstants::tall_grass_perk_ID, Forms::FormConstants::mod_name);
+            REX::INFO("Tall Grass Perk is: {}", tall_grass_perk->GetName());
         }
         else
         {
 
             std::string mod_name_base = Forms::FormConstants::mod_name;
-            REX::FAIL(std::format("{} not found, please enable it.", mod_name_base));
+            REX::FAIL("{} not found, please enable it.", mod_name_base);
         }
     }
 

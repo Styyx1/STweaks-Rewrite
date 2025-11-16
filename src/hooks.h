@@ -132,8 +132,7 @@ class LoadWithResistance
     static RE::NiAVObject *LoadActor(RE::Actor *a_this, bool arg);
     static RE::NiAVObject *LoadPlayer(RE::Actor *a_this, bool arg);
     static inline REL::HookVFT _Hook13{RE::VTABLE_Character[0], 0x06A, &LoadActor};
-    static inline REL::HookVFT _Hook14{RE::VTABLE_PlayerCharacter[0], 0x06A, 
-                                       &LoadPlayer};
+    static inline REL::HookVFT _Hook14{RE::VTABLE_PlayerCharacter[0], 0x06A, &LoadPlayer};
 };
 
 class StaminaRegenAdjuster
@@ -183,6 +182,18 @@ class EquipHandler
 };
 
 //		virtual void  OnItemEquipped(bool a_playAnim); // 0B2
+
+class Detection
+{
+
+    static void DoCalculateDetection(RE::Actor *a_this, RE::Actor *target, std::int32_t &score, bool &spotted,
+                                     bool &hasLOS, std::int32_t &reason, RE::NiPoint3 &lastPos, std::int32_t &soundLvl,
+                                     float &unk8, float &unk9);
+    static inline REL::Hook _Hook28{REL::ID(42742), 0x67b, DoCalculateDetection};
+    static inline bool IsStandingInTallGrass(RE::Actor *target);
+
+    // const REL::Relocation CalculateDetection_Loc{RELOCATION_ID(41659, 42742), REL::Relocate(0x526, 0x67B)};
+};
 
 static RE::ActorValue LookupActorValueByName(const char *av_name)
 {
