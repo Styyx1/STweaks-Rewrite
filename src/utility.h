@@ -588,30 +588,15 @@ public:
         RE::SourceActionMap::DoAction(a_actor, RE::DEFAULT_OBJECT::kActionRightInterrupt);
         RE::SourceActionMap::DoAction(a_actor, RE::DEFAULT_OBJECT::kActionLeftInterrupt);
 
-        /*switch (a_castingSource)
-        {
-        case RE::MagicSystem::CastingSource::kLeftHand:
-            RE::SourceActionMap::DoAction(a_actor, RE::DEFAULT_OBJECT::kActionLeftInterrupt);
-            break;
-        case RE::MagicSystem::CastingSource::kRightHand:
-            RE::SourceActionMap::DoAction(a_actor, RE::DEFAULT_OBJECT::kActionRightInterrupt);
-            break;
-        case RE::MagicSystem::CastingSource::kOther:
-            RE::SourceActionMap::DoAction(a_actor, RE::DEFAULT_OBJECT::kActionVoiceInterrupt);
-            break;
-        default:
-            break;
-        }*/
     }
 
     struct CastInterruptTimer {
-        Timer attackTimer;      // tracks the 1.5s interrupt window
-        Timer cooldownTimer;    // tracks the 12s cooldown
+        Timer attackTimer;     
+        Timer cooldownTimer;    
         bool attackActive{ false };
         bool cooldownActive{ false };
 
         void OnHit() {
-            // Only allow new interrupt if not on cooldown
             if (!cooldownActive) {
                 attackActive = true;
                 attackTimer.Reset();

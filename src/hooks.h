@@ -4,6 +4,17 @@
 namespace Hooks
 {
 
+struct AVStorage : public REX::Singleton<AVStorage>
+{
+    std::unordered_map<RE::ActorValue, uint16_t> attribute_xp;
+    inline uint16_t get_attribute_xp(RE::ActorValue av)
+    {
+        if (attribute_xp.empty())
+            return 0;
+        return attribute_xp[av];
+    }
+};
+
 class MainUpdate
 {
   public:
@@ -12,10 +23,36 @@ class MainUpdate
     static inline bool isSprinting = false;
 
   private:
-    static void PlayerUpdate(RE::PlayerCharacter *p, float a_delta);
+    static void MainUpdateHook(float a_delta);
     static bool HasRangedWeaponDrawn(RE::PlayerCharacter *player);
-
-    static inline REL::HookVFT _Hook1{RE::VTABLE_PlayerCharacter[0], 0xAD, &PlayerUpdate};
+    static float GetCarryPercentage(RE::PlayerCharacter *player);
+    static inline TimerUtil::Timer av_timer;
+    static inline float pl_mass;
+    static inline constexpr std::array restricted_menu_names{
+        RE::BarterMenu::MENU_NAME,    RE::BookMenu::MENU_NAME,     RE::Console::MENU_NAME,
+        RE::ContainerMenu::MENU_NAME, RE::CraftingMenu::MENU_NAME, RE::DialogueMenu::MENU_NAME,
+        RE::FavoritesMenu::MENU_NAME, RE::GiftMenu::MENU_NAME,     RE::InventoryMenu::MENU_NAME,
+        RE::JournalMenu::MENU_NAME,   RE::LevelUpMenu::MENU_NAME,  RE::LockpickingMenu::MENU_NAME,
+        RE::MagicMenu::MENU_NAME,     RE::MapMenu::MENU_NAME,      RE::RaceSexMenu::MENU_NAME,
+        RE::SleepWaitMenu::MENU_NAME, RE::StatsMenu::MENU_NAME,    RE::TrainingMenu::MENU_NAME,
+        RE::TutorialMenu::MENU_NAME,  RE::TweenMenu::MENU_NAME,
+    };
+    static inline std::vector<std::string> a_menuNames{restricted_menu_names.begin(), restricted_menu_names.end()};
+    static inline bool IsAnyOfMenuOpen(const std::vector<std::string> &a_menuNames)
+    {
+        auto a_ui = RE::UI::GetSingleton();
+        if (!a_ui)
+            return true;
+        for (const std::string_view menuName : a_menuNames)
+        {
+            if (a_ui->IsMenuOpen(menuName))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    static inline REL::Hook _Hook1{REL::ID(36564), 0xc26, &MainUpdateHook};
 };
 
 class JumpHeight
@@ -93,7 +130,10 @@ class LoadWithResistance
   private:
     static constexpr uint16_t LEVEL_CAP = 5;
     static RE::NiAVObject *LoadActor(RE::Actor *a_this, bool arg);
+    static RE::NiAVObject *LoadPlayer(RE::Actor *a_this, bool arg);
     static inline REL::HookVFT _Hook13{RE::VTABLE_Character[0], 0x06A, &LoadActor};
+    static inline REL::HookVFT _Hook14{RE::VTABLE_PlayerCharacter[0], 0x06A, 
+                                       &LoadPlayer};
 };
 
 class StaminaRegenAdjuster
@@ -102,12 +142,6 @@ class StaminaRegenAdjuster
   private:
     static float GetStamBase(RE::Character *a_char, RE::ActorValue a_av);
     static inline REL::Hook _Hook21{REL::ID(38459), 0x26, &GetStamBase};
-};
-
-class AntiOneShot
-{
-    static void ModAV(RE::Actor *a_this, RE::ACTOR_VALUE_MODIFIER a_modifier, RE::ActorValue a_av, float amount);
-    static inline REL::Hook _Hook22{REL::ID(38467), 0x14, ModAV};
 };
 
 class SpellCap
@@ -126,18 +160,29 @@ class DamageOut
 
 class CastingSpeed
 {
-  static void CasterUpdate(RE::ActorMagicCaster *a_this, float a_delta);
+    static void CasterUpdate(RE::ActorMagicCaster *a_this, float a_delta);
 
-  static inline float GetCastingSpeedMult(float skillLevel) 
-  {
-    skillLevel = std::clamp(skillLevel, 0.0f, 100.0f);
-    float min_speed = Config::Settings::min_cast_speed.GetValue();
-    float max_speed = Config::Settings::max_cast_speed.GetValue();
-    return std::lerp(min_speed,max_speed, skillLevel / 100.0f);
-  }
+    static inline float GetCastingSpeedMult(float skillLevel)
+    {
+        skillLevel = std::clamp(skillLevel, 0.0f, 100.0f);
+        float min_speed = Config::Settings::min_cast_speed.GetValue();
+        float max_speed = Config::Settings::max_cast_speed.GetValue();
+        return std::lerp(min_speed, max_speed, skillLevel / 100.0f);
+    }
 
     static inline REL::HookVFT _Hook25{RE::VTABLE_ActorMagicCaster[0], 0x1d, CasterUpdate};
 };
+
+class EquipHandler
+{
+    static void OnItemEquipped(RE::Actor *a_this, bool a_playAnim);
+    static void OnItemEquippedPlayer(RE::PlayerCharacter *a_this, bool a_playAnim);
+
+    static inline REL::HookVFT _Hook26{RE::VTABLE_Character[0], 0x0b2, OnItemEquipped};
+    static inline REL::HookVFT _Hook27{RE::VTABLE_PlayerCharacter[0], 0x0b2, OnItemEquippedPlayer};
+};
+
+//		virtual void  OnItemEquipped(bool a_playAnim); // 0B2
 
 static RE::ActorValue LookupActorValueByName(const char *av_name)
 {

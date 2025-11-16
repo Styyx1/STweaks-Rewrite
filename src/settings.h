@@ -39,6 +39,9 @@ struct Settings : REX::Singleton<Settings>
     static inline REX::TOML::Bool enable_damage_caps{TOGGLES, "bEnableDamageCaps", true};
     static inline REX::TOML::Bool enable_skill_based_cast_speed{TOGGLES, "bEnableSkillBasedCastSpeed", true};
     static inline REX::TOML::Bool level_up_low_levels{TOGGLES, "bLevelUpLowLevelEnemies", true};
+    static inline REX::TOML::Bool enable_automatic_attributes{TOGGLES, "bEnableAutoAttributes", true};
+    static inline REX::TOML::Bool enable_mass_equip_changes{TOGGLES, "bEnableMassChangesWithEquipment", true};
+    static inline REX::TOML::Bool jump_stamina_cost{TOGGLES, "bEnableJumpStaminaCost", true};
 
     static inline REX::TOML::F32 sneak_height_modifier{SETTINGS, "fSneakJumpModifier", 0.55f};
     static inline REX::TOML::I32 weapon_upper_range{SETTINGS, "iUpperRangeWeapons", 15};

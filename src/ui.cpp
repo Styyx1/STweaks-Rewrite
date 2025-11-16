@@ -50,22 +50,25 @@ void RestoreFromSettings(bool settings, bool toggles, bool attributes)
         one_shot_protec = set::one_shot_protection.GetValue();
         enable_damage_caps = set::enable_damage_caps.GetValue();
         level_up_lows = set::level_up_low_levels.GetValue();
+        auto_attributes = set::enable_automatic_attributes.GetValue();
+        mass_equipment = set::enable_mass_equip_changes.GetValue();
     }
     if (attributes)
     {
-        using namespace UI::Attributes;
-        vars::stamina_attack = set::base_stamina_cost_attacks.GetValue();
-        vars::stamina_magic = set::magic_stamina_cost_divider.GetValue();
-        vars::sneak_stamina = set::enable_sneak_stamina.GetValue();
-        vars::stamina_regen_toggle = set::stamina_regen_changes.GetValue();
-        vars::magicka_regen_toggle = set::magicka_regen_changes.GetValue();
-        vars::attack_stamina_toggle = set::enable_attack_stamina.GetValue();
-        vars::magic_stamina_toggle = set::enable_cast_stamina.GetValue();
-        vars::base_for_stamina_regen = set::stamina_regen_base_calc.GetValue();
-        vars::base_for_magicka_regen = set::magicka_regen_base_calc.GetValue();
-        vars::min_cast_speed = set::min_cast_speed.GetValue();
-        vars::max_cast_speed = set::max_cast_speed.GetValue();
-        vars::toggle_cast_speed = set::enable_skill_based_cast_speed.GetValue();
+        using namespace UI::Attributes::vars;
+        stamina_attack = set::base_stamina_cost_attacks.GetValue();
+        stamina_magic = set::magic_stamina_cost_divider.GetValue();
+        sneak_stamina = set::enable_sneak_stamina.GetValue();
+        stamina_regen_toggle = set::stamina_regen_changes.GetValue();
+        magicka_regen_toggle = set::magicka_regen_changes.GetValue();
+        attack_stamina_toggle = set::enable_attack_stamina.GetValue();
+        magic_stamina_toggle = set::enable_cast_stamina.GetValue();
+        base_for_stamina_regen = set::stamina_regen_base_calc.GetValue();
+        base_for_magicka_regen = set::magicka_regen_base_calc.GetValue();
+        min_cast_speed = set::min_cast_speed.GetValue();
+        max_cast_speed = set::max_cast_speed.GetValue();
+        toggle_cast_speed = set::enable_skill_based_cast_speed.GetValue();
+        jump_stamina_cost = set::jump_stamina_cost.GetValue();
     }
 }
 
@@ -112,6 +115,8 @@ void RestoreDefaults(bool settings, bool toggles, bool attributes)
         one_shot_protec = true;
         enable_damage_caps = true;
         level_up_lows = true;
+        auto_attributes = true;
+        mass_equipment = true;
 
         set::enable_damage_ranges.SetValue(damage_ranges);
         set::enable_sneak_jump_limit.SetValue(sneak_jump_limit);
@@ -126,6 +131,8 @@ void RestoreDefaults(bool settings, bool toggles, bool attributes)
         set::one_shot_protection.SetValue(one_shot_protec);
         set::enable_damage_caps.SetValue(enable_damage_caps);
         set::level_up_low_levels.SetValue(level_up_lows);
+        set::enable_automatic_attributes.SetValue(auto_attributes);
+        set::enable_mass_equip_changes.SetValue(mass_equipment);
     }
 
     if (attributes)
@@ -144,6 +151,7 @@ void RestoreDefaults(bool settings, bool toggles, bool attributes)
         min_cast_speed = 0.5;
         max_cast_speed = 3.0;
         toggle_cast_speed = true;
+        jump_stamina_cost = true;
 
         set::base_stamina_cost_attacks.SetValue(stamina_attack);
         set::magic_stamina_cost_divider.SetValue(stamina_magic);
@@ -157,6 +165,7 @@ void RestoreDefaults(bool settings, bool toggles, bool attributes)
         set::min_cast_speed.SetValue(min_cast_speed);
         set::max_cast_speed.SetValue(max_cast_speed);
         set::enable_skill_based_cast_speed.SetValue(toggle_cast_speed);
+        set::jump_stamina_cost.SetValue(jump_stamina_cost);
     }
 
     Config::Settings::GetSingleton()->UpdateSettings(true);
@@ -380,7 +389,7 @@ void __stdcall RenderToggles()
     ImGui::SameLine();
     HelpMarker(Tooltip::enable_damage_caps.c_str());
 
-    // === Level Up Low Levels ===
+    // === Level Up Low Levels & Auto Attributes===
 
     if (ImGui::Checkbox(Label::level_up_lows.c_str(), &vars::level_up_lows))
     {
@@ -388,6 +397,18 @@ void __stdcall RenderToggles()
     }
     ImGui::SameLine();
     HelpMarker(Tooltip::level_up_lows.c_str());
+
+    ImGui::SameLine();
+    if (ImGui::Checkbox(Label::auto_attributes.c_str(), &vars::auto_attributes))
+        Config::Settings::enable_automatic_attributes.SetValue(vars::auto_attributes);
+    ImGui::SameLine();
+    HelpMarker(Tooltip::auto_attributes.c_str());
+
+    // === Mass Equipment Changes ===
+    if (ImGui::Checkbox(Label::mass_equipment.c_str(), &vars::mass_equipment))
+        Config::Settings::enable_mass_equip_changes.SetValue(vars::mass_equipment);
+    ImGui::SameLine();
+    HelpMarker(Tooltip::mass_equipment.c_str());
 
     // === Save / Reset System ===
     ImGui::NewLine();
@@ -447,6 +468,14 @@ void __stdcall RenderAttributes()
         Config::Settings::enable_sneak_stamina.SetValue(vars::sneak_stamina);
     ImGui::SameLine();
     HelpMarker(Tooltip::sneak_stamina.c_str());
+
+    ImGui::SameLine();
+    if (ImGui::Checkbox(Label::jump_stamina_cost.c_str(),
+                        &vars::jump_stamina_cost))
+      Config::Settings::jump_stamina_cost.SetValue(vars::jump_stamina_cost);
+    ImGui::SameLine();
+    HelpMarker(Tooltip::jump_stamina_cost.c_str());
+
 
     ImGui::NewLine();
     ImGui::SeparatorText(Titles::regen.c_str());

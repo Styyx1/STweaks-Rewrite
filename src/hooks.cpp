@@ -7,15 +7,17 @@ using namespace Config;
 
 bool wasEnraged = false;
 
-void MainUpdate::PlayerUpdate(RE::PlayerCharacter *player, float a_delta)
+void MainUpdate::MainUpdateHook(float a_delta)
 {
+    auto *player = Cache::GetPlayerSingleton();
+
     if (!Settings::enable_sneak_stamina.GetValue())
     {
         if (Utility::HasSpell(player, Forms::FormLoader::sneak_stamina_spell))
         {
             player->RemoveSpell(Forms::FormLoader::sneak_stamina_spell);
         }
-        return _Hook1(player, a_delta);
+        return _Hook1(a_delta);
     }
 
     if (frameCount > 10)
@@ -60,7 +62,50 @@ void MainUpdate::PlayerUpdate(RE::PlayerCharacter *player, float a_delta)
         }
     }
     frameCount++;
-    return _Hook1(player, a_delta);
+
+    if (av_timer.ElapsedSeconds() >= 45)
+    {
+        av_timer.Reset();
+
+        float perc_health = GetActorValuePercentage(player, RE::ActorValue::kHealth);
+        float perc_stamina = GetActorValuePercentage(player, RE::ActorValue::kStamina);
+        float perc_magicka = GetActorValuePercentage(player, RE::ActorValue::kMagicka);
+        float perc_carry = GetCarryPercentage(player);
+
+        auto *av_store = AVStorage::GetSingleton();
+        if (perc_health > 0.4 && perc_health < 0.95)
+            av_store->attribute_xp[RE::ActorValue::kHealth] += 1;
+        if (perc_stamina > 0.4 && perc_stamina < 0.95)
+            av_store->attribute_xp[RE::ActorValue::kStamina] += 1;
+        if (perc_magicka > 0.4 && perc_magicka < 0.95)
+            av_store->attribute_xp[RE::ActorValue::kMagicka] += 1;
+        if (perc_carry > 0.4 && perc_carry < 0.95)
+            av_store->attribute_xp[RE::ActorValue::kCarryWeight] += 1;
+
+        auto it = av_store->attribute_xp.begin();
+        for (it; it != av_store->attribute_xp.end(); ++it)
+        {
+            if (it->second >= 100)
+            {
+                player->SetBaseActorValue(it->first, player->GetBaseActorValue(it->first) + 1);
+                it->second -= 100;
+            }
+        }
+    }
+
+    if (!av_timer.IsRunning() && !MiscUtil::IsAnyOfMenuOpen(Cache::GetUISingleton(), a_menuNames))
+    {
+        av_timer.Start();
+    }
+    if (av_timer.IsRunning() && MiscUtil::IsAnyOfMenuOpen(Cache::GetUISingleton(), a_menuNames))
+    {
+        av_timer.Stop();
+    }
+
+    if (!Config::Settings::enable_automatic_attributes.GetValue())
+        av_timer.Stop();
+
+    return _Hook1(a_delta);
 }
 
 bool MainUpdate::HasRangedWeaponDrawn(RE::PlayerCharacter *player)
@@ -77,6 +122,13 @@ bool MainUpdate::HasRangedWeaponDrawn(RE::PlayerCharacter *player)
     return result;
 }
 
+float MainUpdate::GetCarryPercentage(RE::PlayerCharacter *player)
+{
+
+    return player->GetActorValue(RE::ActorValue::kInventoryWeight) /
+           player->GetActorValue(RE::ActorValue::kCarryWeight);
+}
+
 float JumpHeight::JumpHeightGetScale(RE::TESObjectREFR *refr)
 {
     float scale = refr->GetScale();
@@ -86,13 +138,6 @@ float JumpHeight::JumpHeightGetScale(RE::TESObjectREFR *refr)
     {
         return scale;
     }
-
-    float stamina = actor->GetActorValue(RE::ActorValue::kStamina);
-    static float jump_cost = 15.f;
-    if (stamina < jump_cost)
-      return 0.0;
-    actor->DamageActorValue(RE::ActorValue::kStamina, jump_cost);
-
 
     float mass = 1.0f;
     if (Config::Settings::enable_mass_based_jump_height.GetValue())
@@ -114,6 +159,23 @@ float JumpHeight::JumpHeightGetScale(RE::TESObjectREFR *refr)
             curse_modi = 0.5f;
         }
     }
+    if (Config::Settings::jump_stamina_cost.GetValue()) {
+      float min_cost = 10.0f;
+      float max_cost = 50.0f;
+      float max_mass = 80.0f;
+
+      float jump_cost =
+          min_cost +
+          (max_cost - min_cost) *
+              std::min(actor->GetActorValue(RE::ActorValue::kMass), max_mass) /
+              max_mass;
+
+      float stamina = actor->GetActorValue(RE::ActorValue::kStamina);
+      if (stamina < jump_cost)
+        return 0.0;
+      actor->DamageActorValue(RE::ActorValue::kStamina, jump_cost);
+    }
+    
 
     return scale *= ju_modifier * curse_modi;
 }
@@ -164,6 +226,7 @@ void OnEffectEndHook::OnEffectEnd(RE::ScriptEffect *a_this)
 
 void NPCFade::ActorUpdate(RE::Character *a_actor, float a_delta)
 {
+
     if (!Config::Settings::enable_fading_actors.GetValue())
     {
         if (a_actor->GetAlpha() < 1.0)
@@ -181,7 +244,7 @@ void NPCFade::ActorUpdate(RE::Character *a_actor, float a_delta)
     float minAlpha = 0.05f;
 
     auto difficulty_level = player->difficulty;
-    float difficultyMult = static_cast<float>(difficulty_level) / 5.0f; 
+    float difficultyMult = static_cast<float>(difficulty_level) / 5.0f;
 
     if (float distance = a_actor->GetDistance(player); distance >= distance_full_fade && a_actor->GetHighProcess() &&
                                                        a_actor->GetHighProcess()->lightLevel <= light_level_threshold)
@@ -195,6 +258,7 @@ void NPCFade::ActorUpdate(RE::Character *a_actor, float a_delta)
     {
         a_actor->SetAlpha();
     }
+
     _Hook6(a_actor, a_delta);
 }
 
@@ -230,7 +294,7 @@ bool PreventCast::CheckCast(RE::ActorMagicCaster *a_this, RE::MagicItem *a_spell
             if (a_spell && a_spell->GetFormType() != RE::FormType::AlchemyItem &&
                 a_spell->GetFormType() != RE::FormType::Enchantment &&
                 !Forms::FormLoader::spell_allow_list->HasForm(a_spell))
-            { 
+            {
                 InterruptActor(actor, a_this->GetCastingSource());
                 return false;
             }
@@ -388,7 +452,14 @@ float StaminaAttackCost::GetWeightMult(RE::Actor *actor, float weight, RE::Actor
 
 RE::NiAVObject *LoadWithResistance::LoadActor(RE::Actor *a_this, bool arg)
 {
+
     auto actor = _Hook13(a_this, arg);
+    if (Config::Settings::enable_mass_equip_changes.GetValue())
+    {
+        auto curr_mass = ActorUtil::GetMassFromInventory(a_this);
+        a_this->SetActorValue(RE::ActorValue::kMass, a_this->GetBaseActorValue(RE::ActorValue::kMass));
+        a_this->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass, curr_mass);
+    }
 
     auto player = Cache::GetPlayerSingleton();
     if (a_this == player)
@@ -413,9 +484,20 @@ RE::NiAVObject *LoadWithResistance::LoadActor(RE::Actor *a_this, bool arg)
             auto npc_level = a_this->GetLevel();
             if (npc_level + 10 < player_level)
             {
-              ActorUtil::SetNPCLevel(a_this, player_level - 10);
+                ActorUtil::SetNPCLevel(a_this, player_level - 10);
             }
         }
+    }
+    return actor;
+}
+RE::NiAVObject *LoadWithResistance::LoadPlayer(RE::Actor *a_this, bool arg)
+{
+    auto actor = _Hook14(a_this, arg);
+    if (Config::Settings::enable_mass_equip_changes.GetValue())
+    {
+        auto curr_mass = ActorUtil::GetMassFromInventory(a_this);
+        a_this->SetActorValue(RE::ActorValue::kMass, a_this->GetBaseActorValue(RE::ActorValue::kMass));
+        a_this->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass, curr_mass);
     }
     return actor;
 }
@@ -448,24 +530,6 @@ float StaminaRegenAdjuster::GetStamBase(RE::Character *a_char, RE::ActorValue a_
     }
 
     return _Hook21(a_char, a_av);
-}
-void AntiOneShot::ModAV(RE::Actor *a_this, RE::ACTOR_VALUE_MODIFIER a_modifier, RE::ActorValue a_av, float amount)
-{
-
-    return _Hook22(a_this, a_modifier, a_av, amount);
-    RE::MagicTarget *targ;
-    RE::MagicCaster *cast;
-
-    if (a_modifier != RE::ACTOR_VALUE_MODIFIER::kDamage || !a_this || a_av != RE::ActorValue::kHealth)
-        return _Hook22(a_this, a_modifier, a_av, amount);
-
-    float modified = 0;
-
-    REX::INFO("Inside modav hook, av used is {}, amount is: {} and affected actor is: {}", RE::ActorValueToString(a_av),
-              amount, a_this->GetName());
-    modified = -100;
-    REX::INFO("{} modified health damage is: {}", __func__, modified);
-    return _Hook22(a_this, a_modifier, a_av, modified);
 }
 
 void Hooks::SpellCap::ApplyPerkEntrySpellMag(RE::BGSPerkEntry::EntryPoint a_entry, RE::Actor *caster,
@@ -691,4 +755,34 @@ void CastingSpeed::CasterUpdate(RE::ActorMagicCaster *a_this, float a_delta)
     }
     return _Hook25(a_this, a_delta);
 }
+void EquipHandler::OnItemEquipped(RE::Actor *a_this, bool a_playAnim)
+{
+
+    _Hook26(a_this, a_playAnim);
+    if (Config::Settings::enable_mass_equip_changes.GetValue())
+    {
+        auto curr_mass = ActorUtil::GetMassFromInventory(a_this);
+        a_this->SetActorValue(RE::ActorValue::kMass, a_this->GetBaseActorValue(RE::ActorValue::kMass));
+        a_this->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass, curr_mass);
+    }
+    else
+    {
+        a_this->SetActorValue(RE::ActorValue::kMass, a_this->GetBaseActorValue(RE::ActorValue::kMass));
+    }
+}
+void EquipHandler::OnItemEquippedPlayer(RE::PlayerCharacter *a_this, bool a_playAnim)
+{
+    _Hook26(a_this, a_playAnim);
+    if (Config::Settings::enable_mass_equip_changes.GetValue())
+    {
+        auto curr_mass = ActorUtil::GetMassFromInventory(a_this);
+        a_this->SetActorValue(RE::ActorValue::kMass, a_this->GetBaseActorValue(RE::ActorValue::kMass));
+        a_this->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass, curr_mass);
+    }
+    else
+    {
+        a_this->SetActorValue(RE::ActorValue::kMass, a_this->GetBaseActorValue(RE::ActorValue::kMass));
+    }
+}
+
 } // namespace Hooks

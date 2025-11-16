@@ -108,6 +108,7 @@ inline str magicka_regen_toggle = "Toggle Magicka Regen";
 inline str toggle_cast_speed = "Toggle Cast Speed";
 inline str min_cast_speed = "Min Cast Speed Modifier";
 inline str max_cast_speed = "Max Cast Speed Modifier";
+inline str jump_stamina_cost = "Jump Stamina Cost";
 
 inline str save_settings = FontAwesome::UnicodeToUtf8(0xf0c7) + " Save Settings";
 inline str restore_defaults = FontAwesome::UnicodeToUtf8(0xf0e2) + " Reset Settings";
@@ -131,6 +132,8 @@ inline str magicka_regen_toggle = "Toggle changes to Magicka Regen calculations"
 inline str toggle_cast_speed = "Toggle Skill based casting speed changes";
 inline str min_cast_speed = "Minimum casting speed Multiplier at low skill level. \nThe lower the value, the lower the casting speed at low skill levels";
 inline str max_cast_speed = "Maximum casting speed Multiplier at high skill level. \nThe higher the value, the higher the casting speed at high skill levels";
+inline str jump_stamina_cost =
+    "Toggle Stamina cost for jumping. the cost is based on the actor's mass";
 
 } // namespace Tooltip
 namespace vars
@@ -147,6 +150,7 @@ inline bool magicka_regen_toggle;
 inline bool toggle_cast_speed;
 inline float min_cast_speed;
 inline float max_cast_speed;
+inline bool jump_stamina_cost;
 
 } // namespace vars
 
@@ -180,6 +184,8 @@ inline str follower_damage = "Follower Damage Changes";
 inline str one_shot_protec = "One Hit Protection";
 inline str enable_damage_caps = "Damage Caps";
 inline str level_up_lows = "Dynamic Enemy Levels";
+inline str auto_attributes = "Automatic Attributes";
+inline str mass_equipment = "Equipment affects Mass";
 
 inline str save_settings = FontAwesome::UnicodeToUtf8(0xf0c7) + " Save Settings";
 inline str restore_defaults = FontAwesome::UnicodeToUtf8(0xf0e2) + " Reset Settings";
@@ -206,6 +212,10 @@ inline str one_shot_protec = "Prevents NPCs and you from being one-hit except by
 inline str enable_damage_caps = "Caps damage to 5 times the base weapon damage for normal attacks and 10 "
                                 "times for power attacks. Does not cap sneak attack damage";
 inline str level_up_lows = "Levels up low level enemies as they spawn up to 10 levels below your level";
+inline str auto_attributes = "Automatically levels Health, Magicka, Stamina and Carry Weight if you are between 40 and 95% of their max";
+inline str mass_equipment = "Your Mass actor value changes depending how much your equipment weights. \n Note, toggling it off will only change it back once you/the NPCs equipped a new item";
+
+
 } // namespace Tooltip
 namespace vars
 {
@@ -222,6 +232,8 @@ inline bool follower_damage;
 inline bool one_shot_protec;
 inline bool enable_damage_caps;
 inline bool level_up_lows;
+inline bool auto_attributes;
+inline bool mass_equipment;
 } // namespace vars
 } // namespace Toggles
 
