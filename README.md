@@ -79,6 +79,7 @@ Disease like curses you can catch when being bit by any spell in the game.
 In vanilla, Stamina and Magicka regen is based on your max value which makes high level attribute consumption often lower than the regen. 
 now attribute regen is based on a flat base.
 
+Everything can be toggled separately and there are some value adjustments like: The new base for the regen, that upper and lower limits for the damage ranges, toggling changing curses, curse chance, stamina cost modifiers and a few more.
 
 ## Building the mod:
 
