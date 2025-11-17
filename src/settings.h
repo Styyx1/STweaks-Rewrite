@@ -35,7 +35,6 @@ struct Settings : REX::Singleton<Settings>
     static inline REX::TOML::Bool interupt_cast_on_hit{TOGGLES, "bInteruptCastOnHit", true};
     static inline REX::TOML::Bool stamina_regen_changes{TOGGLES, "bChangeStaminaRegen", true};
     static inline REX::TOML::Bool magicka_regen_changes{TOGGLES, "bChangeMagickaRegen", true};
-    static inline REX::TOML::Bool cap_damage_output{TOGGLES, "bToggleDamageCaps", true};
     static inline REX::TOML::Bool one_shot_protection{TOGGLES, "bEnableOneHitProtection", true};
     static inline REX::TOML::Bool enable_damage_caps{TOGGLES, "bEnableDamageCaps", true};
     static inline REX::TOML::Bool enable_skill_based_cast_speed{TOGGLES, "bEnableSkillBasedCastSpeed", true};
@@ -43,8 +42,7 @@ struct Settings : REX::Singleton<Settings>
     static inline REX::TOML::Bool enable_automatic_attributes{TOGGLES, "bEnableAutoAttributes", true};
     static inline REX::TOML::Bool enable_mass_equip_changes{TOGGLES, "bEnableMassChangesWithEquipment", true};
     static inline REX::TOML::Bool jump_stamina_cost{TOGGLES, "bEnableJumpStaminaCost", true};
-    static inline REX::TOML::Bool tall_grass_sneak{
-        TOGGLES, "bEnableTallGrassEnhancesSneak", true};
+    static inline REX::TOML::Bool tall_grass_sneak{TOGGLES, "bEnableTallGrassEnhancesSneak", true};
 
     static inline REX::TOML::F32 sneak_height_modifier{SETTINGS, "fSneakJumpModifier", 0.55f};
     static inline REX::TOML::I32 weapon_upper_range{SETTINGS, "iUpperRangeWeapons", 15};
@@ -146,7 +144,7 @@ static inline void LoadTallGrass(const std::string &configFilePath)
             if (form && form->GetFormType() == RE::FormType::LandTexture)
             {
                 Sets::land_textures.insert(form->As<RE::TESLandTexture>());
-                REX::INFO("loaded {} as land texture", editorID::get_editorID(form));
+                REX::INFO("loaded {} as land texture", std::string(editorID::get_editorID(form)));
             }
             else
             {

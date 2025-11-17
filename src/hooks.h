@@ -181,8 +181,6 @@ class EquipHandler
     static inline REL::HookVFT _Hook27{RE::VTABLE_PlayerCharacter[0], 0x0b2, OnItemEquippedPlayer};
 };
 
-//		virtual void  OnItemEquipped(bool a_playAnim); // 0B2
-
 class Detection
 {
 
@@ -191,8 +189,6 @@ class Detection
                                      float &unk8, float &unk9);
     static inline REL::Hook _Hook28{REL::ID(42742), 0x67b, DoCalculateDetection};
     static inline bool IsStandingInTallGrass(RE::Actor *target);
-
-    // const REL::Relocation CalculateDetection_Loc{RELOCATION_ID(41659, 42742), REL::Relocate(0x526, 0x67B)};
 };
 
 static RE::ActorValue LookupActorValueByName(const char *av_name)

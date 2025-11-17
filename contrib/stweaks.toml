@@ -48,7 +48,6 @@ fMagickaBaseValue = 150.0
 
 # Core Combat Logic
 bEnableDamageRanges = true
-bToggleDamageCaps = true
 bEnableDamageCaps = true
 bEnableOneHitProtection = true
 
