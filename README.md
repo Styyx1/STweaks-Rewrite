@@ -79,6 +79,10 @@ Disease like curses you can catch when being bit by any spell in the game.
 In vanilla, Stamina and Magicka regen is based on your max value which makes high level attribute consumption often lower than the regen. 
 now attribute regen is based on a flat base.
 
+### 25. Attacks of Opportunity
+
+Attacking a target while they're under the effect of a paralysis or calm spell deals 2.5 times damage, while they sleep deals 4 times damage, while they are power attacking or staggered deals 1.2 times damage and while attacking from behind deals 1.3 times damage
+
 Everything can be toggled separately and there are some value adjustments like: The new base for the regen, that upper and lower limits for the damage ranges, toggling changing curses, curse chance, stamina cost modifiers and a few more.
 
 ## Building the mod:

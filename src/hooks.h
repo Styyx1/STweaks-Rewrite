@@ -3,7 +3,26 @@
 
 namespace Hooks
 {
+enum class OpportunityType : int {
+  Sleep = 0,
+  Attack = 1,
+  Paralysis = 2,
+  Backstab = 3,
+  None = 4
+};
 
+inline static std::array<float, 5> OpportunityModifiers = {
+    4.0f, // Sleep
+    1.2f, // Attack
+    2.5f, // Paralysis
+    1.3f, // Backstab
+    1.0f  // None
+};
+
+inline float GetModifier(OpportunityType type)
+{
+  return OpportunityModifiers[static_cast<int>(type)];
+}
 struct AVStorage : public REX::Singleton<AVStorage>
 {
     std::unordered_map<RE::ActorValue, uint16_t> attribute_xp;
@@ -155,6 +174,8 @@ class DamageOut
     static void ApplyPerkEntryAttack(RE::BGSPerkEntry::EntryPoint a_entry, RE::Actor *attacker,
                                      RE::TESObjectWEAP *weapon, RE::TESObjectREFR *target, float &damage);
     static inline REL::Hook _Hook24{REL::ID(44016), 0x96, ApplyPerkEntryAttack};
+
+    static float GetOpportunityModifier(RE::Actor *victim, RE::Actor *attacker, bool notification);
 };
 
 class CastingSpeed
@@ -212,4 +233,5 @@ static bool IsQuestObject(RE::ExtraDataList *a_list)
     REL::Relocation<func_t> target{REL::ID(12052)};
     return target(a_list);
 }
+
 } // namespace Hooks

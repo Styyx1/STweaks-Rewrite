@@ -109,6 +109,7 @@ inline str toggle_cast_speed = "Toggle Cast Speed";
 inline str min_cast_speed = "Min Cast Speed Modifier";
 inline str max_cast_speed = "Max Cast Speed Modifier";
 inline str jump_stamina_cost = "Jump Stamina Cost";
+inline str vanilla_attribute_leveling = "Vanilla Atribute Leveling";
 
 inline str save_settings = FontAwesome::UnicodeToUtf8(0xf0c7) + " Save Settings";
 inline str restore_defaults = FontAwesome::UnicodeToUtf8(0xf0e2) + " Reset Settings";
@@ -134,6 +135,10 @@ inline str min_cast_speed = "Minimum casting speed Multiplier at low skill level
 inline str max_cast_speed = "Maximum casting speed Multiplier at high skill level. \nThe higher the value, the higher the casting speed at high skill levels";
 inline str jump_stamina_cost =
     "Toggle Stamina cost for jumping. the cost is based on the actor's mass";
+inline str vanilla_attribute_leveling =
+    "The amount of attributes you get when you select a stat in the level up "
+    "menu. \nIt's 10 by default and i recommend putting it to 5 at max if you "
+    "use my automatic attribute feature";
 
 } // namespace Tooltip
 namespace vars
@@ -151,6 +156,7 @@ inline bool toggle_cast_speed;
 inline float min_cast_speed;
 inline float max_cast_speed;
 inline bool jump_stamina_cost;
+inline int vanilla_attribute_leveling;
 
 } // namespace vars
 
@@ -187,6 +193,7 @@ inline str level_up_lows = "Dynamic Enemy Levels";
 inline str auto_attributes = "Automatic Attributes";
 inline str mass_equipment = "Equipment affects Mass";
 inline str tall_grass_sneak = "Tall Grass Enhances Sneak";
+inline str attacks_of_opp = "Attacks of Opportunity";
 
 inline str save_settings = FontAwesome::UnicodeToUtf8(0xf0c7) + " Save Settings";
 inline str restore_defaults = FontAwesome::UnicodeToUtf8(0xf0e2) + " Reset Settings";
@@ -217,6 +224,11 @@ inline str auto_attributes = "Automatically levels Health, Magicka, Stamina and 
 inline str mass_equipment = "Your Mass actor value changes depending how much your equipment weights. \n Note, toggling it off will only change it back once you/the NPCs equipped a new item";
 inline str tall_grass_sneak = "Standing on 'Tall Grass' areas while sneaking "
                               "enhances your sneaking skills by 60%";
+inline str attacks_of_opp =
+    "Attacking a target while:\nthey're under the effect of a paralysis or calm "
+    "spell deals 2.5 times damage\nthey sleep or sit deals 4 times damage, "
+    "\nthey are power attacking or staggered deals 1.2 times damage "
+    "\nattacking from behind deals 1.3 times damage";
 
 } // namespace Tooltip
 namespace vars
@@ -237,6 +249,7 @@ inline bool level_up_lows;
 inline bool auto_attributes;
 inline bool mass_equipment;
 inline bool tall_grass_sneak;
+inline bool attacks_of_opp;
 } // namespace vars
 } // namespace Toggles
 

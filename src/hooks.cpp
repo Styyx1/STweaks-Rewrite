@@ -719,6 +719,7 @@ void DamageOut::ApplyPerkEntryAttack(RE::BGSPerkEntry::EntryPoint a_entry, RE::A
             }
         }
     }
+    damage *= GetOpportunityModifier(actor, attacker, true);
 
     auto power_attack = attacker ? attacker->IsPowerAttacking() : false;
     uint16_t dmg_cap = weapon && !weapon->IsHandToHandMelee() ? weapon->attackDamage * 5 : 200;
@@ -731,6 +732,41 @@ void DamageOut::ApplyPerkEntryAttack(RE::BGSPerkEntry::EntryPoint a_entry, RE::A
     {
         damage = dmg_cap;
     }
+}
+float DamageOut::GetOpportunityModifier(RE::Actor *victim, RE::Actor *attacker, bool notification)
+{
+    float mod = 1.0f;
+    if (!ActorUtil::IsInOpportunityState(victim, attacker))
+        return mod;
+
+    if (ActorUtil::ActorHasEffectOfTypeActive(victim, RE::EffectArchetypes::ArchetypeID::kParalysis) ||
+        ActorUtil::ActorHasEffectOfTypeActive(victim, RE::EffectArchetypes::ArchetypeID::kCalm))
+    {
+        mod = GetModifier(OpportunityType::Paralysis);
+        if (notification)
+            RE::DebugNotification(std::format("attack of opportunity occured for {} times damage", mod).c_str());
+    }
+    else if (ActorUtil::IsPowerAttacking(victim) || victim->IsStaggering())
+    {
+        mod = GetModifier(OpportunityType::Attack);
+        if (notification)
+            RE::DebugNotification(std::format("attack of opportunity occured for {} times damage", mod).c_str());
+    }
+    else if (victim->actorState1.sitSleepState == RE::SIT_SLEEP_STATE::kIsSitting ||
+             victim->actorState1.sitSleepState == RE::SIT_SLEEP_STATE::kIsSleeping)
+    {
+        mod = GetModifier(OpportunityType::Sleep);
+        if (notification)
+            RE::DebugNotification(std::format("attack of opportunity occured for {} times damage", mod).c_str());
+    }
+    else if (victim->GetHeadingAngle(attacker->GetPosition(), false) <= -135 ||
+             victim->GetHeadingAngle(attacker->GetPosition(), false) >= 135)
+    {
+        mod = GetModifier(OpportunityType::Backstab);
+        if (notification)
+            RE::DebugNotification(std::format("attack of opportunity occured for {} times damage", mod).c_str());
+    }
+    return mod;
 }
 // https://www.nexusmods.com/skyrimspecialedition/mods/73514 partially taken
 // from this mod
@@ -846,4 +882,20 @@ inline bool Detection::IsStandingInTallGrass(RE::Actor *target)
     }
     return false;
 }
+
+inline bool IsSleepRelated(RE::SIT_SLEEP_STATE state)
+{
+    switch (state)
+    {
+    case RE::SIT_SLEEP_STATE::kWantToSleep:
+    case RE::SIT_SLEEP_STATE::kIsSleeping:
+    case RE::SIT_SLEEP_STATE::kWaitingForSleepAnim:
+    case RE::SIT_SLEEP_STATE::kWantToWake:
+    case RE::SIT_SLEEP_STATE::kWantToStand:
+        return true;
+    default:
+        return false;
+    }
+}
+
 } // namespace Hooks

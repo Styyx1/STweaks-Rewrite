@@ -53,6 +53,7 @@ void RestoreFromSettings(bool settings, bool toggles, bool attributes)
         auto_attributes = set::enable_automatic_attributes.GetValue();
         mass_equipment = set::enable_mass_equip_changes.GetValue();
         tall_grass_sneak = set::tall_grass_sneak.GetValue();
+        attacks_of_opp = set::attacks_of_opp.GetValue();
     }
     if (attributes)
     {
@@ -70,6 +71,9 @@ void RestoreFromSettings(bool settings, bool toggles, bool attributes)
         max_cast_speed = set::max_cast_speed.GetValue();
         toggle_cast_speed = set::enable_skill_based_cast_speed.GetValue();
         jump_stamina_cost = set::jump_stamina_cost.GetValue();
+        vanilla_attribute_leveling = set::vanilla_attribute_leveling.GetValue();
+        MiscUtil::SetGMST("iAVDhmsLevelUp", vanilla_attribute_leveling);
+
     }
 }
 
@@ -119,6 +123,7 @@ void RestoreDefaults(bool settings, bool toggles, bool attributes)
         auto_attributes = true;
         mass_equipment = true;
         tall_grass_sneak = true;
+        attacks_of_opp = true;
 
         set::enable_damage_ranges.SetValue(damage_ranges);
         set::enable_sneak_jump_limit.SetValue(sneak_jump_limit);
@@ -136,6 +141,7 @@ void RestoreDefaults(bool settings, bool toggles, bool attributes)
         set::enable_automatic_attributes.SetValue(auto_attributes);
         set::enable_mass_equip_changes.SetValue(mass_equipment);
         set::tall_grass_sneak.SetValue(tall_grass_sneak);
+        set::attacks_of_opp.SetValue(attacks_of_opp);
     }
 
     if (attributes)
@@ -155,6 +161,7 @@ void RestoreDefaults(bool settings, bool toggles, bool attributes)
         max_cast_speed = 3.0;
         toggle_cast_speed = true;
         jump_stamina_cost = true;
+        vanilla_attribute_leveling = 10;
 
         set::base_stamina_cost_attacks.SetValue(stamina_attack);
         set::magic_stamina_cost_divider.SetValue(stamina_magic);
@@ -169,6 +176,8 @@ void RestoreDefaults(bool settings, bool toggles, bool attributes)
         set::max_cast_speed.SetValue(max_cast_speed);
         set::enable_skill_based_cast_speed.SetValue(toggle_cast_speed);
         set::jump_stamina_cost.SetValue(jump_stamina_cost);
+        set::vanilla_attribute_leveling.SetValue(vanilla_attribute_leveling);
+        MiscUtil::SetGMST("iAVDhmsLevelUp", vanilla_attribute_leveling);
     }
 
     Config::Settings::GetSingleton()->UpdateSettings(true);
@@ -419,6 +428,13 @@ void __stdcall RenderToggles()
     ImGui::SameLine();
     HelpMarker(Tooltip::tall_grass_sneak.c_str());
 
+    // === Attacks of Opportunity ===
+    if (ImGui::Checkbox(Label::attacks_of_opp.c_str(), &vars::attacks_of_opp))
+      Config::Settings::attacks_of_opp.SetValue(vars::attacks_of_opp);
+    ImGui::SameLine();
+    HelpMarker(Tooltip::attacks_of_opp.c_str());
+
+
     // === Save / Reset System ===
     ImGui::NewLine();
     ImGui::SeparatorText(Titles::system.c_str());
@@ -539,12 +555,25 @@ void __stdcall RenderAttributes()
     ImGui::SameLine();
     HelpMarker(Tooltip::toggle_cast_speed.c_str());
 
+
+    ImGui::SetNextItemWidth(300.f);
+    if (ImGui::SliderInt(Label::vanilla_attribute_leveling.c_str(), &vars::vanilla_attribute_leveling, 0, 10))
+    {
+        Config::Settings::vanilla_attribute_leveling.SetValue(vars::vanilla_attribute_leveling);
+    }
+
+    ImGui::SameLine();
+    HelpMarker(Tooltip::vanilla_attribute_leveling.c_str());
+
     // === Save / Reset System ===
     ImGui::NewLine();
     ImGui::SeparatorText(Titles::system.c_str());
 
-    if (ImGui::Button(Label::save_settings.c_str()))
-        Config::Settings::GetSingleton()->UpdateSettings(true);
+    if (ImGui::Button(Label::save_settings.c_str())) {
+      Config::Settings::GetSingleton()->UpdateSettings(true);
+      MiscUtil::SetGMST("iAVDhmsLevelUp", vars::vanilla_attribute_leveling);
+    }
+        
 
     ImGui::SameLine();
     if (ImGui::Button(Label::restore_defaults.c_str()))
