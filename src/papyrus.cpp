@@ -52,23 +52,25 @@ void CleanseCurseActor(STATIC_ARGS, RE::Actor *a_actor)
 }
 void ChangeOpportunityModifier(STATIC_ARGS, int opportunityType, float modifier)
 {
-    if (opportunityType < 0 || opportunityType >= Hooks::OpportunityModifiers.size())
+  if (opportunityType < 0 ||
+      opportunityType >= Hooks::OppModi::OpportunityModifiers.size())
     {
         REX::WARN("Invalid opportunity type in ChangeOpportunityModifier script function");
         return;
     }
-    Hooks::OpportunityModifiers[opportunityType] = modifier;
+    Hooks::OppModi::OpportunityModifiers[opportunityType] = modifier;
     REX::INFO("Changed Opportunity Type({}) Modifier to: {}", opportunityType, modifier);
 }
 float GetOpportunityModifier(STATIC_ARGS, int opportunityType)
 {
-    if (opportunityType < 0 || opportunityType >= Hooks::OpportunityModifiers.size())
+  if (opportunityType < 0 ||
+      opportunityType >= Hooks::OppModi::OpportunityModifiers.size())
     {
         REX::WARN("Invalid opportunity type in GetOpportunityModifier script "
                   "function");
         return 1.0f;
     }
-    return Hooks::OpportunityModifiers[opportunityType];
+    return Hooks::OppModi::OpportunityModifiers[opportunityType];
 }
 } // namespace Functions
 

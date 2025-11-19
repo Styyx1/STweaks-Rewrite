@@ -719,7 +719,22 @@ void DamageOut::ApplyPerkEntryAttack(RE::BGSPerkEntry::EntryPoint a_entry, RE::A
             }
         }
     }
-    damage *= GetOpportunityModifier(actor, attacker, true);
+    if (Config::Settings::attacks_of_opp.GetValue())
+    {
+
+        float opp_mod = GetOpportunityModifier(actor, attacker, false);
+        damage *= opp_mod;
+
+        if (Config::Settings::show_opp_notif.GetValue() && opp_mod > 1.0f)
+        {
+            const auto crit_message = std::format("Critical Strike for {:.1f} x Damage", opp_mod);
+            RE::DebugNotification(crit_message.c_str(),
+                                  Config::Settings::play_opp_sound.GetValue() ? "UISneakAttack" : nullptr);
+
+            const RE::CriticalHit::Event event{attacker, ActorUtil::getWieldingWeapon(attacker), false};
+            RE::CriticalHit::GetEventSource()->SendEvent(&event);
+        }
+    }
 
     auto power_attack = attacker ? attacker->IsPowerAttacking() : false;
     uint16_t dmg_cap = weapon && !weapon->IsHandToHandMelee() ? weapon->attackDamage * 5 : 200;
@@ -742,27 +757,27 @@ float DamageOut::GetOpportunityModifier(RE::Actor *victim, RE::Actor *attacker, 
     if (ActorUtil::ActorHasEffectOfTypeActive(victim, RE::EffectArchetypes::ArchetypeID::kParalysis) ||
         ActorUtil::ActorHasEffectOfTypeActive(victim, RE::EffectArchetypes::ArchetypeID::kCalm))
     {
-        mod = GetModifier(OpportunityType::Paralysis);
+        mod = OppModi::GetModifier(OppModi::OpportunityType::Paralysis);
         if (notification)
             RE::DebugNotification(std::format("attack of opportunity occured for {} times damage", mod).c_str());
     }
     else if (ActorUtil::IsPowerAttacking(victim) || victim->IsStaggering())
     {
-        mod = GetModifier(OpportunityType::Attack);
+        mod = OppModi::GetModifier(OppModi::OpportunityType::Attack);
         if (notification)
             RE::DebugNotification(std::format("attack of opportunity occured for {} times damage", mod).c_str());
     }
     else if (victim->actorState1.sitSleepState == RE::SIT_SLEEP_STATE::kIsSitting ||
              victim->actorState1.sitSleepState == RE::SIT_SLEEP_STATE::kIsSleeping)
     {
-        mod = GetModifier(OpportunityType::Sleep);
+        mod = OppModi::GetModifier(OppModi::OpportunityType::Sleep);
         if (notification)
             RE::DebugNotification(std::format("attack of opportunity occured for {} times damage", mod).c_str());
     }
     else if (victim->GetHeadingAngle(attacker->GetPosition(), false) <= -135 ||
              victim->GetHeadingAngle(attacker->GetPosition(), false) >= 135)
     {
-        mod = GetModifier(OpportunityType::Backstab);
+        mod = OppModi::GetModifier(OppModi::OpportunityType::Backstab);
         if (notification)
             RE::DebugNotification(std::format("attack of opportunity occured for {} times damage", mod).c_str());
     }

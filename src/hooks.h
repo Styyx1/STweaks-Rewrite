@@ -3,26 +3,28 @@
 
 namespace Hooks
 {
-enum class OpportunityType : int {
-  Sleep = 0,
-  Attack = 1,
-  Paralysis = 2,
-  Backstab = 3,
-  None = 4
+    struct OppModi {
+  enum class OpportunityType : int {
+    Sleep = 0,
+    Attack = 1,
+    Paralysis = 2,
+    Backstab = 3,
+    None = 4
+  };
+
+  inline static std::array<float, 5> OpportunityModifiers = {
+      4.0f, // Sleep
+      1.2f, // Attack
+      2.5f, // Paralysis
+      1.3f, // Backstab
+      1.0f  // None
+  };
+
+  inline static float GetModifier(OpportunityType type) {
+    return OpportunityModifiers[static_cast<int>(type)];
+  }
 };
 
-inline static std::array<float, 5> OpportunityModifiers = {
-    4.0f, // Sleep
-    1.2f, // Attack
-    2.5f, // Paralysis
-    1.3f, // Backstab
-    1.0f  // None
-};
-
-inline float GetModifier(OpportunityType type)
-{
-  return OpportunityModifiers[static_cast<int>(type)];
-}
 struct AVStorage : public REX::Singleton<AVStorage>
 {
     std::unordered_map<RE::ActorValue, uint16_t> attribute_xp;
