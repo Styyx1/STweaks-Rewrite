@@ -585,14 +585,19 @@ void Hooks::SpellCap::ApplyPerkEntrySpellMag(RE::BGSPerkEntry::EntryPoint a_entr
 
     if (aggressor_level <= own_level + 10)
     {
-        if (damage > health && curr_health >= health * 0.99)
-            damage = health * 0.75;
-
-        float cap = original_damage * 5;
-        if (damage > cap)
-        {
-            damage = cap;
+        if (Config::Settings::one_shot_protection.GetValue()) {
+            if (damage > health && curr_health >= health * 0.99)
+                damage = health * 0.75;
         }
+        
+        if (Config::Settings::enable_damage_caps.GetValue()) {
+            float cap = original_damage * 5;
+            if (damage > cap)
+            {
+                damage = cap;
+            }
+        }
+        
     }
 }
 void DamageOut::ApplyPerkEntryAttack(RE::BGSPerkEntry::EntryPoint a_entry, RE::Actor *attacker,
@@ -697,10 +702,12 @@ void DamageOut::ApplyPerkEntryAttack(RE::BGSPerkEntry::EntryPoint a_entry, RE::A
 
         auto own_level = actor->GetLevel();
         auto aggressor_level = attacker->GetLevel();
+        
+        bool one_shot_prot = Config::Settings::one_shot_protection.GetValue();
 
         if (aggressor_level <= own_level + 10)
         {
-            if (curr >= max_health * 0.99f)
+            if (curr >= max_health * 0.99f && one_shot_prot)
             {
                 if (!isGoodAssassin)
                 {
@@ -738,15 +745,18 @@ void DamageOut::ApplyPerkEntryAttack(RE::BGSPerkEntry::EntryPoint a_entry, RE::A
 
     auto power_attack = attacker ? attacker->IsPowerAttacking() : false;
     uint16_t dmg_cap = weapon && !weapon->IsHandToHandMelee() ? weapon->attackDamage * 5 : 200;
-
-    if (power_attack)
-    {
-        dmg_cap *= 2;
+    bool cap_dmg = Config::Settings::enable_damage_caps.GetValue();
+    if (cap_dmg) {
+        if (power_attack)
+        {
+            dmg_cap *= 2;
+        }
+        if (damage > dmg_cap && !attacker->IsSneaking())
+        {
+            damage = dmg_cap;
+        }
     }
-    if (damage > dmg_cap && !attacker->IsSneaking())
-    {
-        damage = dmg_cap;
-    }
+    
 }
 float DamageOut::GetOpportunityModifier(RE::Actor *victim, RE::Actor *attacker, bool notification)
 {
@@ -796,14 +806,19 @@ void CastingSpeed::CasterUpdate(RE::ActorMagicCaster *a_this, float a_delta)
         {
 
             auto spell = a_this->currentSpell->As<RE::SpellItem>();
-            if (spell->GetCastingType() == RE::MagicSystem::CastingType::kConcentration)
-            {
-                return _Hook25(a_this, a_delta);
+            if (MagicUtil::IsSpellPlayable(spell) && !MagicUtil::IsPermanent(spell)) {
+                if (spell->GetCastingType() == RE::MagicSystem::CastingType::kConcentration || spell->GetSpellType() == RE::MagicSystem::SpellType::kVoicePower)
+                {
+                    return _Hook25(a_this, a_delta);
+                }
+                float time_origin = a_this->currentSpell->GetChargeTime();
+                float new_time = GetCastingSpeedMult(actor->GetActorValue(spell->GetAssociatedSkill()));
+                return _Hook25(a_this, a_delta * new_time);
             }
-            float time_origin = a_this->currentSpell->GetChargeTime();
-            float new_time = GetCastingSpeedMult(actor->GetActorValue(spell->GetAssociatedSkill()));
+            return _Hook25(a_this, a_delta);
+            
 
-            return _Hook25(a_this, a_delta * new_time);
+           
         }
     }
     return _Hook25(a_this, a_delta);

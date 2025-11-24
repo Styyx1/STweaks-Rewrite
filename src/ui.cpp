@@ -388,7 +388,6 @@ void __stdcall RenderToggles()
     // === One Shot Protection & Damage Caps ===
     if (ImGui::Checkbox(Label::one_shot_protec.c_str(), &vars::one_shot_protec))
     {
-
         Config::Settings::one_shot_protection.SetValue(vars::one_shot_protec);
     }
     ImGui::SameLine();
