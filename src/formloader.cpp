@@ -14,6 +14,8 @@ void Forms::FormLoader::LoadForms()
             tall_grass_perk =
                 dh->LookupForm<RE::BGSPerk>(Forms::FormConstants::tall_grass_perk_ID, Forms::FormConstants::mod_name);
             REX::INFO("Tall Grass Perk is: {}", tall_grass_perk->GetName());
+			exhaustion_spell = dh->LookupForm<RE::SpellItem>(Forms::FormConstants::exhaustion_spell_ID, Forms::FormConstants::mod_name);
+			REX::INFO("Exhaustion Spell is: {}", exhaustion_spell->GetName());
         }
         else
         {

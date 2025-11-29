@@ -21,6 +21,7 @@ const int bow_weakness_curse_ID = 0x13;
 const int jump_curse_ID = 0x16;
 const int spell_allow_list_ID = 0x21;
 const int tall_grass_perk_ID = 0x805;
+const int exhaustion_spell_ID = 0x80d;
 
 constexpr const char *cure_keyword = "cleanse_curse";
 constexpr const char *curse_keyword = "stweaks_curse";
@@ -43,6 +44,7 @@ struct FormLoader : REX::Singleton<FormLoader>
     static inline RE::SpellItem *jump_curse{nullptr};
     static inline RE::BGSListForm *spell_allow_list{nullptr};
     static inline RE::BGSPerk *tall_grass_perk{nullptr};
+	static inline RE::SpellItem* exhaustion_spell{ nullptr };
 
     static inline std::vector<RE::SpellItem *> curse_list{};
     static inline std::vector<RE::SpellItem *> spell_allow_vector{};

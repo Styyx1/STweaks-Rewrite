@@ -423,6 +423,8 @@ float StaminaAttackCost::GetAttackCost(RE::ActorValueOwner *a_owner, RE::BGSAtta
         }
         float ret = GetWeightMult(actor, weight, av);
         RE::BGSEntryPoint::HandleEntryPoint(RE::BGSPerkEntry::EntryPoint::kModPowerAttackStamina, actor, weap, &ret);
+        if(actor->GetActorValue(RE::ActorValue::kStamina) < ret + 0.1 && !ActorUtil::HasEffectWithKeywordActive(actor,"StweaksExhaustion"))
+			MagicUtil::ApplySpell(actor, actor, Forms::FormLoader::exhaustion_spell);
         return ret;
     }
 }
@@ -731,8 +733,8 @@ void DamageOut::ApplyPerkEntryAttack(RE::BGSPerkEntry::EntryPoint a_entry, RE::A
 
         float opp_mod = GetOpportunityModifier(actor, attacker, false);
         damage *= opp_mod;
-
-        if (Config::Settings::show_opp_notif.GetValue() && opp_mod > 1.0f)
+        bool isPl = actor && actor->IsPlayerRef();
+        if (Config::Settings::show_opp_notif.GetValue() && opp_mod > 1.0f  && isPl)
         {
             const auto crit_message = std::format("Critical Strike for {:.1f} x Damage", opp_mod);
             RE::DebugNotification(crit_message.c_str(),
