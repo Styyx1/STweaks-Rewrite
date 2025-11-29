@@ -59,7 +59,7 @@ void ChangeOpportunityModifier(STATIC_ARGS, int opportunityType, float modifier)
         return;
     }
     Hooks::OppModi::OpportunityModifiers[opportunityType] = modifier;
-    REX::INFO("Changed Opportunity Type({}) Modifier to: {}", opportunityType, modifier);
+    REX::DEBUG("Changed Opportunity Type({}) Modifier to: {}", opportunityType, modifier);
 }
 float GetOpportunityModifier(STATIC_ARGS, int opportunityType)
 {

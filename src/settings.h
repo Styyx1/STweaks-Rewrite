@@ -145,13 +145,13 @@ static inline void LoadTallGrass(const std::string &configFilePath)
         for (const auto &str : j["TallGrass"])
         {
             const std::string &formStr = str.get<std::string>();
-            REX::INFO("Loading Tall Grass: {}", formStr);
+            REX::DEBUG("Loading Tall Grass: {}", formStr);
 
             RE::TESForm *form = GetFormFromString(formStr);
             if (form && form->GetFormType() == RE::FormType::LandTexture)
             {
                 Sets::land_textures.insert(form->As<RE::TESLandTexture>());
-                REX::INFO("loaded {} as land texture", std::string(editorID::get_editorID(form)));
+                REX::DEBUG("loaded {} as land texture", std::string(editorID::get_editorID(form)));
             }
             else
             {
@@ -160,7 +160,7 @@ static inline void LoadTallGrass(const std::string &configFilePath)
         }
     }
 
-    REX::INFO("Loaded {} land textures from {}.", Sets::land_textures.size(), configFilePath);
+    REX::DEBUG("Loaded {} land textures from {}.", Sets::land_textures.size(), configFilePath);
 }
 
 static inline void LoadExceptionWeapons(const std::string &configFilePath)
@@ -187,7 +187,7 @@ static inline void LoadExceptionWeapons(const std::string &configFilePath)
             if (form && form->GetFormType() == RE::FormType::Weapon)
             {
                 Sets::weapon_exceptions.insert(form->As<RE::TESObjectWEAP>());
-                REX::INFO("loaded {} as exception", form->GetName());
+                REX::DEBUG("loaded {} as exception", form->GetName());
             }
             else
             {
@@ -196,7 +196,7 @@ static inline void LoadExceptionWeapons(const std::string &configFilePath)
         }
     }
 
-    REX::INFO("Loaded {} weapons from {}.", Sets::weapon_exceptions.size(), configFilePath);
+    REX::DEBUG("Loaded {} weapons from {}.", Sets::weapon_exceptions.size(), configFilePath);
 }
 
 static void LoadJson()
@@ -207,16 +207,16 @@ static void LoadJson()
 
 inline static bool IsQuestWeaponException(RE::TESObjectWEAP *form)
 {
-    REX::INFO("checking exceptions");
+    REX::DEBUG("checking exceptions");
     if (Sets::weapon_exceptions.empty())
-        REX::INFO("weapon exceptions is empty");
+        REX::DEBUG("weapon exceptions is empty");
 
     return form && Sets::weapon_exceptions.contains(form);
 }
 inline static bool IsTallGrass(RE::TESLandTexture *form)
 {
     if (Sets::land_textures.empty())
-        REX::INFO("land textures is empty");
+        REX::DEBUG("land textures is empty");
     return form && Sets::land_textures.contains(form);
 }
 } // namespace Exceptions

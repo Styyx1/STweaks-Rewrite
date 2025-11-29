@@ -138,6 +138,10 @@ float JumpHeight::JumpHeightGetScale(RE::TESObjectREFR *refr)
     {
         return scale;
     }
+    if(actor->IsPlayerRef() && actor->As<RE::PlayerCharacter>()->IsGodMode())
+    {
+        return scale;
+	}
 
     float mass = 1.0f;
     if (Config::Settings::enable_mass_based_jump_height.GetValue())
@@ -299,6 +303,12 @@ bool PreventCast::CheckCast(RE::ActorMagicCaster *a_this, RE::MagicItem *a_spell
     }
     if (Config::Settings::enable_cast_stamina.GetValue())
     {
+
+        if (a_this->actor->IsPlayerRef() && a_this->actor->As<RE::PlayerCharacter>()->IsGodMode())
+        {
+            return _Hook7(a_this, a_spell, a_dualCast, a_effectStrength, a_reason, a_useBaseValueForCost);
+		}
+
         float cost = 5;
         float type_factor = Config::Settings::magic_stamina_cost_divider.GetValue();
 
@@ -375,6 +385,13 @@ float StaminaAttackCost::GetAttackCost(RE::ActorValueOwner *a_owner, RE::BGSAtta
         return _Hook12(a_owner, attack);
     }
     auto actor = skyrim_cast<RE::Actor *>(a_owner);
+
+    if (actor->IsPlayerRef() && actor->As<RE::PlayerCharacter>()->IsGodMode())
+    {
+        return _Hook12(a_owner, attack);
+    }
+
+
     if (attack->data.flags.any(RE::AttackData::AttackFlag::kBashAttack))
     {
         auto weapon = Utility::getWieldingWeapon(actor);
@@ -864,7 +881,7 @@ static void ArgumentDump(RE::Actor *a_this, RE::Actor *target, std::int32_t &sco
 {
     auto this_name = a_this ? a_this->GetName() : "null";
     auto targ_name = target->GetName();
-    REX::INFO("argument dump: a_this: {}, target: {}, "
+    REX::DEBUG("argument dump: a_this: {}, target: {}, "
               "score: {}, spotted: {}, hasLOS: {}, reason: "
               "{}, soundLvl: {}, unk8: {}, unk9: {}",
               this_name, targ_name, score, spotted, hasLOS, reason, soundLvl, unk8, unk9);
@@ -883,7 +900,7 @@ void Detection::DoCalculateDetection(RE::Actor *a_this, RE::Actor *target, std::
         if (!hasPerk)
         {
             target->AddPerk(perk);
-            REX::INFO("added {} to {}", perk->GetName(), target->GetName());
+            REX::DEBUG("added {} to {}", perk->GetName(), target->GetName());
         }
         return;
     }
@@ -907,7 +924,7 @@ inline bool Detection::IsStandingInTallGrass(RE::Actor *target)
     if (!landscapeTexture)
         return false;
     // const auto edid = editorID::get_editorID(landscapeTexture);
-    //  REX::INFO("current landscape texture is: {}", edid);
+    //  REX::DEBUG("current landscape texture is: {}", edid);
     if (Config::Exceptions::IsTallGrass(landscapeTexture))
     {
         return true;

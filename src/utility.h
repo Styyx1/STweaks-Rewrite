@@ -451,7 +451,7 @@ public:
                 ApplySpell(a_actor, a_actor, curse_to_add);
                 Curses::active_curses[a_actor] = curse_to_add;
                 curse_swap_timers[a_actor].Start();
-                REX::INFO("Applied curse {} to {}", curse_to_add->GetName(), a_actor->GetName());
+                REX::DEBUG("Applied curse {} to {}", curse_to_add->GetName(), a_actor->GetName());
             }
             else {
                 REX::WARN("Failed to apply curse: selected spell was null");
@@ -465,7 +465,7 @@ public:
             if (it != active_curses.end() && it->second) {
                 a_actor->RemoveSpell(it->second);
                 active_curses.erase(it);
-                REX::INFO("{}'s curse has been cleansed", a_actor->GetName());
+                REX::DEBUG("{}'s curse has been cleansed", a_actor->GetName());
             }
         }
         static void SwapCurse(RE::Actor* actor, RE::SpellItem* newCurse)
@@ -483,7 +483,7 @@ public:
             // Apply the new curse
             Utility::ApplySpell(actor, actor, newCurse);
             active_curses[actor] = newCurse;
-            REX::INFO("{} has been cursed with {}", actor->GetName(), newCurse->GetName());
+            REX::DEBUG("{} has been cursed with {}", actor->GetName(), newCurse->GetName());
         }
 
         inline static void PopulateActiveCursesAfterLoad(RE::Actor* a_actor)
