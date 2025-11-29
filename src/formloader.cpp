@@ -1,5 +1,29 @@
 #include "formloader.h"
 
+void Forms::FormLoader::PopulateCurseList()
+{
+    curse_list.push_back(health_curse);
+    curse_list.push_back(stamina_curse);
+    curse_list.push_back(magicka_curse);
+    curse_list.push_back(silence_curse);
+    curse_list.push_back(melee_damage_curse);
+    curse_list.push_back(bow_damage_curse);
+    curse_list.push_back(jump_curse);
+}
+
+void Forms::FormLoader::AddFormListEntriesToCurseVector()
+{
+    
+    for (auto& form : curses_formlist->forms)
+    {
+        if (auto spell = form->As<RE::SpellItem>(); spell)
+        {
+            curse_list.push_back(spell);
+            REX::DEBUG("Added {} to spell allow vector", spell->GetName());
+        }
+	}
+}
+
 void Forms::FormLoader::LoadForms()
 {
     auto dh = RE::TESDataHandler::GetSingleton();
@@ -46,8 +70,11 @@ void Forms::FormLoader::LoadForms()
             spell_allow_list = dh->LookupForm<RE::BGSListForm>(Forms::FormConstants::spell_allow_list_ID,
                                                                Forms::FormConstants::diseases_name);
 
-            curse_list = {health_curse,       stamina_curse,    magicka_curse, silence_curse,
-                          melee_damage_curse, bow_damage_curse, jump_curse};
+			curses_formlist = dh->LookupForm<RE::BGSListForm>(Forms::FormConstants::curses_formlist_ID, Forms::FormConstants::diseases_name);
+
+
+            PopulateCurseList();
+			AddFormListEntriesToCurseVector();
 
             disease_mod_active = true;
         }

@@ -47,28 +47,7 @@ namespace Events
             auto& tick = disease_timers[defender];
             if (!tick.IsRunning() || tick.ElapsedSeconds() > 3.0f)
             {
-                if (Utility::ActiveEffectHasNewDiseaseKeyword(defender, Forms::FormConstants::diseases[0]))
-                {
-                    // storedHealth_disease = std::min(std::max(storedHealth_disease + 1.0f, 0.0f), 99.0f);
-                    float decrease_value = CalculatePenaltyAndStoreIt(defender, RE::ActorValue::kHealth, storedHealth_disease);
-                    REX::DEBUG("stored health disease is {}", storedHealth_disease);
-                    defender->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kHealth, -decrease_value);
-                }
-                if (Utility::ActiveEffectHasNewDiseaseKeyword(defender, Forms::FormConstants::diseases[1]))
-                {
-                    // storedStamina_disease = std::min(std::max(storedStamina_disease + 1.0f, 0.0f), 99.0f);
-                    float decrease_value_stam = CalculatePenaltyAndStoreIt(defender, RE::ActorValue::kStamina, storedStamina_disease);
-                    REX::DEBUG("stored stamina disease is {}", storedStamina_disease);
-                    defender->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kStamina, -decrease_value_stam);
-                }
-                if (Utility::ActiveEffectHasNewDiseaseKeyword(defender, Forms::FormConstants::diseases[2]))
-                {
-
-                    // storedMagicka_disease = std::min(std::max(storedMagicka_disease + 1.0f, 0.0f), 99.0f);
-                    float decrease_value_mag = CalculatePenaltyAndStoreIt(defender, RE::ActorValue::kMagicka, storedMagicka_disease);
-                    REX::DEBUG("stored magicka disease is {}", storedMagicka_disease);
-                    defender->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMagicka, -decrease_value_mag);
-                }
+				ManageCurse(defender);
                 tick.Reset();
                 tick.Start();
             }
@@ -108,6 +87,31 @@ namespace Events
     float HitEventHandler::GetMaxActorValue(RE::Actor* a_actor, RE::ActorValue a_av)
     {
         return a_actor->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kTemporary, a_av) + a_actor->GetPermanentActorValue(a_av);
+    }
+    void HitEventHandler::ManageCurse(RE::Actor* defender)
+    {
+        if (Utility::ActiveEffectHasNewDiseaseKeyword(defender, Forms::FormConstants::diseases[0]))
+        {
+            // storedHealth_disease = std::min(std::max(storedHealth_disease + 1.0f, 0.0f), 99.0f);
+            float decrease_value = CalculatePenaltyAndStoreIt(defender, RE::ActorValue::kHealth, storedHealth_disease);
+            REX::DEBUG("stored health disease is {}", storedHealth_disease);
+            defender->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kHealth, -decrease_value);
+        }
+        if (Utility::ActiveEffectHasNewDiseaseKeyword(defender, Forms::FormConstants::diseases[1]))
+        {
+            // storedStamina_disease = std::min(std::max(storedStamina_disease + 1.0f, 0.0f), 99.0f);
+            float decrease_value_stam = CalculatePenaltyAndStoreIt(defender, RE::ActorValue::kStamina, storedStamina_disease);
+            REX::DEBUG("stored stamina disease is {}", storedStamina_disease);
+            defender->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kStamina, -decrease_value_stam);
+        }
+        if (Utility::ActiveEffectHasNewDiseaseKeyword(defender, Forms::FormConstants::diseases[2]))
+        {
+
+            // storedMagicka_disease = std::min(std::max(storedMagicka_disease + 1.0f, 0.0f), 99.0f);
+            float decrease_value_mag = CalculatePenaltyAndStoreIt(defender, RE::ActorValue::kMagicka, storedMagicka_disease);
+            REX::DEBUG("stored magicka disease is {}", storedMagicka_disease);
+            defender->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMagicka, -decrease_value_mag);
+        }
     }
     void RegisterEvents()
     {

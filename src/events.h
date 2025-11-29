@@ -31,6 +31,8 @@ namespace Events
             REL::Relocation<func_t> func{ REL::ID(38483) };
             return func(a, av);
         }
+    private: 
+        void ManageCurse(RE::Actor* defender);
 
     };
 
