@@ -138,10 +138,10 @@ float JumpHeight::JumpHeightGetScale(RE::TESObjectREFR *refr)
     {
         return scale;
     }
-    if(actor->IsPlayerRef() && actor->As<RE::PlayerCharacter>()->IsGodMode())
+    if (actor->IsPlayerRef() && actor->As<RE::PlayerCharacter>()->IsGodMode())
     {
         return scale;
-	}
+    }
 
     float mass = 1.0f;
     if (Config::Settings::enable_mass_based_jump_height.GetValue())
@@ -307,7 +307,7 @@ bool PreventCast::CheckCast(RE::ActorMagicCaster *a_this, RE::MagicItem *a_spell
         if (a_this->actor->IsPlayerRef() && a_this->actor->As<RE::PlayerCharacter>()->IsGodMode())
         {
             return _Hook7(a_this, a_spell, a_dualCast, a_effectStrength, a_reason, a_useBaseValueForCost);
-		}
+        }
 
         float cost = 5;
         float type_factor = Config::Settings::magic_stamina_cost_divider.GetValue();
@@ -391,7 +391,6 @@ float StaminaAttackCost::GetAttackCost(RE::ActorValueOwner *a_owner, RE::BGSAtta
         return _Hook12(a_owner, attack);
     }
 
-
     if (attack->data.flags.any(RE::AttackData::AttackFlag::kBashAttack))
     {
         auto weapon = Utility::getWieldingWeapon(actor);
@@ -440,8 +439,10 @@ float StaminaAttackCost::GetAttackCost(RE::ActorValueOwner *a_owner, RE::BGSAtta
         }
         float ret = GetWeightMult(actor, weight, av);
         RE::BGSEntryPoint::HandleEntryPoint(RE::BGSPerkEntry::EntryPoint::kModPowerAttackStamina, actor, weap, &ret);
-        if(actor->GetActorValue(RE::ActorValue::kStamina) < ret + 0.1 && !ActorUtil::HasEffectWithKeywordActive(actor,"StweaksExhaustion"))
-			MagicUtil::ApplySpell(actor, actor, Forms::FormLoader::exhaustion_spell);
+        bool useEx = Config::Settings::use_exhaustion.GetValue();
+        if (actor->GetActorValue(RE::ActorValue::kStamina) < ret + 0.1 &&
+            !ActorUtil::HasEffectWithKeywordActive(actor, "StweaksExhaustion") && useEx)
+            MagicUtil::ApplySpell(actor, actor, Forms::FormLoader::exhaustion_spell);
         return ret;
     }
 }
@@ -583,9 +584,9 @@ void Hooks::SpellCap::ApplyPerkEntrySpellMag(RE::BGSPerkEntry::EntryPoint a_entr
     bool detri = av_effect->IsDetrimental();
     if (!detri)
         return;
-
+    bool useRange = Config::Settings::enable_damage_ranges.GetValue();
     if (auto damage_ranges = Utility::GetRandomFloat(Utility::CalcPerc(Settings::magic_lower_range.GetValue(), false),
-                                                     Utility::CalcPerc(Settings::magic_upper_range.GetValue(), true)))
+                                                     Utility::CalcPerc(Settings::magic_upper_range.GetValue(), true)) && useRange)
     {
         damage *= damage_ranges;
     }
@@ -604,19 +605,20 @@ void Hooks::SpellCap::ApplyPerkEntrySpellMag(RE::BGSPerkEntry::EntryPoint a_entr
 
     if (aggressor_level <= own_level + 10)
     {
-        if (Config::Settings::one_shot_protection.GetValue()) {
+        if (Config::Settings::one_shot_protection.GetValue())
+        {
             if (damage > health && curr_health >= health * 0.99)
                 damage = health * 0.75;
         }
-        
-        if (Config::Settings::enable_damage_caps.GetValue()) {
+
+        if (Config::Settings::enable_damage_caps.GetValue())
+        {
             float cap = original_damage * 5;
             if (damage > cap)
             {
                 damage = cap;
             }
         }
-        
     }
 }
 void DamageOut::ApplyPerkEntryAttack(RE::BGSPerkEntry::EntryPoint a_entry, RE::Actor *attacker,
@@ -721,7 +723,7 @@ void DamageOut::ApplyPerkEntryAttack(RE::BGSPerkEntry::EntryPoint a_entry, RE::A
 
         auto own_level = actor->GetLevel();
         auto aggressor_level = attacker->GetLevel();
-        
+
         bool one_shot_prot = Config::Settings::one_shot_protection.GetValue();
 
         if (aggressor_level <= own_level + 10)
@@ -751,7 +753,7 @@ void DamageOut::ApplyPerkEntryAttack(RE::BGSPerkEntry::EntryPoint a_entry, RE::A
         float opp_mod = GetOpportunityModifier(actor, attacker, false);
         damage *= opp_mod;
         bool isPl = actor && actor->IsPlayerRef();
-        if (Config::Settings::show_opp_notif.GetValue() && opp_mod > 1.0f  && isPl)
+        if (Config::Settings::show_opp_notif.GetValue() && opp_mod > 1.0f && isPl)
         {
             const auto crit_message = std::format("Critical Strike for {:.1f} x Damage", opp_mod);
             RE::DebugNotification(crit_message.c_str(),
@@ -765,7 +767,8 @@ void DamageOut::ApplyPerkEntryAttack(RE::BGSPerkEntry::EntryPoint a_entry, RE::A
     auto power_attack = attacker ? attacker->IsPowerAttacking() : false;
     uint16_t dmg_cap = weapon && !weapon->IsHandToHandMelee() ? weapon->attackDamage * 5 : 200;
     bool cap_dmg = Config::Settings::enable_damage_caps.GetValue();
-    if (cap_dmg) {
+    if (cap_dmg)
+    {
         if (power_attack)
         {
             dmg_cap *= 2;
@@ -775,7 +778,6 @@ void DamageOut::ApplyPerkEntryAttack(RE::BGSPerkEntry::EntryPoint a_entry, RE::A
             damage = dmg_cap;
         }
     }
-    
 }
 float DamageOut::GetOpportunityModifier(RE::Actor *victim, RE::Actor *attacker, bool notification)
 {
@@ -825,8 +827,10 @@ void CastingSpeed::CasterUpdate(RE::ActorMagicCaster *a_this, float a_delta)
         {
 
             auto spell = a_this->currentSpell->As<RE::SpellItem>();
-            if (MagicUtil::IsSpellPlayable(spell) && !MagicUtil::IsPermanent(spell)) {
-                if (spell->GetCastingType() == RE::MagicSystem::CastingType::kConcentration || spell->GetSpellType() == RE::MagicSystem::SpellType::kVoicePower)
+            if (MagicUtil::IsSpellPlayable(spell) && !MagicUtil::IsPermanent(spell))
+            {
+                if (spell->GetCastingType() == RE::MagicSystem::CastingType::kConcentration ||
+                    spell->GetSpellType() == RE::MagicSystem::SpellType::kVoicePower)
                 {
                     return _Hook25(a_this, a_delta);
                 }
@@ -835,9 +839,6 @@ void CastingSpeed::CasterUpdate(RE::ActorMagicCaster *a_this, float a_delta)
                 return _Hook25(a_this, a_delta * new_time);
             }
             return _Hook25(a_this, a_delta);
-            
-
-           
         }
     }
     return _Hook25(a_this, a_delta);
@@ -882,9 +883,9 @@ static void ArgumentDump(RE::Actor *a_this, RE::Actor *target, std::int32_t &sco
     auto this_name = a_this ? a_this->GetName() : "null";
     auto targ_name = target->GetName();
     REX::DEBUG("argument dump: a_this: {}, target: {}, "
-              "score: {}, spotted: {}, hasLOS: {}, reason: "
-              "{}, soundLvl: {}, unk8: {}, unk9: {}",
-              this_name, targ_name, score, spotted, hasLOS, reason, soundLvl, unk8, unk9);
+               "score: {}, spotted: {}, hasLOS: {}, reason: "
+               "{}, soundLvl: {}, unk8: {}, unk9: {}",
+               this_name, targ_name, score, spotted, hasLOS, reason, soundLvl, unk8, unk9);
 };
 
 void Detection::DoCalculateDetection(RE::Actor *a_this, RE::Actor *target, std::int32_t &score, bool &spotted,

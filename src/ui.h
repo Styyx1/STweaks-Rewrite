@@ -194,6 +194,7 @@ inline str auto_attributes = "Automatic Attributes";
 inline str mass_equipment = "Equipment affects Mass";
 inline str tall_grass_sneak = "Tall Grass Enhances Sneak";
 inline str attacks_of_opp = "Attacks of Opportunity";
+inline str use_exhaustion = "Enable Exhaustion System";
 
 inline str save_settings = FontAwesome::UnicodeToUtf8(0xf0c7) + " Save Settings";
 inline str restore_defaults = FontAwesome::UnicodeToUtf8(0xf0e2) + " Reset Settings";
@@ -229,6 +230,7 @@ inline str attacks_of_opp =
     "spell deals 2.5 times damage\nthey sleep or sit deals 4 times damage, "
     "\nthey are power attacking or staggered deals 1.2 times damage "
     "\nattacking from behind deals 1.3 times damage";
+inline str use_exhaustion = "Enables the exhaustion system which applies negative effects if the player runs out of stamina with attacks";
 
 } // namespace Tooltip
 namespace vars
@@ -250,6 +252,7 @@ inline bool auto_attributes;
 inline bool mass_equipment;
 inline bool tall_grass_sneak;
 inline bool attacks_of_opp;
+inline bool use_exhaustion;
 } // namespace vars
 } // namespace Toggles
 

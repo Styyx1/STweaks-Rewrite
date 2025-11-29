@@ -54,6 +54,7 @@ void RestoreFromSettings(bool settings, bool toggles, bool attributes)
         mass_equipment = set::enable_mass_equip_changes.GetValue();
         tall_grass_sneak = set::tall_grass_sneak.GetValue();
         attacks_of_opp = set::attacks_of_opp.GetValue();
+		use_exhaustion = set::use_exhaustion.GetValue();
     }
     if (attributes)
     {
@@ -124,6 +125,7 @@ void RestoreDefaults(bool settings, bool toggles, bool attributes)
         mass_equipment = true;
         tall_grass_sneak = true;
         attacks_of_opp = true;
+		use_exhaustion = true;
 
         set::enable_damage_ranges.SetValue(damage_ranges);
         set::enable_sneak_jump_limit.SetValue(sneak_jump_limit);
@@ -142,6 +144,7 @@ void RestoreDefaults(bool settings, bool toggles, bool attributes)
         set::enable_mass_equip_changes.SetValue(mass_equipment);
         set::tall_grass_sneak.SetValue(tall_grass_sneak);
         set::attacks_of_opp.SetValue(attacks_of_opp);
+		set::use_exhaustion.SetValue(use_exhaustion);
     }
 
     if (attributes)
@@ -427,11 +430,17 @@ void __stdcall RenderToggles()
     ImGui::SameLine();
     HelpMarker(Tooltip::tall_grass_sneak.c_str());
 
-    // === Attacks of Opportunity ===
+    // === Attacks of Opportunity & Exhaustion===
     if (ImGui::Checkbox(Label::attacks_of_opp.c_str(), &vars::attacks_of_opp))
       Config::Settings::attacks_of_opp.SetValue(vars::attacks_of_opp);
     ImGui::SameLine();
     HelpMarker(Tooltip::attacks_of_opp.c_str());
+
+	ImGui::SameLine();
+	if (ImGui::Checkbox(Label::use_exhaustion.c_str(), &vars::use_exhaustion))
+		Config::Settings::use_exhaustion.SetValue(vars::use_exhaustion);
+	ImGui::SameLine();
+	HelpMarker(Tooltip::use_exhaustion.c_str());
 
 
     // === Save / Reset System ===

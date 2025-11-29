@@ -43,12 +43,10 @@ struct Settings : REX::Singleton<Settings>
     static inline REX::TOML::Bool enable_mass_equip_changes{TOGGLES, "bEnableMassChangesWithEquipment", true};
     static inline REX::TOML::Bool jump_stamina_cost{TOGGLES, "bEnableJumpStaminaCost", true};
     static inline REX::TOML::Bool tall_grass_sneak{TOGGLES, "bEnableTallGrassEnhancesSneak", true};
-    static inline REX::TOML::Bool attacks_of_opp{
-        TOGGLES, "bEnableAttacksOfOpportunity", true};
-    static inline REX::TOML::Bool show_opp_notif{
-        TOGGLES, "bEnableOpportunityNotifications", true};
-    static inline REX::TOML::Bool play_opp_sound{
-        TOGGLES, "bEnableOpportunitySound", true};
+    static inline REX::TOML::Bool attacks_of_opp{TOGGLES, "bEnableAttacksOfOpportunity", true};
+    static inline REX::TOML::Bool show_opp_notif{TOGGLES, "bEnableOpportunityNotifications", true};
+    static inline REX::TOML::Bool play_opp_sound{TOGGLES, "bEnableOpportunitySound", true};
+	static inline REX::TOML::Bool use_exhaustion{ TOGGLES, "bEnableExhaustionSystem", true };
 
     static inline REX::TOML::I32 vanilla_attribute_leveling{SETTINGS, "iVanillaAttributesOnLevelUp", 5};
     static inline REX::TOML::F32 sneak_height_modifier{SETTINGS, "fSneakJumpModifier", 0.55f};
