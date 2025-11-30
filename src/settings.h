@@ -10,8 +10,8 @@ inline constexpr std::string_view TOML_PATH_DEFAULT = "Data/SKSE/Plugins/stweaks
 inline constexpr std::string_view TOML_PATH_CUSTOM = "Data/SKSE/Plugins/stweaks_custom.toml";
 inline constexpr std::string_view JSON_PATH = "Data/SKSE/Plugins/stweaks_exceptions.json";
 inline constexpr std::string_view JSON_PATH_LAND = "Data/SKSE/Plugins/stweaks_tallGrass.json";
-inline constexpr std::string TOGGLES = "Toggles";
-inline constexpr std::string SETTINGS = "SettingValues";
+inline constexpr std::string_view TOGGLES = "Toggles";
+inline constexpr std::string_view SETTINGS = "SettingValues";
 } // namespace SettingConstants
 
 using namespace SettingConstants;

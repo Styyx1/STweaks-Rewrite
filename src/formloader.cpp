@@ -19,7 +19,7 @@ void Forms::FormLoader::AddFormListEntriesToCurseVector()
         if (auto spell = form->As<RE::SpellItem>(); spell)
         {
             curse_list.push_back(spell);
-            REX::DEBUG("Added {} to spell allow vector", spell->GetName());
+            REX::DEBUG("Added {} to curse vector", spell->GetName());
         }
 	}
 }

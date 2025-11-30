@@ -47,6 +47,8 @@ class MainUpdate
     static void MainUpdateHook(float a_delta);
     static bool HasRangedWeaponDrawn(RE::PlayerCharacter *player);
     static float GetCarryPercentage(RE::PlayerCharacter *player);
+	static void ManageSneakStamina(RE::PlayerCharacter* player);
+    static void ManageAttributeGrowth(RE::PlayerCharacter* player);
     static inline TimerUtil::Timer av_timer;
     static inline float pl_mass;
     static inline constexpr std::array restricted_menu_names{

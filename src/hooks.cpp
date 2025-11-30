@@ -7,6 +7,8 @@ using namespace Config;
 
 bool wasEnraged = false;
 
+#pragma region AttributeGrowth & SneakStamina
+
 void MainUpdate::MainUpdateHook(float a_delta)
 {
     auto *player = Cache::GetPlayerSingleton();
@@ -26,39 +28,13 @@ void MainUpdate::MainUpdateHook(float a_delta)
     }
     else
     {
-        if (player->IsGodMode())
+        switch (frameCount)
         {
-            if (player->HasSpell(Forms::FormLoader::sneak_stamina_spell))
-                player->RemoveSpell(Forms::FormLoader::sneak_stamina_spell);
-        }
-        else
-        {
-            switch (frameCount)
-            {
-            case 1:
-                if (player->IsSneaking() && Utility::IsMoving(player) && Settings::enable_sneak_stamina.GetValue() ||
-                    player->IsSneaking() && HasRangedWeaponDrawn(player) && Settings::enable_sneak_stamina.GetValue())
-                {
-                    if (!Utility::HasSpell(player, Forms::FormLoader::sneak_stamina_spell))
-                    {
-                        player->AddSpell(Forms::FormLoader::sneak_stamina_spell);
-                    }
-                    if (player->GetActorValue(RE::ActorValue::kStamina) <= 5 &&
-                        player->GetActorValue(RE::ActorValue::kStamina) > 0 && HasRangedWeaponDrawn(player))
-                    {
-                        player->actorState2.weaponState = RE::WEAPON_STATE::kWantToSheathe;
-                        player->DrawWeaponMagicHands(false);
-                    }
-                }
-                else if (Utility::HasSpell(player, Forms::FormLoader::sneak_stamina_spell))
-                {
-                    player->RemoveSpell(Forms::FormLoader::sneak_stamina_spell);
-                }
-
-                break;
-            default:
-                break;
-            }
+        case 1:
+            ManageSneakStamina(player);
+            break;
+        default:
+            break;
         }
     }
     frameCount++;
@@ -66,31 +42,7 @@ void MainUpdate::MainUpdateHook(float a_delta)
     if (av_timer.ElapsedSeconds() >= 45)
     {
         av_timer.Reset();
-
-        float perc_health = GetActorValuePercentage(player, RE::ActorValue::kHealth);
-        float perc_stamina = GetActorValuePercentage(player, RE::ActorValue::kStamina);
-        float perc_magicka = GetActorValuePercentage(player, RE::ActorValue::kMagicka);
-        float perc_carry = GetCarryPercentage(player);
-
-        auto *av_store = AVStorage::GetSingleton();
-        if (perc_health > 0.4 && perc_health < 0.95)
-            av_store->attribute_xp[RE::ActorValue::kHealth] += 1;
-        if (perc_stamina > 0.4 && perc_stamina < 0.95)
-            av_store->attribute_xp[RE::ActorValue::kStamina] += 1;
-        if (perc_magicka > 0.4 && perc_magicka < 0.95)
-            av_store->attribute_xp[RE::ActorValue::kMagicka] += 1;
-        if (perc_carry > 0.4 && perc_carry < 0.95)
-            av_store->attribute_xp[RE::ActorValue::kCarryWeight] += 1;
-
-        auto it = av_store->attribute_xp.begin();
-        for (it; it != av_store->attribute_xp.end(); ++it)
-        {
-            if (it->second >= 100)
-            {
-                player->SetBaseActorValue(it->first, player->GetBaseActorValue(it->first) + 1);
-                it->second -= 100;
-            }
-        }
+        ManageAttributeGrowth(player);
     }
 
     if (!av_timer.IsRunning() && !MiscUtil::IsAnyOfMenuOpen(Cache::GetUISingleton(), a_menuNames))
@@ -129,6 +81,70 @@ float MainUpdate::GetCarryPercentage(RE::PlayerCharacter *player)
            player->GetActorValue(RE::ActorValue::kCarryWeight);
 }
 
+void MainUpdate::ManageSneakStamina(RE::PlayerCharacter* player)
+{
+
+    if (player->IsGodMode())
+    {
+        if (player->HasSpell(Forms::FormLoader::sneak_stamina_spell))
+            player->RemoveSpell(Forms::FormLoader::sneak_stamina_spell);
+
+        return;
+
+    }    
+
+	bool isSneakSetting = Settings::enable_sneak_stamina.GetValue();
+    bool shouldDrain = player->IsSneaking() && (Utility::IsMoving(player) || HasRangedWeaponDrawn(player));
+
+    if (isSneakSetting && shouldDrain)
+    {
+        if (!Utility::HasSpell(player, Forms::FormLoader::sneak_stamina_spell))
+        {
+            player->AddSpell(Forms::FormLoader::sneak_stamina_spell);
+        }
+        if (player->GetActorValue(RE::ActorValue::kStamina) <= 5 &&
+            player->GetActorValue(RE::ActorValue::kStamina) > 0 && HasRangedWeaponDrawn(player))
+        {
+            player->actorState2.weaponState = RE::WEAPON_STATE::kWantToSheathe;
+            player->DrawWeaponMagicHands(false);
+        }
+    }
+    else if (Utility::HasSpell(player, Forms::FormLoader::sneak_stamina_spell))
+    {
+        player->RemoveSpell(Forms::FormLoader::sneak_stamina_spell);
+    }
+}
+
+void MainUpdate::ManageAttributeGrowth(RE::PlayerCharacter* player)
+{
+    float perc_health = GetActorValuePercentage(player, RE::ActorValue::kHealth);
+    float perc_stamina = GetActorValuePercentage(player, RE::ActorValue::kStamina);
+    float perc_magicka = GetActorValuePercentage(player, RE::ActorValue::kMagicka);
+    float perc_carry = GetCarryPercentage(player);
+
+    auto* av_store = AVStorage::GetSingleton();
+    if (perc_health > 0.4 && perc_health < 0.95)
+        av_store->attribute_xp[RE::ActorValue::kHealth] += 1;
+    if (perc_stamina > 0.4 && perc_stamina < 0.95)
+        av_store->attribute_xp[RE::ActorValue::kStamina] += 1;
+    if (perc_magicka > 0.4 && perc_magicka < 0.95)
+        av_store->attribute_xp[RE::ActorValue::kMagicka] += 1;
+    if (perc_carry > 0.4 && perc_carry < 0.95)
+        av_store->attribute_xp[RE::ActorValue::kCarryWeight] += 1;
+
+    auto it = av_store->attribute_xp.begin();
+    for (it; it != av_store->attribute_xp.end(); ++it)
+    {
+        if (it->second >= 100)
+        {
+            player->SetBaseActorValue(it->first, player->GetBaseActorValue(it->first) + 1);
+            it->second -= 100;
+        }
+    }
+}
+#pragma endregion
+
+#pragma region Jump
 float JumpHeight::JumpHeightGetScale(RE::TESObjectREFR *refr)
 {
     float scale = refr->GetScale();
@@ -180,7 +196,8 @@ float JumpHeight::JumpHeightGetScale(RE::TESObjectREFR *refr)
 
     return scale *= ju_modifier * curse_modi;
 }
-
+#pragma endregion
+#pragma region CurseEnd
 void OnEffectEndHook::OnEffectEnd(RE::ScriptEffect *a_this)
 {
     _Hook5(a_this);
@@ -224,7 +241,8 @@ void OnEffectEndHook::OnEffectEnd(RE::ScriptEffect *a_this)
         }
     }
 }
-
+#pragma endregion
+#pragma region NPCFade
 void NPCFade::ActorUpdate(RE::Character *a_actor, float a_delta)
 {
 
@@ -262,7 +280,8 @@ void NPCFade::ActorUpdate(RE::Character *a_actor, float a_delta)
 
     _Hook6(a_actor, a_delta);
 }
-
+#pragma endregion
+#pragma region PreventCast
 bool PreventCast::CheckCast(RE::ActorMagicCaster *a_this, RE::MagicItem *a_spell, bool a_dualCast,
                             float *a_effectStrength, RE::MagicSystem::CannotCastReason *a_reason,
                             bool a_useBaseValueForCost)
@@ -350,7 +369,8 @@ void PreventCast::InterruptActor(RE::Actor *a_actor, RE::MagicSystem::CastingSou
         break;
     }
 }
-
+#pragma endregion
+#pragma region PlayerPotionUsed
 void PlayerPotionUsed::PlayerUsePotion(uint64_t self, RE::AlchemyItem *alch, uint64_t extralist)
 {
     if (alch->HasKeywordString(Forms::FormConstants::cure_keyword))
@@ -377,7 +397,8 @@ float HighGravityArrows::GetGravityArrow(RE::Projectile *a_this)
     }
     return _Hook9(a_this);
 }
-
+#pragma endregion
+#pragma region StaminaAttackCost
 float StaminaAttackCost::GetAttackCost(RE::ActorValueOwner *a_owner, RE::BGSAttackData *attack)
 {
     if (!Config::Settings::enable_attack_stamina.GetValue())
@@ -466,7 +487,8 @@ float StaminaAttackCost::GetWeightMult(RE::Actor *actor, float weight, RE::Actor
     cost = std::clamp(cost, MIN_COST, MAX_COST);
     return cost;
 }
-
+#pragma endregion
+#pragma region LoadWithResistance & Adjust Level & Mass System  & StaminaRegenAdjuster
 RE::NiAVObject *LoadWithResistance::LoadActor(RE::Actor *a_this, bool arg)
 {
 
@@ -552,7 +574,8 @@ float StaminaRegenAdjuster::GetStamBase(RE::Character *a_char, RE::ActorValue a_
 
     return _Hook21(a_char, a_av);
 }
-
+#pragma endregion
+#pragma region Spell Damage & Weapon Damage
 void Hooks::SpellCap::ApplyPerkEntrySpellMag(RE::BGSPerkEntry::EntryPoint a_entry, RE::Actor *caster,
                                              RE::SpellItem *spell, RE::Actor *target, float &damage)
 {
@@ -843,6 +866,8 @@ void CastingSpeed::CasterUpdate(RE::ActorMagicCaster *a_this, float a_delta)
     }
     return _Hook25(a_this, a_delta);
 }
+#pragma endregion
+#pragma region EquipMassChanges & DetectionInTallGrass
 void EquipHandler::OnItemEquipped(RE::Actor *a_this, bool a_playAnim)
 {
 
@@ -947,5 +972,6 @@ inline bool IsSleepRelated(RE::SIT_SLEEP_STATE state)
         return false;
     }
 }
+#pragma endregion
 
 } // namespace Hooks
