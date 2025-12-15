@@ -1,14 +1,14 @@
 #include "hooks.h"
-
+#undef PlaySound
 namespace Hooks
 {
 
 using namespace Config;
 
-bool wasEnraged = false;
-
 #pragma region AttributeGrowth & SneakStamina
 
+// nullsub loop that runs while the game is paused as well, other than PlayerCharacter::Update for example
+// used to Manage Sneak Stamina spell and for Attribute Growth
 void MainUpdate::MainUpdateHook(float a_delta)
 {
     auto *player = Cache::GetPlayerSingleton();
@@ -59,7 +59,7 @@ void MainUpdate::MainUpdateHook(float a_delta)
 
     return _Hook1(a_delta);
 }
-
+// Check if the drawn weapon is a ranged one, including crossbows
 bool MainUpdate::HasRangedWeaponDrawn(RE::PlayerCharacter *player)
 {
     bool result = false;
@@ -74,13 +74,14 @@ bool MainUpdate::HasRangedWeaponDrawn(RE::PlayerCharacter *player)
     return result;
 }
 
+// Helper to calculate how many % of the carry weight is used
 float MainUpdate::GetCarryPercentage(RE::PlayerCharacter *player)
 {
 
     return player->GetActorValue(RE::ActorValue::kInventoryWeight) /
            player->GetActorValue(RE::ActorValue::kCarryWeight);
 }
-
+// Main function to handle stamina drain on sneaking. Inspired by Blade and Blunt but with the addition to make sneak archery less viable
 void MainUpdate::ManageSneakStamina(RE::PlayerCharacter* player)
 {
 
@@ -114,7 +115,7 @@ void MainUpdate::ManageSneakStamina(RE::PlayerCharacter* player)
         player->RemoveSpell(Forms::FormLoader::sneak_stamina_spell);
     }
 }
-
+//Function to increase attributes on usage. get attribute xp, if xp is above 100, get +1 to the attribute. No need to serialise the attribute gain cause the game does it
 void MainUpdate::ManageAttributeGrowth(RE::PlayerCharacter* player)
 {
     float perc_health = GetActorValuePercentage(player, RE::ActorValue::kHealth);
@@ -143,8 +144,8 @@ void MainUpdate::ManageAttributeGrowth(RE::PlayerCharacter* player)
     }
 }
 #pragma endregion
-
 #pragma region Jump
+//GetScale function inside the Jump function. used for mass jump, sneak jump, jump stamina and one of the curses
 float JumpHeight::JumpHeightGetScale(RE::TESObjectREFR *refr)
 {
     float scale = refr->GetScale();
@@ -154,23 +155,25 @@ float JumpHeight::JumpHeightGetScale(RE::TESObjectREFR *refr)
     {
         return scale;
     }
+    //early opt out for god-mode 
     if (actor->IsPlayerRef() && actor->As<RE::PlayerCharacter>()->IsGodMode())
     {
         return scale;
     }
-
+    // mass jump modifier. useful for requiem users or users who have the mass scaling from this mod active. higher mass = lower jump
     float mass = 1.0f;
     if (Config::Settings::enable_mass_based_jump_height.GetValue())
     {
         mass = actor->GetActorValue(RE::ActorValue::kMass);
     }
-
+    // modifier for sneak jump height
     if (actor->IsSneaking() && Settings::enable_sneak_jump_limit.GetValue())
     {
         scale *= Settings::sneak_height_modifier.GetValue();
     }
     float ju_modifier = (float)sqrt(1.0 / mass);
 
+    // curse modifier for the curse that halves jump height
     float curse_modi = 1.0f;
     if (Config::Settings::enable_diseases.GetValue())
     {
@@ -179,6 +182,7 @@ float JumpHeight::JumpHeightGetScale(RE::TESObjectREFR *refr)
             curse_modi = 0.5f;
         }
     }
+    //jump stamina cost. Not an ideal position for the prevention of jumping when out of stamina, but it does the trick for now
     if (Config::Settings::jump_stamina_cost.GetValue())
     {
         float min_cost = 10.0f;
@@ -198,11 +202,10 @@ float JumpHeight::JumpHeightGetScale(RE::TESObjectREFR *refr)
 }
 #pragma endregion
 #pragma region CurseEnd
+// Function to end curses and clean up what they did
 void OnEffectEndHook::OnEffectEnd(RE::ScriptEffect *a_this)
 {
     _Hook5(a_this);
-    if (!Config::Settings::enable_diseases.GetValue())
-        return;
 
     auto hitEv = Events::HitEventHandler::GetSingleton();
     if (a_this->target && a_this->GetBaseObject()->HasAnyKeywordByEditorID(Forms::FormConstants::diseases))
@@ -243,6 +246,7 @@ void OnEffectEndHook::OnEffectEnd(RE::ScriptEffect *a_this)
 }
 #pragma endregion
 #pragma region NPCFade
+// Actors Fade if they're a certain distance away from you. I made a similar feature for Stressful Darkness, but there it scales with stress
 void NPCFade::ActorUpdate(RE::Character *a_actor, float a_delta)
 {
 
@@ -262,9 +266,6 @@ void NPCFade::ActorUpdate(RE::Character *a_actor, float a_delta)
     float fade_range = distance_full_fade - distance_no_fade;
     float minAlpha = 0.05f;
 
-    auto difficulty_level = player->difficulty;
-    float difficultyMult = static_cast<float>(difficulty_level) / 5.0f;
-
     if (float distance = a_actor->GetDistance(player); distance >= distance_full_fade && a_actor->GetHighProcess() &&
                                                        a_actor->GetHighProcess()->lightLevel <= light_level_threshold)
     {
@@ -282,6 +283,7 @@ void NPCFade::ActorUpdate(RE::Character *a_actor, float a_delta)
 }
 #pragma endregion
 #pragma region PreventCast
+//Prevent casting without stamina and prevent casting if afflicted with the silence curse
 bool PreventCast::CheckCast(RE::ActorMagicCaster *a_this, RE::MagicItem *a_spell, bool a_dualCast,
                             float *a_effectStrength, RE::MagicSystem::CannotCastReason *a_reason,
                             bool a_useBaseValueForCost)
@@ -351,7 +353,7 @@ bool PreventCast::CheckCast(RE::ActorMagicCaster *a_this, RE::MagicItem *a_spell
 
     return _Hook7(a_this, a_spell, a_dualCast, a_effectStrength, a_reason, a_useBaseValueForCost);
 }
-
+// Credits: https://github.com/shad0wshayd3-TES5/BakaBloodMagic/blob/10aa95c56244aff3f1c78c5584968e8a9f827341/src/BloodMagic/Utils.h#L142
 void PreventCast::InterruptActor(RE::Actor *a_actor, RE::MagicSystem::CastingSource a_castingSource)
 {
     switch (a_castingSource)
@@ -371,6 +373,7 @@ void PreventCast::InterruptActor(RE::Actor *a_actor, RE::MagicSystem::CastingSou
 }
 #pragma endregion
 #pragma region PlayerPotionUsed
+// track usage of potion to see if a curse needs to be removed
 void PlayerPotionUsed::PlayerUsePotion(uint64_t self, RE::AlchemyItem *alch, uint64_t extralist)
 {
     if (alch->HasKeywordString(Forms::FormConstants::cure_keyword))
@@ -380,7 +383,7 @@ void PlayerPotionUsed::PlayerUsePotion(uint64_t self, RE::AlchemyItem *alch, uin
     }
     return _Hook8(self, alch, extralist);
 }
-
+//make arrows heavier with a curse
 float HighGravityArrows::GetGravityArrow(RE::Projectile *a_this)
 {
     if (!Config::Settings::enable_diseases.GetValue())
@@ -399,6 +402,8 @@ float HighGravityArrows::GetGravityArrow(RE::Projectile *a_this)
 }
 #pragma endregion
 #pragma region StaminaAttackCost
+//attack stamina cost. Scales with weapon weight and PowerAttackStaminaCost perk entry
+//also applies stamina exhaustion that lowers weapon damage and speed when you attack with too low stamina
 float StaminaAttackCost::GetAttackCost(RE::ActorValueOwner *a_owner, RE::BGSAttackData *attack)
 {
     if (!Config::Settings::enable_attack_stamina.GetValue())
@@ -467,6 +472,7 @@ float StaminaAttackCost::GetAttackCost(RE::ActorValueOwner *a_owner, RE::BGSAtta
         return ret;
     }
 }
+// get the weapon weight multiplier for stamina cost
 float StaminaAttackCost::GetWeightMult(RE::Actor *actor, float weight, RE::ActorValue av_to_use)
 {
     auto lvl = actor->GetActorValue(av_to_use);
@@ -489,12 +495,15 @@ float StaminaAttackCost::GetWeightMult(RE::Actor *actor, float weight, RE::Actor
 }
 #pragma endregion
 #pragma region LoadWithResistance & Adjust Level & Mass System  & StaminaRegenAdjuster
+// Load Actor hook
+// manages resistances to make magic early game a bit easier, sets their level to max 10 below yours, adds the mass system to npcs and adjusts npc's regen rate
 RE::NiAVObject *LoadWithResistance::LoadActor(RE::Actor *a_this, bool arg)
 {
 
     auto actor = _Hook13(a_this, arg);
     if (Config::Settings::enable_mass_equip_changes.GetValue())
     {
+        // mass actor value changes with inventory weight. It's not too reliable, but reliable enough
         auto curr_mass = ActorUtil::GetMassFromInventory(a_this);
         a_this->SetActorValue(RE::ActorValue::kMass, a_this->GetBaseActorValue(RE::ActorValue::kMass));
         float modi = a_this->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass);
@@ -511,6 +520,7 @@ RE::NiAVObject *LoadWithResistance::LoadActor(RE::Actor *a_this, bool arg)
         auto player_level = player->GetLevel();
         if (Config::Settings::enable_resist_changes.GetValue())
         {
+            //reduces the magic resistance for npcs early game
             if (player_level <= LEVEL_CAP && a_this->GetLevel() >= player_level &&
                 a_this->GetActorValue(RE::ActorValue::kResistMagic) >= 0)
             {
@@ -521,7 +531,7 @@ RE::NiAVObject *LoadWithResistance::LoadActor(RE::Actor *a_this, bool arg)
         }
         if (Config::Settings::level_up_low_levels.GetValue())
         {
-
+            //levels NPCs up to min 10 levels below yours so you don't encounter level 5 enemies at level 50
             auto npc_level = a_this->GetLevel();
             if (npc_level + 10 < player_level)
             {
@@ -536,6 +546,7 @@ RE::NiAVObject *LoadWithResistance::LoadPlayer(RE::Actor *a_this, bool arg)
     auto actor = _Hook14(a_this, arg);
     if (Config::Settings::enable_mass_equip_changes.GetValue())
     {
+        // Ties Mass Actor Value to inventory weight. only when the player is loaded. there's a function later on for inventory changes
         auto curr_mass = ActorUtil::GetMassFromInventory(a_this);
         a_this->SetActorValue(RE::ActorValue::kMass, a_this->GetBaseActorValue(RE::ActorValue::kMass));
         float modi = a_this->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass);
@@ -544,6 +555,12 @@ RE::NiAVObject *LoadWithResistance::LoadPlayer(RE::Actor *a_this, bool arg)
     }
     return actor;
 }
+// Stamina and magica regen is based on the max stamina in vanilla
+// this means the higher your stamina, the faster your regen which makes late game stamina regen too fast for attack stamina to have any impact
+// this function uses a flat base basically making the first few levels faster to regen and it falls off pretty quick afterward
+// should keep stamina an important resource to manage
+// same goes for magicka. 
+// it's not made for health cause health calcs aren't that simple, and i don't think it's as busted as the other 2
 float StaminaRegenAdjuster::GetStamBase(RE::Character *a_char, RE::ActorValue a_av)
 {
 
@@ -576,6 +593,9 @@ float StaminaRegenAdjuster::GetStamBase(RE::Character *a_char, RE::ActorValue a_
 }
 #pragma endregion
 #pragma region Spell Damage & Weapon Damage
+
+//damage calcs for Spells.
+//manages OneShot Protection, damage caps and damage randomisation
 void Hooks::SpellCap::ApplyPerkEntrySpellMag(RE::BGSPerkEntry::EntryPoint a_entry, RE::Actor *caster,
                                              RE::SpellItem *spell, RE::Actor *target, float &damage)
 {
@@ -619,7 +639,7 @@ void Hooks::SpellCap::ApplyPerkEntrySpellMag(RE::BGSPerkEntry::EntryPoint a_entr
     {
         return;
     }
-
+    //cap and one-shot protection
     auto health = ActorUtil::GetMaxHealth(target);
     auto curr_health = target->GetActorValue(RE::ActorValue::kHealth);
 
@@ -644,6 +664,7 @@ void Hooks::SpellCap::ApplyPerkEntrySpellMag(RE::BGSPerkEntry::EntryPoint a_entr
         }
     }
 }
+//same as above but for weapons
 void DamageOut::ApplyPerkEntryAttack(RE::BGSPerkEntry::EntryPoint a_entry, RE::Actor *attacker,
                                      RE::TESObjectWEAP *weapon, RE::TESObjectREFR *target, float &damage)
 {
@@ -671,6 +692,7 @@ void DamageOut::ApplyPerkEntryAttack(RE::BGSPerkEntry::EntryPoint a_entry, RE::A
     {
         if (Settings::enable_diseases.GetValue())
         {
+            //manages the damage reduction from the curse. 60% chance to deal 50% damage and 10% chance to deal no damage at all
             const char *curse_word = "curse_weapons";
             if (Utility::ActiveEffectHasNewDiseaseKeyword(attacker, curse_word))
             {
@@ -688,14 +710,14 @@ void DamageOut::ApplyPerkEntryAttack(RE::BGSPerkEntry::EntryPoint a_entry, RE::A
             }
         }
     }
-
+    // safe guard to actually make sure the first hit that ends the ethereal effect doesn't deal damage. If vanilla does that, it's pretty inconsistent
     if (Utility::ActorHasEffectWithArchetype(attacker, RE::EffectArchetypes::ArchetypeID::kEtherealize) &&
         Settings::enable_etheral_change.GetValue())
     {
         damage *= 0.0f;
         REX::DEBUG("{} is ethereal, damage is set to 0", attacker->GetName());
     }
-
+    // adjust damage with follower. the more followers, the less damage those and you deal.
     if (attacker && attacker->IsPlayerTeammate() && !attacker->IsCommandedActor() || attacker && attacker == player)
     {
         if (player->teammateCount > 0 && Settings::enable_foll_change.GetValue())
@@ -730,6 +752,8 @@ void DamageOut::ApplyPerkEntryAttack(RE::BGSPerkEntry::EntryPoint a_entry, RE::A
 
     if (Settings::enable_quest_item_nerf.GetValue())
     {
+        //quest items are without weight. so they can be great weapons without contributing to your inventory weight (mainly useful for low weight setups like requiem)
+        // this function scales their damage to almost 0, so you don't get a free weight weapon. Exceptions can be set in a json file
         if (ActorUtil::ActorHasQuestObjectInHand(attacker))
         {
             if (weapon && !Config::Exceptions::IsQuestWeaponException(weapon))
@@ -772,15 +796,16 @@ void DamageOut::ApplyPerkEntryAttack(RE::BGSPerkEntry::EntryPoint a_entry, RE::A
     }
     if (Config::Settings::attacks_of_opp.GetValue())
     {
-
+        // attacks of opportunity. thy count as crit and deal increased damage
         float opp_mod = GetOpportunityModifier(actor, attacker, false);
         damage *= opp_mod;
         bool isPl = actor && actor->IsPlayerRef();
         if (Config::Settings::show_opp_notif.GetValue() && opp_mod > 1.0f && isPl)
         {
-            const auto crit_message = std::format("Critical Strike for {:.1f} x Damage", opp_mod);
+            /*const auto crit_message = std::format("Critical Strike for {:.1f} x Damage", opp_mod);
             RE::DebugNotification(crit_message.c_str(),
-                                  Config::Settings::play_opp_sound.GetValue() ? "UISneakAttack" : nullptr);
+                                  Config::Settings::play_opp_sound.GetValue() ? "UISneakAttack" : nullptr);*/
+            RE::PlaySound("UISneakAttack");
 
             const RE::CriticalHit::Event event{attacker, ActorUtil::getWieldingWeapon(attacker), false};
             RE::CriticalHit::GetEventSource()->SendEvent(&event);
@@ -802,6 +827,7 @@ void DamageOut::ApplyPerkEntryAttack(RE::BGSPerkEntry::EntryPoint a_entry, RE::A
         }
     }
 }
+// opportunity modifier for attacks of opportunity
 float DamageOut::GetOpportunityModifier(RE::Actor *victim, RE::Actor *attacker, bool notification)
 {
     float mod = 1.0f;
@@ -839,6 +865,7 @@ float DamageOut::GetOpportunityModifier(RE::Actor *victim, RE::Actor *attacker, 
 }
 // https://www.nexusmods.com/skyrimspecialedition/mods/73514 partially taken
 // from this mod
+// cast speed changes with skill level
 void CastingSpeed::CasterUpdate(RE::ActorMagicCaster *a_this, float a_delta)
 {
     auto state = a_this->state.any(RE::ActorMagicCaster::State::kUnk01) ||
@@ -868,6 +895,7 @@ void CastingSpeed::CasterUpdate(RE::ActorMagicCaster *a_this, float a_delta)
 }
 #pragma endregion
 #pragma region EquipMassChanges & DetectionInTallGrass
+// mass change with equipment weight for npcs
 void EquipHandler::OnItemEquipped(RE::Actor *a_this, bool a_playAnim)
 {
 
@@ -885,6 +913,7 @@ void EquipHandler::OnItemEquipped(RE::Actor *a_this, bool a_playAnim)
         a_this->SetActorValue(RE::ActorValue::kMass, a_this->GetBaseActorValue(RE::ActorValue::kMass));
     }
 }
+//same as above but for the player
 void EquipHandler::OnItemEquippedPlayer(RE::PlayerCharacter *a_this, bool a_playAnim)
 {
     _Hook26(a_this, a_playAnim);
@@ -901,7 +930,7 @@ void EquipHandler::OnItemEquippedPlayer(RE::PlayerCharacter *a_this, bool a_play
         a_this->SetActorValue(RE::ActorValue::kMass, a_this->GetBaseActorValue(RE::ActorValue::kMass));
     }
 }
-
+// now unused, was to check what the arguments actually are and whether or not i can use them for my case
 static void ArgumentDump(RE::Actor *a_this, RE::Actor *target, std::int32_t &score, bool &spotted, bool &hasLOS,
                          std::int32_t &reason, std::int32_t &soundLvl, float &unk8, float &unk9)
 {
@@ -913,6 +942,8 @@ static void ArgumentDump(RE::Actor *a_this, RE::Actor *target, std::int32_t &sco
                this_name, targ_name, score, spotted, hasLOS, reason, soundLvl, unk8, unk9);
 };
 
+// detection changes when staning on areas flagged as tall grass. needs landscape textures from a json file
+// json file provided by Ylikollikas
 void Detection::DoCalculateDetection(RE::Actor *a_this, RE::Actor *target, std::int32_t &score, bool &spotted,
                                      bool &hasLOS, std::int32_t &reason, RE::NiPoint3 &lastPos, std::int32_t &soundLvl,
                                      float &unk8, float &unk9)
@@ -973,5 +1004,7 @@ inline bool IsSleepRelated(RE::SIT_SLEEP_STATE state)
     }
 }
 #pragma endregion
+
+
 
 } // namespace Hooks

@@ -216,6 +216,7 @@ class Detection
     static inline bool IsStandingInTallGrass(RE::Actor *target);
 };
 
+
 static RE::ActorValue LookupActorValueByName(const char *av_name)
 {
     using func_t = decltype(&LookupActorValueByName);
