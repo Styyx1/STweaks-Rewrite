@@ -83,6 +83,8 @@ now attribute regen is based on a flat base.
 
 Attacking a target while they're under the effect of a paralysis or calm spell deals 2.5 times damage, while they sleep deals 4 times damage, while they are power attacking or staggered deals 1.2 times damage and while attacking from behind deals 1.3 times damage
 
+### 26. Stamina Exhaustion
+
 Everything can be toggled separately and there are some value adjustments like: The new base for the regen, that upper and lower limits for the damage ranges, toggling changing curses, curse chance, stamina cost modifiers and a few more.
 
 ## Building the mod:
