@@ -114,7 +114,7 @@ void RestoreDefaults(bool settings, bool toggles, bool attributes)
         mass_based_jump = true;
         fade_out_actors = true;
         quest_item_nerf = true;
-        curses = true;
+        curses = false;
         resist_change = false;
         interupt_cast = true;
         follower_damage = true;

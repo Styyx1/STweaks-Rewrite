@@ -451,26 +451,36 @@ float StaminaAttackCost::GetAttackCost(RE::ActorValueOwner *a_owner, RE::BGSAtta
                 av = leftH->As<RE::TESObjectWEAP>()->weaponData.skill.get();
             }
         }
+
         return GetWeightMult(actor, weight, av);
     }
     else
     {
-        auto weap = Utility::getWieldingWeapon(actor);
-        float weight = 1.0f;
-        RE::ActorValue av = RE::ActorValue::kOneHanded;
-        if (weap && !weap->IsHandToHandMelee() && weap != Utility::GetUnarmedWeapon())
-        {
-            av = weap->As<RE::TESObjectWEAP>()->weaponData.skill.get();
-            weight = weap->GetWeight();
-        }
-        float ret = GetWeightMult(actor, weight, av);
-        RE::BGSEntryPoint::HandleEntryPoint(RE::BGSPerkEntry::EntryPoint::kModPowerAttackStamina, actor, weap, &ret);
-        bool useEx = Config::Settings::use_exhaustion.GetValue();
-        if (actor->GetActorValue(RE::ActorValue::kStamina) < ret + 0.1 &&
-            !ActorUtil::HasEffectWithKeywordActive(actor, "StweaksExhaustion") && useEx)
-            MagicUtil::ApplySpell(actor, actor, Forms::FormLoader::exhaustion_spell);
-        return ret;
+        if (!attack->data.flags.any(RE::AttackData::AttackFlag::kPowerAttack)) {
+            auto weap = Utility::getWieldingWeapon(actor);
+            float weight = 1.0f;
+            RE::ActorValue av = RE::ActorValue::kOneHanded;
+            if (weap && !weap->IsHandToHandMelee() && weap != Utility::GetUnarmedWeapon())
+            {
+                av = weap->As<RE::TESObjectWEAP>()->weaponData.skill.get();
+                weight = weap->GetWeight();
+            }
+            float ret = GetWeightMult(actor, weight, av);
+            RE::BGSEntryPoint::HandleEntryPoint(RE::BGSPerkEntry::EntryPoint::kModPowerAttackStamina, actor, weap, &ret);
+            bool useEx = Config::Settings::use_exhaustion.GetValue();
+            if (actor->GetActorValue(RE::ActorValue::kStamina) < ret + 0.1) {
+                if (!ActorUtil::HasEffectWithKeywordActive(actor, "StweaksExhaustion") && useEx) {
+                    MagicUtil::ApplySpell(actor, actor, Forms::FormLoader::exhaustion_spell);
+                }
+                RE::SourceActionMap::DoAction(actor, RE::DEFAULT_OBJECT::kActionRightInterrupt);
+                RE::SourceActionMap::DoAction(actor, RE::DEFAULT_OBJECT::kActionLeftInterrupt);
+
+            }
+
+            return ret;
+        }      
     }
+    return _Hook12(a_owner, attack);
 }
 // get the weapon weight multiplier for stamina cost
 float StaminaAttackCost::GetWeightMult(RE::Actor *actor, float weight, RE::ActorValue av_to_use)
