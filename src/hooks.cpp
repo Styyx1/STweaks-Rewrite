@@ -841,35 +841,52 @@ void DamageOut::ApplyPerkEntryAttack(RE::BGSPerkEntry::EntryPoint a_entry, RE::A
 float DamageOut::GetOpportunityModifier(RE::Actor *victim, RE::Actor *attacker, bool notification)
 {
     float mod = 1.0f;
+
+    if (!victim || !attacker) {
+        return mod;
+    }
+
     if (!ActorUtil::IsInOpportunityState(victim, attacker))
         return mod;
-
+    static std::string message{};
     if (ActorUtil::ActorHasEffectOfTypeActive(victim, RE::EffectArchetypes::ArchetypeID::kParalysis) ||
         ActorUtil::ActorHasEffectOfTypeActive(victim, RE::EffectArchetypes::ArchetypeID::kCalm))
     {
         mod = OppModi::GetModifier(OppModi::OpportunityType::Paralysis);
-        if (notification)
-            RE::DebugNotification(std::format("attack of opportunity occured for {} times damage", mod).c_str());
+        if (notification) {
+            message = std::format("attack of opportunity occured for {} times damage", mod);
+            RE::SendHUDMessage::ShowHUDMessage(message.c_str());
+        }
+            
     }
     else if (ActorUtil::IsPowerAttacking(victim) || victim->IsStaggering())
     {
         mod = OppModi::GetModifier(OppModi::OpportunityType::Attack);
-        if (notification)
-            RE::DebugNotification(std::format("attack of opportunity occured for {} times damage", mod).c_str());
+        if (notification) {
+            message = std::format("attack of opportunity occured for {} times damage", mod);
+            RE::SendHUDMessage::ShowHUDMessage(message.c_str());
+        }
+            
     }
     else if (victim->actorState1.sitSleepState == RE::SIT_SLEEP_STATE::kIsSitting ||
              victim->actorState1.sitSleepState == RE::SIT_SLEEP_STATE::kIsSleeping)
     {
         mod = OppModi::GetModifier(OppModi::OpportunityType::Sleep);
-        if (notification)
-            RE::DebugNotification(std::format("attack of opportunity occured for {} times damage", mod).c_str());
+        if (notification) {
+            message = std::format("attack of opportunity occured for {} times damage", mod);
+            RE::SendHUDMessage::ShowHUDMessage(message.c_str());
+        }
+           
     }
     else if (victim->GetHeadingAngle(attacker->GetPosition(), false) <= -135 ||
              victim->GetHeadingAngle(attacker->GetPosition(), false) >= 135)
     {
         mod = OppModi::GetModifier(OppModi::OpportunityType::Backstab);
-        if (notification)
-            RE::DebugNotification(std::format("attack of opportunity occured for {} times damage", mod).c_str());
+        if (notification) {
+            message = std::format("attack of opportunity occured for {} times damage", mod);
+            RE::SendHUDMessage::ShowHUDMessage(message.c_str());
+        }
+           
     }
     return mod;
 }

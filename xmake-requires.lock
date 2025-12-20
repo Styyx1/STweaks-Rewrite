@@ -30,7 +30,7 @@
         ["spdlog#09c8c173"] = {
             repo = {
                 branch = "master",
-                commit = "76ad497b3bbb32af50ae3b7d2736597ed131512f",
+                commit = "37f47a69ef56b3894924272469056cf425943951",
                 url = "https://gitlab.com/tboox/xmake-repo.git"
             },
             version = "v1.16.0"

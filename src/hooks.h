@@ -21,7 +21,10 @@ namespace Hooks
   };
 
   inline static float GetModifier(OpportunityType type) {
-    return OpportunityModifiers[static_cast<int>(type)];
+      auto opp = static_cast<int>(type);
+      if (opp > 4)
+          return 1.0;
+    return OpportunityModifiers[opp];
   }
 };
 
