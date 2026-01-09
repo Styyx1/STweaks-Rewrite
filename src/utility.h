@@ -118,6 +118,17 @@ public:
         else
             return false;
     }
+    static void AdjustMass(RE::Actor* a_actor) {
+        auto curr_mass = ActorUtil::GetMassFromInventory(a_actor);
+        auto base_mass = a_actor->GetBaseActorValue(RE::ActorValue::kMass);
+        if(curr_mass < base_mass) {
+            curr_mass = base_mass;
+		}       
+        a_actor->SetActorValue(RE::ActorValue::kMass, base_mass);
+        float modi = a_actor->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass) - base_mass;
+        a_actor->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass, -(modi + base_mass));
+        a_actor->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass, curr_mass - base_mass);
+    }
 
     // https://github.com/powerof3/PapyrusExtenderSSE/blob/640b79d554da4a5392a05107560685621825568e/include/Papyrus/Functions/ObjectReference.h#L662
     static std::vector<RE::Actor*> GetNearbyActors(RE::TESObjectREFR* a_ref, float a_radius, bool a_ignorePlayer)

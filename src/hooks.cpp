@@ -514,11 +514,7 @@ RE::NiAVObject *LoadWithResistance::LoadActor(RE::Actor *a_this, bool arg)
     if (Config::Settings::enable_mass_equip_changes.GetValue())
     {
         // mass actor value changes with inventory weight. It's not too reliable, but reliable enough
-        auto curr_mass = ActorUtil::GetMassFromInventory(a_this);
-        a_this->SetActorValue(RE::ActorValue::kMass, a_this->GetBaseActorValue(RE::ActorValue::kMass));
-        float modi = a_this->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass);
-        a_this->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass, -modi);
-        a_this->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass, curr_mass);
+		Utility::AdjustMass(a_this);
     }
 
     auto player = Cache::GetPlayerSingleton();
@@ -557,12 +553,9 @@ RE::NiAVObject *LoadWithResistance::LoadPlayer(RE::Actor *a_this, bool arg)
     if (Config::Settings::enable_mass_equip_changes.GetValue())
     {
         // Ties Mass Actor Value to inventory weight. only when the player is loaded. there's a function later on for inventory changes
-        auto curr_mass = ActorUtil::GetMassFromInventory(a_this);
-        a_this->SetActorValue(RE::ActorValue::kMass, a_this->GetBaseActorValue(RE::ActorValue::kMass));
-        float modi = a_this->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass);
-        a_this->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass, -modi);
-        a_this->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass, curr_mass);
+        Utility::AdjustMass(a_this);
     }
+	REX::INFO("Player Mass on load: {}", a_this->GetActorValue(RE::ActorValue::kMass));
     return actor;
 }
 // Stamina and magica regen is based on the max stamina in vanilla
@@ -612,6 +605,9 @@ void Hooks::SpellCap::ApplyPerkEntrySpellMag(RE::BGSPerkEntry::EntryPoint a_entr
     float original_damage = damage;
     _Hook23(a_entry, caster, spell, target, damage);
 
+    if (!spell) {
+        return;
+    }
     auto spell_type = spell->GetSpellType();
 
     switch (spell_type)
@@ -643,13 +639,16 @@ void Hooks::SpellCap::ApplyPerkEntrySpellMag(RE::BGSPerkEntry::EntryPoint a_entr
     {
         damage *= damage_ranges;
     }
-
+    if (!target || !caster || target->IsDead()) {
+        return;
+    }
     bool isGoodAssassin = caster->IsSneaking() && target->RequestDetectionLevel(caster) <= 0;
     if (isGoodAssassin)
     {
         return;
     }
     //cap and one-shot protection
+    
     auto health = ActorUtil::GetMaxHealth(target);
     auto curr_health = target->GetActorValue(RE::ActorValue::kHealth);
 
@@ -691,10 +690,6 @@ void DamageOut::ApplyPerkEntryAttack(RE::BGSPerkEntry::EntryPoint a_entry, RE::A
     RE::Actor *const &actor = target->As<RE::Actor>();
 
     bool isGoodAssassin = attacker->IsSneaking() && actor ? actor->RequestDetectionLevel(attacker) <= 0 : false;
-
-    if (weapon && !weapon->IsHandToHandMelee())
-    {
-    }
 
     RE::PlayerCharacter *player = Cache::GetPlayerSingleton();
 
@@ -929,16 +924,13 @@ void EquipHandler::OnItemEquipped(RE::Actor *a_this, bool a_playAnim)
     _Hook26(a_this, a_playAnim);
     if (Config::Settings::enable_mass_equip_changes.GetValue())
     {
-        auto curr_mass = ActorUtil::GetMassFromInventory(a_this);
-        a_this->SetActorValue(RE::ActorValue::kMass, a_this->GetBaseActorValue(RE::ActorValue::kMass));
-        float modi = a_this->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass);
-        a_this->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass, -modi);
-        a_this->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass, curr_mass);
+        Utility::AdjustMass(a_this);
     }
     else
     {
         a_this->SetActorValue(RE::ActorValue::kMass, a_this->GetBaseActorValue(RE::ActorValue::kMass));
     }
+	REX::INFO("NPC mass after equip change: {}", a_this->GetActorValue(RE::ActorValue::kMass));
 }
 //same as above but for the player
 void EquipHandler::OnItemEquippedPlayer(RE::PlayerCharacter *a_this, bool a_playAnim)
@@ -946,28 +938,14 @@ void EquipHandler::OnItemEquippedPlayer(RE::PlayerCharacter *a_this, bool a_play
     _Hook26(a_this, a_playAnim);
     if (Config::Settings::enable_mass_equip_changes.GetValue())
     {
-        auto curr_mass = ActorUtil::GetMassFromInventory(a_this);
-        a_this->SetActorValue(RE::ActorValue::kMass, a_this->GetBaseActorValue(RE::ActorValue::kMass));
-        float modi = a_this->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass);
-        a_this->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass, -modi);
-        a_this->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass, curr_mass);
+        Utility::AdjustMass(a_this);
     }
     else
     {
         a_this->SetActorValue(RE::ActorValue::kMass, a_this->GetBaseActorValue(RE::ActorValue::kMass));
     }
+	REX::INFO("Player mass after equip change: {}", a_this->GetActorValue(RE::ActorValue::kMass));
 }
-// now unused, was to check what the arguments actually are and whether or not i can use them for my case
-static void ArgumentDump(RE::Actor *a_this, RE::Actor *target, std::int32_t &score, bool &spotted, bool &hasLOS,
-                         std::int32_t &reason, std::int32_t &soundLvl, float &unk8, float &unk9)
-{
-    auto this_name = a_this ? a_this->GetName() : "null";
-    auto targ_name = target->GetName();
-    REX::DEBUG("argument dump: a_this: {}, target: {}, "
-               "score: {}, spotted: {}, hasLOS: {}, reason: "
-               "{}, soundLvl: {}, unk8: {}, unk9: {}",
-               this_name, targ_name, score, spotted, hasLOS, reason, soundLvl, unk8, unk9);
-};
 
 // detection changes when staning on areas flagged as tall grass. needs landscape textures from a json file
 // json file provided by Ylikollikas
@@ -977,19 +955,20 @@ void Detection::DoCalculateDetection(RE::Actor *a_this, RE::Actor *target, std::
 {
     _Hook28(a_this, target, score, spotted, hasLOS, reason, lastPos, soundLvl, unk8, unk9);
     RE::BGSPerk *perk = Forms::FormLoader::tall_grass_perk;
-    bool hasPerk = target->HasPerk(perk);
-    bool isEnabled = Config::Settings::tall_grass_sneak.GetValue();
-    if (target->IsSneaking() && IsStandingInTallGrass(target) && isEnabled)
-    {
-        if (!hasPerk)
+    if (target && target->IsPlayerRef()) {
+        bool hasPerk = target->HasPerk(perk);
+        bool isEnabled = Config::Settings::tall_grass_sneak.GetValue();
+        if (target->IsSneaking() && IsStandingInTallGrass(target) && isEnabled)
         {
-            target->AddPerk(perk);
-            REX::DEBUG("added {} to {}", perk->GetName(), target->GetName());
+            if (!hasPerk)
+            {
+                target->AddPerk(perk);
+            }
+            return;
         }
-        return;
-    }
-    if (hasPerk)
-        target->RemovePerk(perk);
+        if (hasPerk)
+            target->RemovePerk(perk);
+    }    
 }
 
 inline bool Detection::IsStandingInTallGrass(RE::Actor *target)
