@@ -204,9 +204,11 @@ class EquipHandler
 {
     static void OnItemEquipped(RE::Actor *a_this, bool a_playAnim);
     static void OnItemEquippedPlayer(RE::PlayerCharacter *a_this, bool a_playAnim);
+ 
 
     static inline REL::HookVFT _Hook26{RE::VTABLE_Character[0], 0x0b2, OnItemEquipped};
     static inline REL::HookVFT _Hook27{RE::VTABLE_PlayerCharacter[0], 0x0b2, OnItemEquippedPlayer};
+
 };
 
 class Detection

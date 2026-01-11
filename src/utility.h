@@ -118,8 +118,29 @@ public:
         else
             return false;
     }
+
+    inline static float GetMassFromInventory(RE::Actor* actor)
+    {
+        //https://www.desmos.com/calculator/qxttj42mfl?lang=en
+        //this helped me come up with the calcs
+        if (!actor)
+            return 1.0f;
+        float weight = actor->GetEquippedWeight();
+        constexpr float kMinWeight = 0.0f;
+        float kMaxBaseMass = MiscUtil::GetGameSetting("fStaggerMassOffsetBase")->GetFloat();
+        constexpr float kBaseMass = 1.0f;
+
+        constexpr float kGrowth = 0.03f; // 0.01 is too low and 0.05 is too high
+
+        weight = std::max(weight, kMinWeight);
+
+        float mass = kMaxBaseMass - (kMaxBaseMass - kBaseMass) * std::exp(-kGrowth * weight);
+
+        return std::clamp(mass, kBaseMass, kMaxBaseMass);
+    }
+
     static void AdjustMass(RE::Actor* a_actor) {
-        auto curr_mass = ActorUtil::GetMassFromInventory(a_actor);
+        auto curr_mass = GetMassFromInventory(a_actor);
         auto base_mass = a_actor->GetBaseActorValue(RE::ActorValue::kMass);
         if(curr_mass < base_mass) {
             curr_mass = base_mass;

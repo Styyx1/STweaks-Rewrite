@@ -172,6 +172,9 @@ float JumpHeight::JumpHeightGetScale(RE::TESObjectREFR *refr)
         scale *= Settings::sneak_height_modifier.GetValue();
     }
     float ju_modifier = (float)sqrt(1.0 / mass);
+    if (ju_modifier < 0.6f) {
+        ju_modifier = 0.6f;
+    }
 
     // curse modifier for the curse that halves jump height
     float curse_modi = 1.0f;
@@ -944,7 +947,7 @@ void EquipHandler::OnItemEquippedPlayer(RE::PlayerCharacter *a_this, bool a_play
     {
         a_this->SetActorValue(RE::ActorValue::kMass, a_this->GetBaseActorValue(RE::ActorValue::kMass));
     }
-	REX::INFO("Player mass after equip change: {}", a_this->GetActorValue(RE::ActorValue::kMass));
+    REX::INFO("Player mass after equip change: {}", a_this->GetActorValue(RE::ActorValue::kMass));
 }
 
 // detection changes when staning on areas flagged as tall grass. needs landscape textures from a json file
