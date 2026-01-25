@@ -121,6 +121,7 @@ namespace Events
             hitEventHandler->RegisterHitEvent();
             auto effectHandler = ApplyEffectEvent::GetSingleton();
             effectHandler->RegisterApplyEffect();
+            EquipManager::RegisterEquipEvent();
         }
     }
     RE::BSEventNotifyControl ApplyEffectEvent::ProcessEvent(const RE::TESMagicEffectApplyEvent* a_event, RE::BSTEventSource<RE::TESMagicEffectApplyEvent>* a_eventSource)
@@ -153,4 +154,27 @@ namespace Events
     }
 
     
+    void EquipManager::RegisterEquipEvent()
+    {
+        if (auto src = RE::ScriptEventSourceHolder::GetSingleton(); src) {
+            src->AddEventSink<RE::TESEquipEvent>(GetSingleton());
+            REX::INFO("Registered for EquipEvent");
+        }
+    }
+
+    RE::BSEventNotifyControl EquipManager::ProcessEvent(const RE::TESEquipEvent* event, RE::BSTEventSource<RE::TESEquipEvent>*)
+    {
+        if(!event || !event->actor)
+            return RE::BSEventNotifyControl::kContinue;
+
+        auto act = event->actor.get()->As<RE::Actor>();
+        if(!act)
+            return RE::BSEventNotifyControl::kContinue;
+
+        Utility::AdjustMass(act);
+        REX::INFO("equip event fired for: {}, item was: {}", act->GetName(), event->equipped ? "equipped" : "unequipped");
+        
+        return RE::BSEventNotifyControl::kContinue;
+    }
+
 }

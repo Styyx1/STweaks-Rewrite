@@ -44,4 +44,12 @@ namespace Events
         static void RegisterApplyEffect();
     };
 
+    struct EquipManager : REX::Singleton<EquipManager>, RE::BSTEventSink<RE::TESEquipEvent> {
+        
+        static void RegisterEquipEvent();
+    private:
+        RE::BSEventNotifyControl ProcessEvent(const RE::TESEquipEvent* event, RE::BSTEventSource<RE::TESEquipEvent>*) override;
+
+    };
+
 }
