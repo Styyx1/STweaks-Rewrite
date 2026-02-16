@@ -1,4 +1,11 @@
 #include "hooks.h"
+#include "stamina-manager.h"
+#include "curses.h"
+#include "damage-manager.h"
+#include "mod-storage.h"
+#include "attributes.h"
+
+
 #undef PlaySound
 namespace Hooks
 {
@@ -8,155 +15,33 @@ using namespace Config;
 #pragma region AttributeGrowth & SneakStamina
 
 // nullsub loop that runs while the game is paused as well, other than PlayerCharacter::Update for example
-// used to Manage Sneak Stamina spell and for Attribute Growth
+// NOTE: a_delta is always 0 in this function!
 void MainUpdate::MainUpdateHook(float a_delta)
 {
-    auto *player = Cache::GetPlayerSingleton();
-
-    if (!Settings::enable_sneak_stamina.GetValue())
-    {
-        if (Utility::HasSpell(player, Forms::FormLoader::sneak_stamina_spell))
-        {
-            player->RemoveSpell(Forms::FormLoader::sneak_stamina_spell);
-        }
-        return _Hook1(a_delta);
-    }
-
-    if (frameCount > 10)
-    {
-        frameCount = 0;
-    }
-    else
-    {
-        switch (frameCount)
-        {
-        case 1:
-            ManageSneakStamina(player);
-            break;
-        default:
-            break;
-        }
-    }
-    frameCount++;
-
-    if (av_timer.ElapsedSeconds() >= 45)
-    {
-        av_timer.Reset();
-        ManageAttributeGrowth(player);
-    }
-
-    if (!av_timer.IsRunning() && !MiscUtil::IsAnyOfMenuOpen(Cache::GetUISingleton(), a_menuNames))
-    {
-        av_timer.Start();
-    }
-    if (av_timer.IsRunning() && MiscUtil::IsAnyOfMenuOpen(Cache::GetUISingleton(), a_menuNames))
-    {
-        av_timer.Stop();
-    }
-
-    if (!Config::Settings::enable_automatic_attributes.GetValue())
-        av_timer.Stop();
-
-    return _Hook1(a_delta);
+    _mainUpdateHook(a_delta);
+    stweaks::Attributes::UpdateAttributes(Cache::GetPlayerSingleton());
 }
-// Check if the drawn weapon is a ranged one, including crossbows
-bool MainUpdate::HasRangedWeaponDrawn(RE::PlayerCharacter *player)
+
+void MainUpdate::PlayerUpdateHook(RE::PlayerCharacter* a_this, float a_delta)
 {
-    bool result = false;
-    RE::TESObjectWEAP *weap = Utility::getWieldingWeapon(player);
-    if (weap)
-    {
-        if (weap->IsBow() && player->IsWeaponDrawn() || weap->IsCrossbow() && player->IsWeaponDrawn())
-            result = true;
-    }
-
-    REX::DEBUG("check for ranged weapon, it is {}", result ? "true" : "false");
-    return result;
+    _playerUpdateHook(a_this, a_delta);
+    stweaks::StealthStamina::ManageSneakStamina(a_this, a_delta);
 }
 
-// Helper to calculate how many % of the carry weight is used
-float MainUpdate::GetCarryPercentage(RE::PlayerCharacter *player)
-{
-
-    return player->GetActorValue(RE::ActorValue::kInventoryWeight) /
-           player->GetActorValue(RE::ActorValue::kCarryWeight);
-}
-// Main function to handle stamina drain on sneaking. Inspired by Blade and Blunt but with the addition to make sneak archery less viable
-void MainUpdate::ManageSneakStamina(RE::PlayerCharacter* player)
-{
-
-    if (player->IsGodMode())
-    {
-        if (player->HasSpell(Forms::FormLoader::sneak_stamina_spell))
-            player->RemoveSpell(Forms::FormLoader::sneak_stamina_spell);
-
-        return;
-
-    }    
-
-	bool isSneakSetting = Settings::enable_sneak_stamina.GetValue();
-    bool shouldDrain = player->IsSneaking() && (Utility::IsMoving(player) || HasRangedWeaponDrawn(player));
-
-    if (isSneakSetting && shouldDrain)
-    {
-        if (!Utility::HasSpell(player, Forms::FormLoader::sneak_stamina_spell))
-        {
-            player->AddSpell(Forms::FormLoader::sneak_stamina_spell);
-        }
-        if (player->GetActorValue(RE::ActorValue::kStamina) <= 5 &&
-            player->GetActorValue(RE::ActorValue::kStamina) > 0 && HasRangedWeaponDrawn(player))
-        {
-            player->actorState2.weaponState = RE::WEAPON_STATE::kWantToSheathe;
-            player->DrawWeaponMagicHands(false);
-        }
-    }
-    else if (Utility::HasSpell(player, Forms::FormLoader::sneak_stamina_spell))
-    {
-        player->RemoveSpell(Forms::FormLoader::sneak_stamina_spell);
-    }
-}
-//Function to increase attributes on usage. get attribute xp, if xp is above 100, get +1 to the attribute. No need to serialise the attribute gain cause the game does it
-void MainUpdate::ManageAttributeGrowth(RE::PlayerCharacter* player)
-{
-    float perc_health = GetActorValuePercentage(player, RE::ActorValue::kHealth);
-    float perc_stamina = GetActorValuePercentage(player, RE::ActorValue::kStamina);
-    float perc_magicka = GetActorValuePercentage(player, RE::ActorValue::kMagicka);
-    float perc_carry = GetCarryPercentage(player);
-
-    auto* av_store = AVStorage::GetSingleton();
-    if (perc_health > 0.4 && perc_health < 0.95)
-        av_store->attribute_xp[RE::ActorValue::kHealth] += 1;
-    if (perc_stamina > 0.4 && perc_stamina < 0.95)
-        av_store->attribute_xp[RE::ActorValue::kStamina] += 1;
-    if (perc_magicka > 0.4 && perc_magicka < 0.95)
-        av_store->attribute_xp[RE::ActorValue::kMagicka] += 1;
-    if (perc_carry > 0.4 && perc_carry < 0.95)
-        av_store->attribute_xp[RE::ActorValue::kCarryWeight] += 1;
-
-    auto it = av_store->attribute_xp.begin();
-    for (it; it != av_store->attribute_xp.end(); ++it)
-    {
-        if (it->second >= 100)
-        {
-            player->SetBaseActorValue(it->first, player->GetBaseActorValue(it->first) + 1);
-            it->second -= 100;
-        }
-    }
-}
 #pragma endregion
 #pragma region Jump
 //GetScale function inside the Jump function. used for mass jump, sneak jump, jump stamina and one of the curses
 float JumpHeight::JumpHeightGetScale(RE::TESObjectREFR *refr)
 {
-    float scale = refr->GetScale();
-    RE::Actor *actor = refr->As<RE::Actor>();
+    float scale = _jumpHeightGetScale(refr);
+    auto *actor = refr->As<RE::Actor>();
 
     if (!actor)
     {
         return scale;
     }
     //early opt out for god-mode 
-    if (actor->IsPlayerRef() && actor->As<RE::PlayerCharacter>()->IsGodMode())
+    if (actor->IsPlayerRef() && RE::PlayerCharacter::IsGodMode())
     {
         return scale;
     }
@@ -171,7 +56,7 @@ float JumpHeight::JumpHeightGetScale(RE::TESObjectREFR *refr)
     {
         scale *= Settings::sneak_height_modifier.GetValue();
     }
-    float ju_modifier = (float)sqrt(1.0 / mass);
+    float ju_modifier = static_cast<float>(sqrt(1.0 / mass));
     if (ju_modifier < 0.6f) {
         ju_modifier = 0.6f;
     }
@@ -180,29 +65,35 @@ float JumpHeight::JumpHeightGetScale(RE::TESObjectREFR *refr)
     float curse_modi = 1.0f;
     if (Config::Settings::enable_diseases.GetValue())
     {
-        if (Utility::ActiveEffectHasNewDiseaseKeyword(actor, Forms::FormConstants::jump_curse_key))
+        if (Utility::ActiveEffectHasNewDiseaseKeyword(actor, stweaks::keywords::kJump.data()))
         {
             curse_modi = 0.5f;
         }
     }
     //jump stamina cost. Not an ideal position for the prevention of jumping when out of stamina, but it does the trick for now
-    if (Config::Settings::jump_stamina_cost.GetValue())
+    if (!stweaks::StealthStamina::ManageJumpStamina(actor))
     {
-        float min_cost = 10.0f;
-        float max_cost = 50.0f;
-        float max_mass = 80.0f;
-
-        float jump_cost = min_cost + (max_cost - min_cost) *
-                                         std::min(actor->GetActorValue(RE::ActorValue::kMass), max_mass) / max_mass;
-
-        float stamina = actor->GetActorValue(RE::ActorValue::kStamina);
-        if (stamina < jump_cost)
-            return 0.0;
-        actor->DamageActorValue(RE::ActorValue::kStamina, jump_cost);
+        REX::INFO("no stamina dude");
     }
-
-    return scale *= ju_modifier * curse_modi;
+    return scale * ju_modifier * curse_modi;
 }
+
+RE::bhkCharacterController* JumpHeight::GetCharacterController(RE::AIProcess* a_proc)
+{
+    const auto player = Cache::GetPlayerSingleton();
+    if (!player)
+       return _getCharacterControllerHook(a_proc);
+    if (a_proc && a_proc->middleHigh)
+    {
+        if (player->GetActorValue(RE::ActorValue::kStamina) < stweaks::StealthStamina::CalculateJumpCost(player))
+        {
+            RE::FlashHUDMeter(RE::ActorValue::kStamina);
+            return nullptr;
+        }
+    }
+    return _getCharacterControllerHook(a_proc);
+}
+
 #pragma endregion
 #pragma region CurseEnd
 // Function to end curses and clean up what they did
@@ -210,37 +101,32 @@ void OnEffectEndHook::OnEffectEnd(RE::ScriptEffect *a_this)
 {
     _Hook5(a_this);
 
-    auto hitEv = Events::HitEventHandler::GetSingleton();
-    if (a_this->target && a_this->GetBaseObject()->HasAnyKeywordByEditorID(Forms::FormConstants::diseases))
+    const auto store = stweaks::ModStorage::GetSingleton();
+    if (RE::Actor *aff_actor = a_this->target ? a_this->target->GetTargetAsActor() : nullptr; aff_actor && a_this->GetBaseObject())
     {
-        REX::DEBUG("curse ended");
-        RE::Actor *aff_actor = skyrim_cast<RE::Actor *>(a_this->target);
-        if (a_this->GetBaseObject()->HasKeywordString(Forms::FormConstants::diseases[0]))
+        if (a_this->GetBaseObject()->HasKeywordString(stweaks::keywords::disease_keywords[0]))
         {
-            float currentPenaltyH = hitEv->storedHealth_disease;
-            if (currentPenaltyH > 0)
+            if (const float currentPenaltyH = store->storedHealth_disease; currentPenaltyH > 0)
             {
-                hitEv->storedHealth_disease = 0.0f;
+                store->storedHealth_disease = 0.0f;
                 aff_actor->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kHealth,
                                          currentPenaltyH);
             }
         }
-        if (a_this->GetBaseObject()->HasKeywordString(Forms::FormConstants::diseases[1]))
+        if (a_this->GetBaseObject()->HasKeywordString(stweaks::keywords::disease_keywords[1]))
         {
-            float currentPenaltyS = hitEv->storedStamina_disease;
-            if (currentPenaltyS > 0)
+            if (const float currentPenaltyS = store->storedStamina_disease; currentPenaltyS > 0)
             {
-                hitEv->storedStamina_disease = 0.0f;
+                store->storedStamina_disease = 0.0f;
                 aff_actor->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kStamina,
                                          currentPenaltyS);
             }
         }
-        if (a_this->GetBaseObject()->HasKeywordString(Forms::FormConstants::diseases[2]))
+        if (a_this->GetBaseObject()->HasKeywordString(stweaks::keywords::disease_keywords[2]))
         {
-            float currentPenaltyM = hitEv->storedMagicka_disease;
-            if (currentPenaltyM > 0)
+            if (const float currentPenaltyM = store->storedMagicka_disease; currentPenaltyM > 0)
             {
-                hitEv->storedMagicka_disease = 0.0f;
+                store->storedMagicka_disease = 0.0f;
                 aff_actor->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMagicka,
                                          currentPenaltyM);
             }
@@ -263,19 +149,15 @@ void NPCFade::ActorUpdate(RE::Character *a_actor, float a_delta)
     }
 
     RE::PlayerCharacter *player = Cache::GetPlayerSingleton();
-    float distance_full_fade = 2400.00;
-    float distance_no_fade = 1200.00f;
-    float light_level_threshold = 30.0f;
-    float fade_range = distance_full_fade - distance_no_fade;
-    float minAlpha = 0.05f;
 
-    if (float distance = a_actor->GetDistance(player); distance >= distance_full_fade && a_actor->GetHighProcess() &&
-                                                       a_actor->GetHighProcess()->lightLevel <= light_level_threshold)
+    constexpr float fade_range = stweaks::FADE_DISTANCE_FULL_FADE - stweaks::FADE_DISTANCE_NO_FADE;
+
+    if (const float distance = a_actor->GetDistance(player); distance >= stweaks::FADE_DISTANCE_FULL_FADE && a_actor->GetHighProcess() &&
+                                                       a_actor->GetHighProcess()->lightLevel <= stweaks::FADE_LIGHT_LEVEL_THRESHOLD)
     {
-        float fade_progress = std::min(std::max((distance - distance_no_fade) / fade_range, 0.0f), 1.0f);
-        float alpha = std::lerp(1.0f, minAlpha, fade_progress);
+        const float fade_progress = std::min(std::max((distance - stweaks::FADE_DISTANCE_NO_FADE) / fade_range, 0.0f), 1.0f);
+        const float alpha = std::lerp(1.0f, stweaks::FADE_MIN_ALPHA, fade_progress);
         a_actor->SetAlpha(alpha);
-        a_actor->dialogueItemTarget;
     }
     else
     {
@@ -294,59 +176,65 @@ bool PreventCast::CheckCast(RE::ActorMagicCaster *a_this, RE::MagicItem *a_spell
     if (!a_spell)
         return _Hook7(a_this, a_spell, a_dualCast, a_effectStrength, a_reason, a_useBaseValueForCost);
 
-    auto type = a_spell->GetSpellType();
-    switch (type)
+    switch (a_spell->GetSpellType())
     {
         using st = RE::MagicSystem::SpellType;
-    case st::kSpell:
-    case st::kPower:
-    case st::kVoicePower:
-    case st::kLesserPower:
+        case st::kSpell:
+        case st::kPower:
+        case st::kVoicePower:
+        case st::kLesserPower:
         break;
-    default:
+        default:
         return _Hook7(a_this, a_spell, a_dualCast, a_effectStrength, a_reason, a_useBaseValueForCost);
     }
 
-    auto actor = a_this->actor;
+    const auto actor = a_this->actor;
 
     if (!actor)
         return _Hook7(a_this, a_spell, a_dualCast, a_effectStrength, a_reason, a_useBaseValueForCost);
 
     if (Config::Settings::enable_diseases.GetValue())
     {
-        if (Utility::ActiveEffectHasNewDiseaseKeyword(actor, Forms::FormConstants::silence_key))
+        if (Utility::ActiveEffectHasNewDiseaseKeyword(actor, stweaks::keywords::kSilence.data()))
         {
-            if (a_spell && a_spell->GetFormType() != RE::FormType::AlchemyItem &&
+            if (a_spell->GetFormType() != RE::FormType::AlchemyItem &&
                 a_spell->GetFormType() != RE::FormType::Enchantment &&
                 !Forms::FormLoader::spell_allow_list->HasForm(a_spell))
             {
                 InterruptActor(actor, a_this->GetCastingSource());
+                if (a_reason)
+                {
+                    *a_reason = RE::MagicSystem::CannotCastReason::kCustomReasonNoStart;
+                }
                 return false;
             }
         }
     }
     if (Config::Settings::enable_cast_stamina.GetValue())
     {
-
-        if (a_this->actor->IsPlayerRef() && a_this->actor->As<RE::PlayerCharacter>()->IsGodMode())
+        if (a_this->actor->IsPlayerRef() && RE::PlayerCharacter::IsGodMode())
         {
             return _Hook7(a_this, a_spell, a_dualCast, a_effectStrength, a_reason, a_useBaseValueForCost);
         }
 
-        float cost = 5;
-        float type_factor = Config::Settings::magic_stamina_cost_divider.GetValue();
+        float type_factor = static_cast<float>(Config::Settings::magic_stamina_cost_divider.GetValue());
 
         if (a_spell->GetCastingType() == RE::MagicSystem::CastingType::kConcentration)
             type_factor *= 2.0f;
 
-        cost = a_this->GetCurrentSpellCost() / type_factor;
+        float cost = a_this->GetCurrentSpellCost() / type_factor;
         if (actor->GetActorValue(RE::ActorValue::kStamina) < cost)
         {
+            if (a_reason)
+            {
+                *a_reason = RE::MagicSystem::CannotCastReason::kCustomReasonNoStart;
+                RE::SendHUDMessage::ShowHUDMessage("No stamina for casting");
+            }
             return false;
         }
         if (a_this->state == RE::MagicCaster::State::kCharging)
         {
-            if (actor == Cache::GetPlayerSingleton() && Cache::GetPlayerSingleton()->IsGodMode())
+            if (actor == Cache::GetPlayerSingleton() && RE::PlayerCharacter::IsGodMode())
             {
                 return _Hook7(a_this, a_spell, a_dualCast, a_effectStrength, a_reason, a_useBaseValueForCost);
             }
@@ -379,7 +267,7 @@ void PreventCast::InterruptActor(RE::Actor *a_actor, RE::MagicSystem::CastingSou
 // track usage of potion to see if a curse needs to be removed
 void PlayerPotionUsed::PlayerUsePotion(uint64_t self, RE::AlchemyItem *alch, uint64_t extralist)
 {
-    if (alch->HasKeywordString(Forms::FormConstants::cure_keyword))
+    if (alch->HasKeywordString(stweaks::keywords::kCure))
     {
         RE::PlayerCharacter *player = Cache::GetPlayerSingleton();
         Utility::Curses::CleanseCurse(player);
@@ -392,11 +280,10 @@ float HighGravityArrows::GetGravityArrow(RE::Projectile *a_this)
     if (!Config::Settings::enable_diseases.GetValue())
         return _Hook9(a_this);
 
-    auto shooterRef = a_this->shooter.get().get();
-    auto actorShooter = shooterRef ? shooterRef->As<RE::Actor>() : nullptr;
-    if (actorShooter)
+    const auto shooterRef = a_this->shooter.get().get();
+    if (const auto actorShooter = shooterRef ? shooterRef->As<RE::Actor>() : nullptr)
     {
-        if (Utility::ActiveEffectHasNewDiseaseKeyword(actorShooter, Forms::FormConstants::bow_curse_key))
+        if (Utility::ActiveEffectHasNewDiseaseKeyword(actorShooter, stweaks::keywords::kBow.data()))
         {
             return _Hook9(a_this) * 10.0f;
         }
@@ -422,9 +309,9 @@ float StaminaAttackCost::GetAttackCost(RE::ActorValueOwner *a_owner, RE::BGSAtta
 
     if (attack->data.flags.any(RE::AttackData::AttackFlag::kBashAttack))
     {
-        auto weapon = Utility::getWieldingWeapon(actor);
-        auto leftH = Utility::GetWeapon(actor, true);
-        auto shield = Utility::GetShield(actor);
+        const auto weapon = Utility::getWieldingWeapon(actor);
+        const auto leftH = Utility::GetWeapon(actor, true);
+        const auto shield = Utility::GetShield(actor);
         if (!leftH || !shield || leftH->IsHandToHandMelee() || weapon == Utility::GetUnarmedWeapon())
         {
             return 1.0f;
@@ -486,9 +373,9 @@ float StaminaAttackCost::GetAttackCost(RE::ActorValueOwner *a_owner, RE::BGSAtta
     return _Hook12(a_owner, attack);
 }
 // get the weapon weight multiplier for stamina cost
-float StaminaAttackCost::GetWeightMult(RE::Actor *actor, float weight, RE::ActorValue av_to_use)
+float StaminaAttackCost::GetWeightMult(const RE::Actor *actor, const float weight, const RE::ActorValue av_to_use)
 {
-    auto lvl = actor->GetActorValue(av_to_use);
+    const auto lvl = actor->GetActorValue(av_to_use);
     auto equip_weight = weight;
 
     if (equip_weight < 0.5f)
@@ -611,9 +498,8 @@ void Hooks::SpellCap::ApplyPerkEntrySpellMag(RE::BGSPerkEntry::EntryPoint a_entr
     if (!spell) {
         return;
     }
-    auto spell_type = spell->GetSpellType();
 
-    switch (spell_type)
+    switch (auto spell_type = spell->GetSpellType())
     {
         using st = RE::MagicSystem::SpellType;
     case st::kSpell:
@@ -625,11 +511,10 @@ void Hooks::SpellCap::ApplyPerkEntrySpellMag(RE::BGSPerkEntry::EntryPoint a_entr
         return;
     }
 
-    bool isHostile = spell->IsHostile();
-    if (!isHostile)
+    if (bool isHostile = spell->IsHostile(); !isHostile)
         return;
 
-    auto av_effect = spell->GetAVEffect();
+    const auto av_effect = spell->GetAVEffect();
     if (!av_effect)
         return;
 
@@ -637,7 +522,7 @@ void Hooks::SpellCap::ApplyPerkEntrySpellMag(RE::BGSPerkEntry::EntryPoint a_entr
     if (!detri)
         return;
     bool useRange = Config::Settings::enable_damage_ranges.GetValue();
-    if (auto damage_ranges = Utility::GetRandomFloat(Utility::CalcPerc(Settings::magic_lower_range.GetValue(), false),
+    if (float damage_ranges = Utility::GetRandomFloat(Utility::CalcPerc(Settings::magic_lower_range.GetValue(), false),
                                                      Utility::CalcPerc(Settings::magic_upper_range.GetValue(), true)) && useRange)
     {
         damage *= damage_ranges;
@@ -645,8 +530,7 @@ void Hooks::SpellCap::ApplyPerkEntrySpellMag(RE::BGSPerkEntry::EntryPoint a_entr
     if (!target || !caster || target->IsDead()) {
         return;
     }
-    bool isGoodAssassin = caster->IsSneaking() && target->RequestDetectionLevel(caster) <= 0;
-    if (isGoodAssassin)
+    if (bool isGoodAssassin = caster->IsSneaking() && target->RequestDetectionLevel(caster) <= 0)
     {
         return;
     }
@@ -682,7 +566,7 @@ void DamageOut::ApplyPerkEntryAttack(RE::BGSPerkEntry::EntryPoint a_entry, RE::A
 {
     const float orig_dam{damage};
 
-    _Hook24(a_entry, attacker, weapon, target, damage);
+    _applyPerkEntryAttack(a_entry, attacker, weapon, target, damage);
 
     if (!attacker)
         return;
@@ -726,7 +610,7 @@ void DamageOut::ApplyPerkEntryAttack(RE::BGSPerkEntry::EntryPoint a_entry, RE::A
         REX::DEBUG("{} is ethereal, damage is set to 0", attacker->GetName());
     }
     // adjust damage with follower. the more followers, the less damage those and you deal.
-    if (attacker && attacker->IsPlayerTeammate() && !attacker->IsCommandedActor() || attacker && attacker == player)
+    if (attacker->IsPlayerTeammate() && !attacker->IsCommandedActor() || attacker == player)
     {
         if (player->teammateCount > 0 && Settings::enable_foll_change.GetValue())
         {
@@ -771,37 +655,6 @@ void DamageOut::ApplyPerkEntryAttack(RE::BGSPerkEntry::EntryPoint a_entry, RE::A
         }
     }
 
-    if (actor)
-    {
-        auto max_health = ActorUtil::GetMaxHealth(actor);
-        auto curr = actor->GetActorValue(RE::ActorValue::kHealth);
-
-        auto own_level = actor->GetLevel();
-        auto aggressor_level = attacker->GetLevel();
-
-        bool one_shot_prot = Config::Settings::one_shot_protection.GetValue();
-
-        if (aggressor_level <= own_level + 10)
-        {
-            if (curr >= max_health * 0.99f && one_shot_prot)
-            {
-                if (!isGoodAssassin)
-                {
-                    if (damage >= max_health)
-                    {
-                        damage = max_health * 0.75;
-                    }
-                }
-                else if (weapon->IsRanged())
-                {
-                    if (damage >= max_health)
-                    {
-                        damage = max_health * 0.75;
-                    }
-                }
-            }
-        }
-    }
     if (Config::Settings::attacks_of_opp.GetValue())
     {
         // attacks of opportunity. thy count as crit and deal increased damage
@@ -819,25 +672,67 @@ void DamageOut::ApplyPerkEntryAttack(RE::BGSPerkEntry::EntryPoint a_entry, RE::A
             RE::CriticalHit::GetEventSource()->SendEvent(&event);
         }
     }
+    REX::INFO("done with apply perk entry");
+}
 
-    auto power_attack = attacker ? attacker->IsPowerAttacking() : false;
-    uint16_t dmg_cap = weapon && !weapon->IsHandToHandMelee() ? weapon->attackDamage * 5 : 200;
-    bool cap_dmg = Config::Settings::enable_damage_caps.GetValue();
-    if (cap_dmg)
+void DamageOut::ManageCombatHit(RE::Actor* a_this, RE::HitData* a_hitData)
+{
+    auto attacker = a_hitData->aggressor.get();
+    if (!attacker || !a_this)
+    {
+        return _manageCombatHit(a_this, a_hitData);
+    }
+    REX::INFO("actor is: {}", a_this->GetName());
+    const auto max_health = ActorUtil::GetMaxHealth(a_this);
+    const auto curr = a_this->GetActorValue(RE::ActorValue::kHealth);
+
+    const auto own_level = a_this->GetLevel();
+    const auto aggressor_level = attacker->GetLevel();
+    bool one_shot_prot = Config::Settings::one_shot_protection.GetValue();
+    if (aggressor_level <= own_level + 10)
+    {
+        if (curr >= max_health * 0.99f && one_shot_prot)
+        {
+            bool isGoodAssassin = attacker->IsSneaking() && a_this->RequestDetectionLevel(attacker.get()) <= 0;
+            if (!isGoodAssassin)
+            {
+                if (a_hitData->totalDamage >= max_health)
+                {
+                    a_hitData->totalDamage = max_health * 0.2f;
+                    REX::INFO("total damage is: {}", a_hitData->totalDamage);
+                }
+            }
+            else if (a_hitData->weapon->IsRanged())
+            {
+                if (a_hitData->totalDamage >= max_health)
+                {
+                    a_hitData->totalDamage = max_health * 0.2f;
+                }
+            }
+        }
+
+    }
+
+    const auto power_attack = a_hitData->flags.any(RE::HitData::Flag::kPowerAttack);
+    uint16_t dmg_cap = a_hitData->weapon && !a_hitData->weapon->IsHandToHandMelee() ? a_hitData->weapon->attackDamage * 5 : 200;
+    if (bool cap_dmg = Config::Settings::enable_damage_caps.GetValue())
     {
         if (power_attack)
         {
             dmg_cap *= 2;
         }
-        if (damage > dmg_cap && !attacker->IsSneaking())
+        if (a_hitData->totalDamage > static_cast<float>(dmg_cap) && !a_hitData->flags.any(RE::HitData::Flag::kSneakAttack))
         {
-            damage = dmg_cap;
+            a_hitData->totalDamage = dmg_cap;
         }
     }
+    return _manageCombatHit(a_this, a_hitData);
 }
+
 // opportunity modifier for attacks of opportunity
 float DamageOut::GetOpportunityModifier(RE::Actor *victim, RE::Actor *attacker, bool notification)
 {
+    using namespace stweaks;
     float mod = 1.0f;
 
     if (!victim || !attacker) {
@@ -850,7 +745,7 @@ float DamageOut::GetOpportunityModifier(RE::Actor *victim, RE::Actor *attacker, 
     if (ActorUtil::ActorHasEffectOfTypeActive(victim, RE::EffectArchetypes::ArchetypeID::kParalysis) ||
         ActorUtil::ActorHasEffectOfTypeActive(victim, RE::EffectArchetypes::ArchetypeID::kCalm))
     {
-        mod = OppModi::GetModifier(OppModi::OpportunityType::Paralysis);
+        mod = stweaks::OppModi::GetModifier(OppModi::OpportunityType::Paralysis);
         if (notification) {
             message = std::format("attack of opportunity occured for {} times damage", mod);
             RE::SendHUDMessage::ShowHUDMessage(message.c_str());
@@ -894,7 +789,7 @@ float DamageOut::GetOpportunityModifier(RE::Actor *victim, RE::Actor *attacker, 
 void CastingSpeed::CasterUpdate(RE::ActorMagicCaster *a_this, float a_delta)
 {
     auto state = a_this->state.any(RE::ActorMagicCaster::State::kUnk01) ||
-                 a_this->state.any(RE::ActorMagicCaster::State::kUnk02);
+        a_this->state.any(RE::ActorMagicCaster::State::kUnk02);
     if (state && Config::Settings::enable_skill_based_cast_speed.GetValue())
     {
         if (const auto actor = a_this->GetCasterAsActor();
@@ -907,16 +802,16 @@ void CastingSpeed::CasterUpdate(RE::ActorMagicCaster *a_this, float a_delta)
                 if (spell->GetCastingType() == RE::MagicSystem::CastingType::kConcentration ||
                     spell->GetSpellType() == RE::MagicSystem::SpellType::kVoicePower)
                 {
-                    return _Hook25(a_this, a_delta);
+                    return _casterUpdate(a_this, a_delta);
                 }
                 float time_origin = a_this->currentSpell->GetChargeTime();
                 float new_time = GetCastingSpeedMult(actor->GetActorValue(spell->GetAssociatedSkill()));
-                return _Hook25(a_this, a_delta * new_time);
+                return _casterUpdate(a_this, a_delta * new_time);
             }
-            return _Hook25(a_this, a_delta);
+            return _casterUpdate(a_this, a_delta);
         }
     }
-    return _Hook25(a_this, a_delta);
+    return _casterUpdate(a_this, a_delta);
 }
 #pragma endregion
 #pragma region EquipMassChanges & DetectionInTallGrass

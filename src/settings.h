@@ -1,73 +1,69 @@
 #pragma once
 #include <nlohmann/json.hpp>
+#include "mod-data.h"
 #undef ERROR
 
 namespace Config
 {
 namespace SettingConstants
 {
-inline constexpr std::string_view TOML_PATH_DEFAULT = "Data/SKSE/Plugins/stweaks.toml";
-inline constexpr std::string_view TOML_PATH_CUSTOM = "Data/SKSE/Plugins/stweaks_custom.toml";
-inline constexpr std::string_view JSON_PATH = "Data/SKSE/Plugins/stweaks_exceptions.json";
-inline constexpr std::string_view JSON_PATH_LAND = "Data/SKSE/Plugins/stweaks_tallGrass.json";
-inline constexpr std::string_view TOGGLES = "Toggles";
-inline constexpr std::string_view SETTINGS = "SettingValues";
+
 } // namespace SettingConstants
 
 using namespace SettingConstants;
-struct Settings : REX::Singleton<Settings>
+struct Settings : REX::TSingleton<Settings>
 {
     // bools
     static inline REX::TOML::Bool debug_logging{"DebugLogging", "bDebugLoggingEnable", false};
-    static inline REX::TOML::Bool enable_damage_ranges{TOGGLES, "bEnableDamageRanges", true};
-    static inline REX::TOML::Bool enable_sneak_jump_limit{TOGGLES, "bEnableSneakJumpLimit", true};
-    static inline REX::TOML::Bool enable_mass_based_jump_height{TOGGLES, "bMassBasedJump", true};
-    static inline REX::TOML::Bool enable_sneak_stamina{TOGGLES, "bEnableSneakStamina", true};
-    static inline REX::TOML::Bool enable_foll_change{TOGGLES, "bEnableFollowerDamageChange", true};
-    static inline REX::TOML::Bool enable_etheral_change{TOGGLES, "bEnableEtherealChange", true};
-    static inline REX::TOML::Bool enable_diseases{TOGGLES, "bEnableCurses", true};
-    static inline REX::TOML::Bool enable_fading_actors{TOGGLES, "bEnableFadingActors", true};
-    static inline REX::TOML::Bool enable_quest_item_nerf{TOGGLES, "bEnableQuestItemNerf", true};
-    static inline REX::TOML::Bool allow_curse_swapping{TOGGLES, "bAllowCurseSwaps", true};
-    static inline REX::TOML::Bool enable_resist_changes{TOGGLES, "bEnableResistChanges", true};
-    static inline REX::TOML::Bool enable_cast_stamina{TOGGLES, "bEnableCastStamina", true};
-    static inline REX::TOML::Bool enable_attack_stamina{TOGGLES, "bEnableAttackStamina", true};
-    static inline REX::TOML::Bool interupt_cast_on_hit{TOGGLES, "bInteruptCastOnHit", true};
-    static inline REX::TOML::Bool stamina_regen_changes{TOGGLES, "bChangeStaminaRegen", true};
-    static inline REX::TOML::Bool magicka_regen_changes{TOGGLES, "bChangeMagickaRegen", true};
-    static inline REX::TOML::Bool one_shot_protection{TOGGLES, "bEnableOneHitProtection", true};
-    static inline REX::TOML::Bool enable_damage_caps{TOGGLES, "bEnableDamageCaps", true};
-    static inline REX::TOML::Bool enable_skill_based_cast_speed{TOGGLES, "bEnableSkillBasedCastSpeed", true};
-    static inline REX::TOML::Bool level_up_low_levels{TOGGLES, "bLevelUpLowLevelEnemies", true};
-    static inline REX::TOML::Bool enable_automatic_attributes{TOGGLES, "bEnableAutoAttributes", true};
-    static inline REX::TOML::Bool enable_mass_equip_changes{TOGGLES, "bEnableMassChangesWithEquipment", true};
-    static inline REX::TOML::Bool jump_stamina_cost{TOGGLES, "bEnableJumpStaminaCost", true};
-    static inline REX::TOML::Bool tall_grass_sneak{TOGGLES, "bEnableTallGrassEnhancesSneak", true};
-    static inline REX::TOML::Bool attacks_of_opp{TOGGLES, "bEnableAttacksOfOpportunity", true};
-    static inline REX::TOML::Bool show_opp_notif{TOGGLES, "bEnableOpportunityNotifications", true};
-    static inline REX::TOML::Bool play_opp_sound{TOGGLES, "bEnableOpportunitySound", true};
-	static inline REX::TOML::Bool use_exhaustion{ TOGGLES, "bEnableExhaustionSystem", true };
+    static inline REX::TOML::Bool enable_damage_ranges{stweaks::TOGGLES, "bEnableDamageRanges", true};
+    static inline REX::TOML::Bool enable_sneak_jump_limit{stweaks::TOGGLES, "bEnableSneakJumpLimit", true};
+    static inline REX::TOML::Bool enable_mass_based_jump_height{stweaks::TOGGLES, "bMassBasedJump", true};
+    static inline REX::TOML::Bool enable_sneak_stamina{stweaks::TOGGLES, "bEnableSneakStamina", true};
+    static inline REX::TOML::Bool enable_foll_change{stweaks::TOGGLES, "bEnableFollowerDamageChange", true};
+    static inline REX::TOML::Bool enable_etheral_change{stweaks::TOGGLES, "bEnableEtherealChange", true};
+    static inline REX::TOML::Bool enable_diseases{stweaks::TOGGLES, "bEnableCurses", true};
+    static inline REX::TOML::Bool enable_fading_actors{stweaks::TOGGLES, "bEnableFadingActors", true};
+    static inline REX::TOML::Bool enable_quest_item_nerf{stweaks::TOGGLES, "bEnableQuestItemNerf", true};
+    static inline REX::TOML::Bool allow_curse_swapping{stweaks::TOGGLES, "bAllowCurseSwaps", true};
+    static inline REX::TOML::Bool enable_resist_changes{stweaks::TOGGLES, "bEnableResistChanges", true};
+    static inline REX::TOML::Bool enable_cast_stamina{stweaks::TOGGLES, "bEnableCastStamina", true};
+    static inline REX::TOML::Bool enable_attack_stamina{stweaks::TOGGLES, "bEnableAttackStamina", true};
+    static inline REX::TOML::Bool interupt_cast_on_hit{stweaks::TOGGLES, "bInteruptCastOnHit", true};
+    static inline REX::TOML::Bool stamina_regen_changes{stweaks::TOGGLES, "bChangeStaminaRegen", true};
+    static inline REX::TOML::Bool magicka_regen_changes{stweaks::TOGGLES, "bChangeMagickaRegen", true};
+    static inline REX::TOML::Bool one_shot_protection{stweaks::TOGGLES, "bEnableOneHitProtection", true};
+    static inline REX::TOML::Bool enable_damage_caps{stweaks::TOGGLES, "bEnableDamageCaps", true};
+    static inline REX::TOML::Bool enable_skill_based_cast_speed{stweaks::TOGGLES, "bEnableSkillBasedCastSpeed", true};
+    static inline REX::TOML::Bool level_up_low_levels{stweaks::TOGGLES, "bLevelUpLowLevelEnemies", true};
+    static inline REX::TOML::Bool enable_automatic_attributes{stweaks::TOGGLES, "bEnableAutoAttributes", true};
+    static inline REX::TOML::Bool enable_mass_equip_changes{stweaks::TOGGLES, "bEnableMassChangesWithEquipment", true};
+    static inline REX::TOML::Bool jump_stamina_cost{stweaks::TOGGLES, "bEnableJumpStaminaCost", true};
+    static inline REX::TOML::Bool tall_grass_sneak{stweaks::TOGGLES, "bEnableTallGrassEnhancesSneak", true};
+    static inline REX::TOML::Bool attacks_of_opp{stweaks::TOGGLES, "bEnableAttacksOfOpportunity", true};
+    static inline REX::TOML::Bool show_opp_notif{stweaks::TOGGLES, "bEnableOpportunityNotifications", true};
+    static inline REX::TOML::Bool play_opp_sound{stweaks::TOGGLES, "bEnableOpportunitySound", true};
+	static inline REX::TOML::Bool use_exhaustion{ stweaks::TOGGLES, "bEnableExhaustionSystem", true };
 
-    static inline REX::TOML::I32 vanilla_attribute_leveling{SETTINGS, "iVanillaAttributesOnLevelUp", 5};
-    static inline REX::TOML::F32 sneak_height_modifier{SETTINGS, "fSneakJumpModifier", 0.55f};
-    static inline REX::TOML::I32 weapon_upper_range{SETTINGS, "iUpperRangeWeapons", 15};
-    static inline REX::TOML::I32 weapon_lower_range{SETTINGS, "iLowerRangeWeapons", 15};
-    static inline REX::TOML::I32 magic_upper_range{SETTINGS, "iUpperRangeMagic", 15};
-    static inline REX::TOML::I32 magic_lower_range{SETTINGS, "iLowerRangeMagic", 15};
-    static inline REX::TOML::F32 curse_chance{SETTINGS, "fCurseChance", 1.0f};
-    static inline REX::TOML::F64 curse_swap_cooldown{SETTINGS, "fCurseSwapCooldown", 60.0};
-    static inline REX::TOML::F64 base_stamina_cost_attacks{SETTINGS, "fBaseStaminaCostMelee", 10.0};
-    static inline REX::TOML::F64 resist_reduction_value{SETTINGS, "fResistReduceValue", 20.0};
-    static inline REX::TOML::F64 magic_stamina_cost_divider{SETTINGS, "fMagicStamCostDivider", 2.0};
-    static inline REX::TOML::F64 stamina_regen_base_calc{SETTINGS, "fStaminaBaseValue", 150.0};
-    static inline REX::TOML::F64 magicka_regen_base_calc{SETTINGS, "fMagickaBaseValue", 150.0};
-    static inline REX::TOML::F64 max_cast_speed{SETTINGS, "fMaxCastSpeedModifier", 2.0};
-    static inline REX::TOML::F64 min_cast_speed{SETTINGS, "fMinCastSpeedModifier", 0.33};
+    static inline REX::TOML::I32 vanilla_attribute_leveling{stweaks::SETTINGS, "iVanillaAttributesOnLevelUp", 5};
+    static inline REX::TOML::F32 sneak_height_modifier{stweaks::SETTINGS, "fSneakJumpModifier", 0.55f};
+    static inline REX::TOML::I32 weapon_upper_range{stweaks::SETTINGS, "iUpperRangeWeapons", 15};
+    static inline REX::TOML::I32 weapon_lower_range{stweaks::SETTINGS, "iLowerRangeWeapons", 15};
+    static inline REX::TOML::I32 magic_upper_range{stweaks::SETTINGS, "iUpperRangeMagic", 15};
+    static inline REX::TOML::I32 magic_lower_range{stweaks::SETTINGS, "iLowerRangeMagic", 15};
+    static inline REX::TOML::F32 curse_chance{stweaks::SETTINGS, "fCurseChance", 1.0f};
+    static inline REX::TOML::F64 curse_swap_cooldown{stweaks::SETTINGS, "fCurseSwapCooldown", 60.0};
+    static inline REX::TOML::F64 base_stamina_cost_attacks{stweaks::SETTINGS, "fBaseStaminaCostMelee", 10.0};
+    static inline REX::TOML::F64 resist_reduction_value{stweaks::SETTINGS, "fResistReduceValue", 20.0};
+    static inline REX::TOML::F64 magic_stamina_cost_divider{stweaks::SETTINGS, "fMagicStamCostDivider", 2.0};
+    static inline REX::TOML::F64 stamina_regen_base_calc{stweaks::SETTINGS, "fStaminaBaseValue", 150.0};
+    static inline REX::TOML::F64 magicka_regen_base_calc{stweaks::SETTINGS, "fMagickaBaseValue", 150.0};
+    static inline REX::TOML::F64 max_cast_speed{stweaks::SETTINGS, "fMaxCastSpeedModifier", 2.0};
+    static inline REX::TOML::F64 min_cast_speed{stweaks::SETTINGS, "fMinCastSpeedModifier", 0.33};
 
-    inline void UpdateSettings(bool save = false)
+    static void UpdateSettings(const bool save = false)
     {
         const auto toml = REX::TOML::SettingStore::GetSingleton();
-        toml->Init(TOML_PATH_DEFAULT.data(), TOML_PATH_CUSTOM.data());
+        toml->Init(stweaks::TOML_PATH_DEFAULT.data(), stweaks::TOML_PATH_CUSTOM.data());
         if (!save)
             toml->Load();
         else
@@ -199,8 +195,8 @@ static inline void LoadExceptionWeapons(const std::string &configFilePath)
 
 static void LoadJson()
 {
-    LoadExceptionWeapons(JSON_PATH.data());
-    LoadTallGrass(JSON_PATH_LAND.data());
+    LoadExceptionWeapons(stweaks::JSON_PATH.data());
+    LoadTallGrass(stweaks::JSON_PATH_LAND.data());
 }
 
 inline static bool IsQuestWeaponException(RE::TESObjectWEAP *form)

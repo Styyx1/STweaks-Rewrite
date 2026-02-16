@@ -1,5 +1,5 @@
 #pragma once
-#include "API/SKSEMenuFramework.h"
+#include "st-ui.h"
 #include "settings.h"
 namespace UI
 {

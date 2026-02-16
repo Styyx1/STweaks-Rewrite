@@ -3,91 +3,25 @@
 
 namespace Hooks
 {
-    struct OppModi {
-  enum class OpportunityType : int {
-    Sleep = 0,
-    Attack = 1,
-    Paralysis = 2,
-    Backstab = 3,
-    None = 4
-  };
-
-  inline static std::array<float, 5> OpportunityModifiers = {
-      4.0f, // Sleep
-      1.2f, // Attack
-      2.5f, // Paralysis
-      1.3f, // Backstab
-      1.0f  // None
-  };
-
-  inline static float GetModifier(OpportunityType type) {
-      auto opp = static_cast<int>(type);
-      if (opp > 4)
-          return 1.0;
-    return OpportunityModifiers[opp];
-  }
-};
-
-struct AVStorage : public REX::Singleton<AVStorage>
-{
-    std::unordered_map<RE::ActorValue, uint16_t> attribute_xp;
-    inline uint16_t get_attribute_xp(RE::ActorValue av)
-    {
-        if (attribute_xp.empty())
-            return 0;
-        return attribute_xp[av];
-    }
-};
 
 class MainUpdate
 {
-  public:
-    static inline int frameCount = 0;
-    static inline std::chrono::steady_clock::time_point sprintStartTime;
-    static inline bool isSprinting = false;
-
-  private:
     static void MainUpdateHook(float a_delta);
-    static bool HasRangedWeaponDrawn(RE::PlayerCharacter *player);
-    static float GetCarryPercentage(RE::PlayerCharacter *player);
-	static void ManageSneakStamina(RE::PlayerCharacter* player);
-    static void ManageAttributeGrowth(RE::PlayerCharacter* player);
-    static inline TimerUtil::Timer av_timer;
-    static inline float pl_mass;
-    static inline constexpr std::array restricted_menu_names{
-        RE::BarterMenu::MENU_NAME,    RE::BookMenu::MENU_NAME,     RE::Console::MENU_NAME,
-        RE::ContainerMenu::MENU_NAME, RE::CraftingMenu::MENU_NAME, RE::DialogueMenu::MENU_NAME,
-        RE::FavoritesMenu::MENU_NAME, RE::GiftMenu::MENU_NAME,     RE::InventoryMenu::MENU_NAME,
-        RE::JournalMenu::MENU_NAME,   RE::LevelUpMenu::MENU_NAME,  RE::LockpickingMenu::MENU_NAME,
-        RE::MagicMenu::MENU_NAME,     RE::MapMenu::MENU_NAME,      RE::RaceSexMenu::MENU_NAME,
-        RE::SleepWaitMenu::MENU_NAME, RE::StatsMenu::MENU_NAME,    RE::TrainingMenu::MENU_NAME,
-        RE::TutorialMenu::MENU_NAME,  RE::TweenMenu::MENU_NAME,
-    };
-    static inline std::vector<std::string> a_menuNames{restricted_menu_names.begin(), restricted_menu_names.end()};
-    static inline bool IsAnyOfMenuOpen(const std::vector<std::string> &a_menuNames)
-    {
-        auto a_ui = RE::UI::GetSingleton();
-        if (!a_ui)
-            return true;
-        for (const std::string_view menuName : a_menuNames)
-        {
-            if (a_ui->IsMenuOpen(menuName))
-            {
-                return true;
-            }
-        }
-        return false;
-    }
-    static inline REL::Hook _Hook1{REL::ID(36564), 0xc26, &MainUpdateHook};
+    static void PlayerUpdateHook(RE::PlayerCharacter* a_this, float a_delta);
+
+    static inline REL::Hook _mainUpdateHook{REL::ID(36564), 0xc26, &MainUpdateHook};
+    static inline REL::HookVFT _playerUpdateHook{RE::VTABLE_PlayerCharacter[0], 0xAD, &PlayerUpdateHook};
 };
 
 class JumpHeight
 {
   public:
     static float JumpHeightGetScale(RE::TESObjectREFR *refr);
+    static RE::bhkCharacterController* GetCharacterController(RE::AIProcess* a_proc);
 
   private:
-    static inline REL::Hook _Hook3{REL::ID(37257), 0x17f, &JumpHeightGetScale};
+    static inline REL::Hook _jumpHeightGetScale{REL::ID(37257), 0x17f, &JumpHeightGetScale};
+    static inline REL::Hook _getCharacterControllerHook{REL::ID(37257), 0x35, &GetCharacterController};
 };
 
 class OnEffectEndHook
@@ -145,7 +79,7 @@ class StaminaAttackCost
     static constexpr float SKILL_SCALING = 1.10f;
 
     static float GetAttackCost(RE::ActorValueOwner *a_owner, RE::BGSAttackData *attack);
-    static float GetWeightMult(RE::Actor *actor, float weight, RE::ActorValue av_to_use);
+    static float GetWeightMult(const RE::Actor *actor, float weight, RE::ActorValue av_to_use);
 
     static inline REL::Hook _Hook12{REL::ID(38603), 0x171, &GetAttackCost};
 };
@@ -180,7 +114,11 @@ class DamageOut
 {
     static void ApplyPerkEntryAttack(RE::BGSPerkEntry::EntryPoint a_entry, RE::Actor *attacker,
                                      RE::TESObjectWEAP *weapon, RE::TESObjectREFR *target, float &damage);
-    static inline REL::Hook _Hook24{REL::ID(44016), 0x96, ApplyPerkEntryAttack};
+
+    static void ManageCombatHit(RE::Actor* a_this, RE::HitData* a_hitData);
+
+    static inline REL::Hook _applyPerkEntryAttack{REL::ID(44016), 0x96, ApplyPerkEntryAttack};
+    static inline REL::Hook _manageCombatHit{REL::ID(38627), 0x4a8, ManageCombatHit};
 
     static float GetOpportunityModifier(RE::Actor *victim, RE::Actor *attacker, bool notification);
 };
@@ -192,12 +130,12 @@ class CastingSpeed
     static inline float GetCastingSpeedMult(float skillLevel)
     {
         skillLevel = std::clamp(skillLevel, 0.0f, 100.0f);
-        float min_speed = Config::Settings::min_cast_speed.GetValue();
-        float max_speed = Config::Settings::max_cast_speed.GetValue();
+        const auto min_speed = static_cast<float>(Config::Settings::min_cast_speed.GetValue());
+        const auto max_speed = static_cast<float>(Config::Settings::max_cast_speed.GetValue());
         return std::lerp(min_speed, max_speed, skillLevel / 100.0f);
     }
 
-    static inline REL::HookVFT _Hook25{RE::VTABLE_ActorMagicCaster[0], 0x1d, CasterUpdate};
+    static inline REL::HookVFT _casterUpdate{RE::VTABLE_ActorMagicCaster[0], 0x1d, CasterUpdate};
 };
 
 class EquipHandler

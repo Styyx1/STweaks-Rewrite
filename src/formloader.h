@@ -1,59 +1,42 @@
 #pragma once
 
 #include "settings.h"
+#include "mod-data.h"
 
 namespace Forms
 {
-namespace FormConstants
-{
-static inline std::vector<std::string> diseases{"stweaksDisease_Health", "stweaksDisease_Stamina",
-                                                "stweaksDisease_Magicka"};
+	struct FormLoader
+	{
+		static inline bool disease_mod_active = false;
+		static inline RE::SpellItem *sneak_stamina_spell{nullptr};
+		static inline RE::SpellItem *health_curse{nullptr};
+		static inline RE::SpellItem *stamina_curse{nullptr};
+		static inline RE::SpellItem *magicka_curse{nullptr};
+		static inline RE::SpellItem *silence_curse{nullptr};
+		static inline RE::SpellItem *melee_damage_curse{nullptr};
+		static inline RE::SpellItem *bow_damage_curse{nullptr};
+		static inline RE::SpellItem *jump_curse{nullptr};
+		static inline RE::BGSListForm *spell_allow_list{nullptr};
+		static inline RE::BGSPerk *tall_grass_perk{nullptr};
+		static inline RE::SpellItem* exhaustion_spell{ nullptr };
+		static inline RE::BGSListForm* curses_formlist{ nullptr };
 
-constexpr const char *mod_name = "STweaks.esp";
-constexpr const char *diseases_name = "Stweaks - Diseases.esp";
-const int sneak_stamina_spell_ID = 0x804;
-const int health_curse_ID = 0x3;
-const int stamina_curse_ID = 0x6;
-const int magicka_curse_ID = 0x9;
-const int silence_curse_ID = 0xD;
-const int melee_weakness_curse_ID = 0x10;
-const int bow_weakness_curse_ID = 0x13;
-const int jump_curse_ID = 0x16;
-const int spell_allow_list_ID = 0x1c;
-const int tall_grass_perk_ID = 0x805;
-const int exhaustion_spell_ID = 0x80d;
-const int curses_formlist_ID = 0x1b;
+		using SpellVector = std::vector<RE::SpellItem*>;
+		//can contain duplicates
+		//this allows users to weight towards specific spells with the formlist
 
-constexpr const char *cure_keyword = "cleanse_curse";
-constexpr const char *curse_keyword = "stweaks_curse";
-constexpr const char *silence_key = "curse_silence";
-constexpr const char *bow_curse_key = "curse_bow";
-constexpr const char *jump_curse_key = "curse_jump";
+		static inline SpellVector curse_list;
 
-} // namespace FormConstants
-struct FormLoader : REX::Singleton<FormLoader>
-{
+		//doesn't specifically expect duplicates
+		static inline SpellVector spell_allow_vector;
 
-    bool disease_mod_active = false;
-    static inline RE::SpellItem *sneak_stamina_spell{nullptr};
-    static inline RE::SpellItem *health_curse{nullptr};
-    static inline RE::SpellItem *stamina_curse{nullptr};
-    static inline RE::SpellItem *magicka_curse{nullptr};
-    static inline RE::SpellItem *silence_curse{nullptr};
-    static inline RE::SpellItem *melee_damage_curse{nullptr};
-    static inline RE::SpellItem *bow_damage_curse{nullptr};
-    static inline RE::SpellItem *jump_curse{nullptr};
-    static inline RE::BGSListForm *spell_allow_list{nullptr};
-    static inline RE::BGSPerk *tall_grass_perk{nullptr};
-	static inline RE::SpellItem* exhaustion_spell{ nullptr };
-	static inline RE::BGSListForm* curses_formlist{ nullptr };
+		static bool ContainsSpell(const SpellVector& list, RE::SpellItem* spell)
+		{
+			return std::ranges::find(list, spell) != list.end();
+		}
 
-    static inline std::vector<RE::SpellItem *> curse_list{};
-    static inline std::vector<RE::SpellItem *> spell_allow_vector{};
-    void PopulateCurseList();
-    
-    void AddFormListEntriesToCurseVector();
-
-    void LoadForms();
-};
+		static void PopulateCurseList();
+		static void AddFormListEntriesToCurseVector();
+		static void LoadForms();
+	};
 } // namespace Forms

@@ -1,5 +1,6 @@
 #pragma once
 #include "Events.h"
+#include "mod-storage.h"
 
 // Credits: https://github.com/colinswrath/BladeAndBlunt/blob/main/include/Serialization.h
 namespace Serialisation
@@ -18,12 +19,12 @@ inline void SaveCallback(SKSE::SerializationInterface *a_skse)
     }
     else
     {
-        auto diseaseManager = Events::HitEventHandler::GetSingleton();
-        auto healthdebuffToSerialise = diseaseManager->storedHealth_disease;
-        auto staminadebuffToSerialise = diseaseManager->storedStamina_disease;
-        auto magickadebuffToSerialise = diseaseManager->storedMagicka_disease;
+        auto store = stweaks::ModStorage::GetSingleton();
+        auto healthdebuffToSerialise = store->storedHealth_disease;
+        auto staminadebuffToSerialise = store->storedStamina_disease;
+        auto magickadebuffToSerialise = store->storedMagicka_disease;
 
-        auto av_store = Hooks::AVStorage::GetSingleton();
+        auto av_store = stweaks::AVStorage::GetSingleton();
         auto health_xp = av_store->get_attribute_xp(RE::ActorValue::kHealth);
         auto stamina_xp = av_store->get_attribute_xp(RE::ActorValue::kStamina);
         auto magicka_xp = av_store->get_attribute_xp(RE::ActorValue::kMagicka);
@@ -63,8 +64,8 @@ inline void LoadCallback(SKSE::SerializationInterface *a_skse)
     std::uint32_t length;
     a_skse->GetNextRecordInfo(type, version, length);
 
-    auto *diseaseManager = Events::HitEventHandler::GetSingleton();
-    auto *av_store = Hooks::AVStorage::GetSingleton();
+    auto *store = stweaks::ModStorage::GetSingleton();
+    auto *av_store = stweaks::AVStorage::GetSingleton();
 
     if (type != SerializationType)
     {
@@ -102,9 +103,9 @@ inline void LoadCallback(SKSE::SerializationInterface *a_skse)
 
     else
     {
-        diseaseManager->storedHealth_disease = deserialisedHealth;
-        diseaseManager->storedStamina_disease = deserialisedStamina;
-        diseaseManager->storedMagicka_disease = deserialisedMagicka;
+        store->storedHealth_disease = deserialisedHealth;
+        store->storedStamina_disease = deserialisedStamina;
+        store->storedMagicka_disease = deserialisedMagicka;
         av_store->attribute_xp [RE::ActorValue::kHealth] = health_xp;
         av_store->attribute_xp[RE::ActorValue::kStamina] = stamina_xp;
         av_store->attribute_xp[RE::ActorValue::kMagicka] = magicka_xp;
@@ -122,11 +123,11 @@ inline void LoadCallback(SKSE::SerializationInterface *a_skse)
 
 inline void RevertCallback([[maybe_unused]] SKSE::SerializationInterface *a_skse)
 {
-    auto diseaseManager = Events::HitEventHandler::GetSingleton();
-    diseaseManager->storedHealth_disease = 0.0f;
-    diseaseManager->storedStamina_disease = 0.0f;
-    diseaseManager->storedMagicka_disease = 0.0f;
-    auto *av_store = Hooks::AVStorage::GetSingleton();
+    const auto store = stweaks::ModStorage::GetSingleton();
+    store->storedHealth_disease = 0.0f;
+    store->storedStamina_disease = 0.0f;
+    store->storedMagicka_disease = 0.0f;
+    auto *av_store = stweaks::AVStorage::GetSingleton();
     av_store->attribute_xp[RE::ActorValue::kHealth] = 0;
     av_store->attribute_xp[RE::ActorValue::kStamina] = 0;
     av_store->attribute_xp[RE::ActorValue::kMagicka] = 0;

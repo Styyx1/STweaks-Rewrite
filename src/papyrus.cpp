@@ -1,6 +1,9 @@
 #include "papyrus.h"
 #include "hooks.h"
+#include "mod-storage.h"
 #include <string_view>
+
+#include "damage-manager.h"
 
 namespace Papyrus
 {
@@ -53,24 +56,24 @@ void CleanseCurseActor(STATIC_ARGS, RE::Actor *a_actor)
 void ChangeOpportunityModifier(STATIC_ARGS, int opportunityType, float modifier)
 {
   if (opportunityType < 0 ||
-      opportunityType >= Hooks::OppModi::OpportunityModifiers.size())
+      opportunityType >= stweaks::OppModi::OpportunityModifiers.size())
     {
         REX::WARN("Invalid opportunity type in ChangeOpportunityModifier script function");
         return;
     }
-    Hooks::OppModi::OpportunityModifiers[opportunityType] = modifier;
+    stweaks::OppModi::OpportunityModifiers[opportunityType] = modifier;
     REX::DEBUG("Changed Opportunity Type({}) Modifier to: {}", opportunityType, modifier);
 }
 float GetOpportunityModifier(STATIC_ARGS, int opportunityType)
 {
   if (opportunityType < 0 ||
-      opportunityType >= Hooks::OppModi::OpportunityModifiers.size())
+      opportunityType >= stweaks::OppModi::OpportunityModifiers.size())
     {
         REX::WARN("Invalid opportunity type in GetOpportunityModifier script "
                   "function");
         return 1.0f;
     }
-    return Hooks::OppModi::OpportunityModifiers[opportunityType];
+    return stweaks::OppModi::OpportunityModifiers[opportunityType];
 }
 } // namespace Functions
 

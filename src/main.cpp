@@ -10,7 +10,7 @@ void Listener(SKSE::MessagingInterface::Message* message) noexcept
 {
     switch (message->type) {
     case SKSE::MessagingInterface::kDataLoaded:
-        Forms::FormLoader::GetSingleton()->LoadForms();
+        Forms::FormLoader::LoadForms();
         Events::RegisterEvents();
         Config::Exceptions::LoadJson();
         break;

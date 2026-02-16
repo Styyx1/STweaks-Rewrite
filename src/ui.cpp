@@ -26,13 +26,13 @@ void RestoreFromSettings(bool settings, bool toggles, bool attributes)
 
         jump_height_mod = set::sneak_height_modifier.GetValue();
         curse_chance = set::curse_chance.GetValue();
-        curse_swap_cooldown = set::curse_swap_cooldown.GetValue();
+        curse_swap_cooldown = static_cast<float>(set::curse_swap_cooldown.GetValue());
         upper_range_melee = set::weapon_upper_range.GetValue();
         upper_range_magic = set::magic_upper_range.GetValue();
         lower_range_melee = set::weapon_lower_range.GetValue();
         lower_range_magic = set::magic_lower_range.GetValue();
         curse_swap_toggle = set::allow_curse_swapping.GetValue();
-        resistance_change_value = set::resist_reduction_value.GetValue();
+        resistance_change_value = static_cast<float>(set::resist_reduction_value.GetValue());
     }
     if (toggles)
     {
@@ -59,17 +59,17 @@ void RestoreFromSettings(bool settings, bool toggles, bool attributes)
     if (attributes)
     {
         using namespace UI::Attributes::vars;
-        stamina_attack = set::base_stamina_cost_attacks.GetValue();
-        stamina_magic = set::magic_stamina_cost_divider.GetValue();
+        stamina_attack = static_cast<float>(set::base_stamina_cost_attacks.GetValue());
+        stamina_magic = static_cast<float>(set::magic_stamina_cost_divider.GetValue());
         sneak_stamina = set::enable_sneak_stamina.GetValue();
         stamina_regen_toggle = set::stamina_regen_changes.GetValue();
         magicka_regen_toggle = set::magicka_regen_changes.GetValue();
         attack_stamina_toggle = set::enable_attack_stamina.GetValue();
         magic_stamina_toggle = set::enable_cast_stamina.GetValue();
-        base_for_stamina_regen = set::stamina_regen_base_calc.GetValue();
-        base_for_magicka_regen = set::magicka_regen_base_calc.GetValue();
-        min_cast_speed = set::min_cast_speed.GetValue();
-        max_cast_speed = set::max_cast_speed.GetValue();
+        base_for_stamina_regen = static_cast<float>(set::stamina_regen_base_calc.GetValue());
+        base_for_magicka_regen = static_cast<float>(set::magicka_regen_base_calc.GetValue());
+        min_cast_speed = static_cast<float>(set::min_cast_speed.GetValue());
+        max_cast_speed = static_cast<float>(set::max_cast_speed.GetValue());
         toggle_cast_speed = set::enable_skill_based_cast_speed.GetValue();
         jump_stamina_cost = set::jump_stamina_cost.GetValue();
         vanilla_attribute_leveling = set::vanilla_attribute_leveling.GetValue();
@@ -189,13 +189,13 @@ void RestoreDefaults(bool settings, bool toggles, bool attributes)
 // https://github.com/QTR-Modding/SaveManagerSKSE/blob/af53d32f57a3fc4a0c0e22828b66e4592338826e/src/UI.cpp#L3
 void HelpMarker(const char *desc)
 {
-    ImGui::TextDisabled("(?)");
-    if (ImGui::BeginItemTooltip())
+    ImGuiMCP::TextDisabled("(?)");
+    if (ImGuiMCP::BeginItemTooltip())
     {
-        ImGui::PushTextWrapPos(ImGui::GetFontSize() * 35.0f);
-        ImGui::TextUnformatted(desc);
-        ImGui::PopTextWrapPos();
-        ImGui::EndTooltip();
+        ImGuiMCP::PushTextWrapPos(ImGuiMCP::GetFontSize() * 35.0f);
+        ImGuiMCP::TextUnformatted(desc);
+        ImGuiMCP::PopTextWrapPos();
+        ImGuiMCP::EndTooltip();
     }
 }
 
@@ -206,106 +206,106 @@ void __stdcall RenderSettings()
     FontAwesome::PushSolid();
 
     // === Jump Height ===
-    ImGui::NewLine();
-    ImGui::SeparatorText(Titles::jump_height.c_str());
+    ImGuiMCP::NewLine();
+    ImGuiMCP::SeparatorText(Titles::jump_height.c_str());
 
-    ImGui::SetNextItemWidth(300.0f);
-    if (ImGui::SliderFloat(Label::jump_height_mod.c_str(), &vars::jump_height_mod, 0.0, 1.0, "%.2f"))
+    ImGuiMCP::SetNextItemWidth(300.0f);
+    if (ImGuiMCP::SliderFloat(Label::jump_height_mod.c_str(), &vars::jump_height_mod, 0.0, 1.0, "%.2f"))
     {
         Config::Settings::sneak_height_modifier.SetValue(vars::jump_height_mod);
     }
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::jump_height_mod.c_str());
 
     // === Curse Settings ===
-    ImGui::NewLine();
-    ImGui::SeparatorText(Titles::curses.c_str());
+    ImGuiMCP::NewLine();
+    ImGuiMCP::SeparatorText(Titles::curses.c_str());
 
-    if (ImGui::Checkbox(Label::curse_swap_toggle.c_str(), &vars::curse_swap_toggle))
+    if (ImGuiMCP::Checkbox(Label::curse_swap_toggle.c_str(), &vars::curse_swap_toggle))
     {
         Config::Settings::allow_curse_swapping.SetValue(vars::curse_swap_toggle);
     }
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::curse_swap_toggle.c_str());
 
-    ImGui::SetNextItemWidth(200.0);
-    if (ImGui::SliderFloat(Label::curse_chance.c_str(), &vars::curse_chance, 0.0, 100.0f, "%.2f%%"))
+    ImGuiMCP::SetNextItemWidth(200.0);
+    if (ImGuiMCP::SliderFloat(Label::curse_chance.c_str(), &vars::curse_chance, 0.0, 100.0f, "%.2f%%"))
     {
         Config::Settings::curse_chance.SetValue(vars::curse_chance);
     }
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::curse_chance.c_str());
 
-    ImGui::SetNextItemWidth(200.0);
-    if (ImGui::SliderFloat(Label::curse_swap_cooldown.c_str(), &vars::curse_swap_cooldown, 3.0, 120.0, "%.2fsec"))
+    ImGuiMCP::SetNextItemWidth(200.0);
+    if (ImGuiMCP::SliderFloat(Label::curse_swap_cooldown.c_str(), &vars::curse_swap_cooldown, 3.0, 120.0, "%.2fsec"))
     {
         Config::Settings::curse_swap_cooldown.SetValue(vars::curse_swap_cooldown);
     }
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::curse_swap_cooldown.c_str());
 
     // === Damage Ranges ===
-    ImGui::NewLine();
-    ImGui::SeparatorText(Titles::ranges.c_str());
+    ImGuiMCP::NewLine();
+    ImGuiMCP::SeparatorText(Titles::ranges.c_str());
 
-    ImGui::SetNextItemWidth(200.0f);
-    if (ImGui::SliderInt(Label::upper_range_melee.c_str(), &vars::upper_range_melee, 0, 99, "%d%%"))
+    ImGuiMCP::SetNextItemWidth(200.0f);
+    if (ImGuiMCP::SliderInt(Label::upper_range_melee.c_str(), &vars::upper_range_melee, 0, 99, "%d%%"))
     {
         Config::Settings::weapon_upper_range.SetValue(vars::upper_range_melee);
     }
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::upper_range_melee.c_str());
 
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(200.0f);
-    if (ImGui::SliderInt(Label::lower_range_melee.c_str(), &vars::lower_range_melee, 0, 99, "%d%%"))
+    ImGuiMCP::SameLine();
+    ImGuiMCP::SetNextItemWidth(200.0f);
+    if (ImGuiMCP::SliderInt(Label::lower_range_melee.c_str(), &vars::lower_range_melee, 0, 99, "%d%%"))
     {
         Config::Settings::weapon_lower_range.SetValue(vars::lower_range_melee);
     }
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::lower_range_melee.c_str());
 
-    ImGui::SetNextItemWidth(200.0f);
-    if (ImGui::SliderInt(Label::upper_range_magic.c_str(), &vars::upper_range_magic, 0, 99, "%d%%"))
+    ImGuiMCP::SetNextItemWidth(200.0f);
+    if (ImGuiMCP::SliderInt(Label::upper_range_magic.c_str(), &vars::upper_range_magic, 0, 99, "%d%%"))
     {
         Config::Settings::magic_upper_range.SetValue(vars::upper_range_magic);
     }
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::upper_range_magic.c_str());
 
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(200.0f);
-    if (ImGui::SliderInt(Label::lower_range_magic.c_str(), &vars::lower_range_magic, 0, 99, "%d%%"))
+    ImGuiMCP::SameLine();
+    ImGuiMCP::SetNextItemWidth(200.0f);
+    if (ImGuiMCP::SliderInt(Label::lower_range_magic.c_str(), &vars::lower_range_magic, 0, 99, "%d%%"))
     {
         Config::Settings::magic_lower_range.SetValue(vars::lower_range_magic);
     }
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::lower_range_magic.c_str());
 
     // === Resistance Change ===
-    ImGui::NewLine();
-    ImGui::SeparatorText(Titles::resist.c_str());
+    ImGuiMCP::NewLine();
+    ImGuiMCP::SeparatorText(Titles::resist.c_str());
 
-    ImGui::SetNextItemWidth(300.0f);
-    if (ImGui::SliderFloat(Label::resistance_change_value.c_str(), &vars::resistance_change_value, 0.0, 50.0f,
+    ImGuiMCP::SetNextItemWidth(300.0f);
+    if (ImGuiMCP::SliderFloat(Label::resistance_change_value.c_str(), &vars::resistance_change_value, 0.0, 50.0f,
                            "%.2f%%"))
     {
         Config::Settings::resist_reduction_value.SetValue(vars::resistance_change_value);
     }
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::resistance_change_value.c_str());
 
     // === Save / Reset System ===
-    ImGui::NewLine();
-    ImGui::SeparatorText(Titles::system.c_str());
+    ImGuiMCP::NewLine();
+    ImGuiMCP::SeparatorText(Titles::system.c_str());
 
-    if (ImGui::Button(Label::save_settings.c_str()))
+    if (ImGuiMCP::Button(Label::save_settings.c_str()))
     {
         Config::Settings::GetSingleton()->UpdateSettings(true);
     }
 
-    ImGui::SameLine();
-    if (ImGui::Button(Label::restore_defaults.c_str()))
+    ImGuiMCP::SameLine();
+    if (ImGuiMCP::Button(Label::restore_defaults.c_str()))
     {
         RestoreDefaults(true, false);
     }
@@ -321,137 +321,137 @@ void __stdcall RenderToggles()
     FontAwesome::PushSolid();
 
     // === Toggles Title ===
-    ImGui::SeparatorText(Titles::toggles.c_str());
-    ImGui::TextColored(ImVec4(1.0f, 0.2f, 0.2f, 1.0f), Titles::system_note.c_str());
-    ImGui::NewLine();
+    ImGuiMCP::SeparatorText(Titles::toggles.c_str());
+    ImGuiMCP::TextColored(ImVec4(1.0f, 0.2f, 0.2f, 1.0f), Titles::system_note.c_str());
+    ImGuiMCP::NewLine();
 
     // === Damage Range & Ethereal Changes ===
-    if (ImGui::Checkbox(Label::damage_ranges.c_str(), &vars::damage_ranges))
+    if (ImGuiMCP::Checkbox(Label::damage_ranges.c_str(), &vars::damage_ranges))
         Config::Settings::enable_damage_ranges.SetValue(vars::damage_ranges);
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::damage_ranges.c_str());
 
-    ImGui::SameLine();
-    if (ImGui::Checkbox(Label::ethereal_change.c_str(), &vars::ethereal_change))
+    ImGuiMCP::SameLine();
+    if (ImGuiMCP::Checkbox(Label::ethereal_change.c_str(), &vars::ethereal_change))
         Config::Settings::enable_etheral_change.SetValue(vars::ethereal_change);
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::ethereal_change.c_str());
 
     // === Sneak Jump & Mass Based Jump ===
-    if (ImGui::Checkbox(Label::sneak_jump_limit.c_str(), &vars::sneak_jump_limit))
+    if (ImGuiMCP::Checkbox(Label::sneak_jump_limit.c_str(), &vars::sneak_jump_limit))
         Config::Settings::enable_sneak_jump_limit.SetValue(vars::sneak_jump_limit);
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::sneak_jump_limit.c_str());
 
-    ImGui::SameLine();
-    if (ImGui::Checkbox(Label::mass_based_jump.c_str(), &vars::mass_based_jump))
+    ImGuiMCP::SameLine();
+    if (ImGuiMCP::Checkbox(Label::mass_based_jump.c_str(), &vars::mass_based_jump))
         Config::Settings::enable_mass_based_jump_height.SetValue(vars::mass_based_jump);
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::mass_based_jump.c_str());
 
     // === Quest Item Nerf & Curses ===
-    if (ImGui::Checkbox(Label::quest_item_nerf.c_str(), &vars::quest_item_nerf))
+    if (ImGuiMCP::Checkbox(Label::quest_item_nerf.c_str(), &vars::quest_item_nerf))
         Config::Settings::enable_quest_item_nerf.SetValue(vars::quest_item_nerf);
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::quest_item_nerf.c_str());
 
-    ImGui::SameLine();
-    if (ImGui::Checkbox(Label::curses.c_str(), &vars::curses))
+    ImGuiMCP::SameLine();
+    if (ImGuiMCP::Checkbox(Label::curses.c_str(), &vars::curses))
     {
         Config::Settings::enable_diseases.SetValue(vars::curses);
         Utility::Curses::CleanseCurse(Cache::GetPlayerSingleton());
     }
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::curses.c_str());
 
     // === Resistance & Spell/Attack Toggles ===
-    if (ImGui::Checkbox(Label::resist_change.c_str(), &vars::resist_change))
+    if (ImGuiMCP::Checkbox(Label::resist_change.c_str(), &vars::resist_change))
         Config::Settings::enable_resist_changes.SetValue(vars::resist_change);
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::resist_change.c_str());
 
-    ImGui::SameLine();
-    if (ImGui::Checkbox(Label::interupt_cast.c_str(), &vars::interupt_cast))
+    ImGuiMCP::SameLine();
+    if (ImGuiMCP::Checkbox(Label::interupt_cast.c_str(), &vars::interupt_cast))
         Config::Settings::interupt_cast_on_hit.SetValue(vars::interupt_cast);
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::interupt_cast.c_str());
 
     // === Actor Fade Out & Follower Damage ===
-    if (ImGui::Checkbox(Label::fade_out_actors.c_str(), &vars::fade_out_actors))
+    if (ImGuiMCP::Checkbox(Label::fade_out_actors.c_str(), &vars::fade_out_actors))
         Config::Settings::enable_fading_actors.SetValue(vars::fade_out_actors);
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::fade_out_actors.c_str());
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
 
-    if (ImGui::Checkbox(Label::follower_damage.c_str(), &vars::follower_damage))
+    if (ImGuiMCP::Checkbox(Label::follower_damage.c_str(), &vars::follower_damage))
         Config::Settings::enable_foll_change.SetValue(vars::follower_damage);
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::follower_damage.c_str());
 
     // === One Shot Protection & Damage Caps ===
-    if (ImGui::Checkbox(Label::one_shot_protec.c_str(), &vars::one_shot_protec))
+    if (ImGuiMCP::Checkbox(Label::one_shot_protec.c_str(), &vars::one_shot_protec))
     {
         Config::Settings::one_shot_protection.SetValue(vars::one_shot_protec);
     }
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::one_shot_protec.c_str());
-    ImGui::SameLine();
-    if (ImGui::Checkbox(Label::enable_damage_caps.c_str(), &vars::enable_damage_caps))
+    ImGuiMCP::SameLine();
+    if (ImGuiMCP::Checkbox(Label::enable_damage_caps.c_str(), &vars::enable_damage_caps))
     {
         Config::Settings::enable_damage_caps.SetValue(vars::enable_damage_caps);
     }
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::enable_damage_caps.c_str());
 
     // === Level Up Low Levels & Auto Attributes===
 
-    if (ImGui::Checkbox(Label::level_up_lows.c_str(), &vars::level_up_lows))
+    if (ImGuiMCP::Checkbox(Label::level_up_lows.c_str(), &vars::level_up_lows))
     {
         Config::Settings::level_up_low_levels.SetValue(vars::level_up_lows);
     }
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::level_up_lows.c_str());
 
-    ImGui::SameLine();
-    if (ImGui::Checkbox(Label::auto_attributes.c_str(), &vars::auto_attributes))
+    ImGuiMCP::SameLine();
+    if (ImGuiMCP::Checkbox(Label::auto_attributes.c_str(), &vars::auto_attributes))
         Config::Settings::enable_automatic_attributes.SetValue(vars::auto_attributes);
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::auto_attributes.c_str());
 
     // === Mass Equipment Changes & Tall Grass Sneak ===
-    if (ImGui::Checkbox(Label::mass_equipment.c_str(), &vars::mass_equipment))
+    if (ImGuiMCP::Checkbox(Label::mass_equipment.c_str(), &vars::mass_equipment))
         Config::Settings::enable_mass_equip_changes.SetValue(vars::mass_equipment);
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::mass_equipment.c_str());
 
-    ImGui::SameLine();
-    if (ImGui::Checkbox(Label::tall_grass_sneak.c_str(), &vars::tall_grass_sneak))
+    ImGuiMCP::SameLine();
+    if (ImGuiMCP::Checkbox(Label::tall_grass_sneak.c_str(), &vars::tall_grass_sneak))
         Config::Settings::tall_grass_sneak.SetValue(vars::tall_grass_sneak);
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::tall_grass_sneak.c_str());
 
     // === Attacks of Opportunity & Exhaustion===
-    if (ImGui::Checkbox(Label::attacks_of_opp.c_str(), &vars::attacks_of_opp))
+    if (ImGuiMCP::Checkbox(Label::attacks_of_opp.c_str(), &vars::attacks_of_opp))
       Config::Settings::attacks_of_opp.SetValue(vars::attacks_of_opp);
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::attacks_of_opp.c_str());
 
-	ImGui::SameLine();
-	if (ImGui::Checkbox(Label::use_exhaustion.c_str(), &vars::use_exhaustion))
+	ImGuiMCP::SameLine();
+	if (ImGuiMCP::Checkbox(Label::use_exhaustion.c_str(), &vars::use_exhaustion))
 		Config::Settings::use_exhaustion.SetValue(vars::use_exhaustion);
-	ImGui::SameLine();
+	ImGuiMCP::SameLine();
 	HelpMarker(Tooltip::use_exhaustion.c_str());
 
 
     // === Save / Reset System ===
-    ImGui::NewLine();
-    ImGui::SeparatorText(Titles::system.c_str());
+    ImGuiMCP::NewLine();
+    ImGuiMCP::SeparatorText(Titles::system.c_str());
 
-    if (ImGui::Button(Label::save_settings.c_str()))
+    if (ImGuiMCP::Button(Label::save_settings.c_str()))
         Config::Settings::GetSingleton()->UpdateSettings(true);
 
-    ImGui::SameLine();
-    if (ImGui::Button(Label::restore_defaults.c_str()))
+    ImGuiMCP::SameLine();
+    if (ImGuiMCP::Button(Label::restore_defaults.c_str()))
         RestoreDefaults(false, true);
 
     FontAwesome::Pop();
@@ -464,127 +464,127 @@ namespace Attributes
 void __stdcall RenderAttributes()
 {
     FontAwesome::PushSolid();
-    ImGui::SeparatorText(Titles::attributes_header.c_str());
-    ImGui::NewLine();
+    ImGuiMCP::SeparatorText(Titles::attributes_header.c_str());
+    ImGuiMCP::NewLine();
 
-    ImGui::SeparatorText(Titles::stamina.c_str());
+    ImGuiMCP::SeparatorText(Titles::stamina.c_str());
 
-    ImGui::SetNextItemWidth(200.0f);
-    if (ImGui::SliderFloat(Label::stamina_attack.c_str(), &vars::stamina_attack, 3.0, 50.0, "%.2f"))
+    ImGuiMCP::SetNextItemWidth(200.0f);
+    if (ImGuiMCP::SliderFloat(Label::stamina_attack.c_str(), &vars::stamina_attack, 3.0, 50.0, "%.2f"))
     {
         Config::Settings::base_stamina_cost_attacks.SetValue(vars::stamina_attack);
     }
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::stamina_attack.c_str());
 
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(200.0f);
-    if (ImGui::SliderFloat(Label::stamina_magic.c_str(), &vars::stamina_magic, 0.1, 10.0f, "%.2f"))
+    ImGuiMCP::SameLine();
+    ImGuiMCP::SetNextItemWidth(200.0f);
+    if (ImGuiMCP::SliderFloat(Label::stamina_magic.c_str(), &vars::stamina_magic, 0.1, 10.0f, "%.2f"))
     {
         Config::Settings::magic_stamina_cost_divider.SetValue(vars::stamina_magic);
     }
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::stamina_magic.c_str());
 
-    if (ImGui::Checkbox(Label::attack_stamina_toggle.c_str(), &vars::attack_stamina_toggle))
+    if (ImGuiMCP::Checkbox(Label::attack_stamina_toggle.c_str(), &vars::attack_stamina_toggle))
         Config::Settings::enable_attack_stamina.SetValue(vars::attack_stamina_toggle);
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::attack_stamina_toggle.c_str());
 
-    ImGui::SameLine();
-    if (ImGui::Checkbox(Label::magic_stamina_toggle.c_str(), &vars::magic_stamina_toggle))
+    ImGuiMCP::SameLine();
+    if (ImGuiMCP::Checkbox(Label::magic_stamina_toggle.c_str(), &vars::magic_stamina_toggle))
         Config::Settings::enable_cast_stamina.SetValue(vars::magic_stamina_toggle);
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::magic_stamina_toggle.c_str());
 
-    if (ImGui::Checkbox(Label::sneak_stamina.c_str(), &vars::sneak_stamina))
+    if (ImGuiMCP::Checkbox(Label::sneak_stamina.c_str(), &vars::sneak_stamina))
         Config::Settings::enable_sneak_stamina.SetValue(vars::sneak_stamina);
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::sneak_stamina.c_str());
 
-    ImGui::SameLine();
-    if (ImGui::Checkbox(Label::jump_stamina_cost.c_str(), &vars::jump_stamina_cost))
+    ImGuiMCP::SameLine();
+    if (ImGuiMCP::Checkbox(Label::jump_stamina_cost.c_str(), &vars::jump_stamina_cost))
         Config::Settings::jump_stamina_cost.SetValue(vars::jump_stamina_cost);
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::jump_stamina_cost.c_str());
 
-    ImGui::NewLine();
-    ImGui::SeparatorText(Titles::regen.c_str());
+    ImGuiMCP::NewLine();
+    ImGuiMCP::SeparatorText(Titles::regen.c_str());
 
-    if (ImGui::Checkbox(Label::stamina_regen_toggle.c_str(), &vars::stamina_regen_toggle))
+    if (ImGuiMCP::Checkbox(Label::stamina_regen_toggle.c_str(), &vars::stamina_regen_toggle))
         Config::Settings::stamina_regen_changes.SetValue(vars::stamina_regen_toggle);
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::stamina_regen_toggle.c_str());
 
-    ImGui::SameLine();
-    if (ImGui::Checkbox(Label::magicka_regen_toggle.c_str(), &vars::magicka_regen_toggle))
+    ImGuiMCP::SameLine();
+    if (ImGuiMCP::Checkbox(Label::magicka_regen_toggle.c_str(), &vars::magicka_regen_toggle))
         Config::Settings::magicka_regen_changes.SetValue(vars::magicka_regen_toggle);
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::magicka_regen_toggle.c_str());
 
-    ImGui::SetNextItemWidth(200.0f);
-    if (ImGui::SliderFloat(Label::base_for_stamina_regen.c_str(), &vars::base_for_stamina_regen, 10.0f, 500.0f, "%.2f"))
+    ImGuiMCP::SetNextItemWidth(200.0f);
+    if (ImGuiMCP::SliderFloat(Label::base_for_stamina_regen.c_str(), &vars::base_for_stamina_regen, 10.0f, 500.0f, "%.2f"))
         Config::Settings::stamina_regen_base_calc.SetValue(vars::base_for_stamina_regen);
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::base_for_stamina_regen.c_str());
 
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(200.0f);
-    if (ImGui::SliderFloat(Label::base_for_magicka_regen.c_str(), &vars::base_for_magicka_regen, 10.0f, 500.0f, "%.2f"))
+    ImGuiMCP::SameLine();
+    ImGuiMCP::SetNextItemWidth(200.0f);
+    if (ImGuiMCP::SliderFloat(Label::base_for_magicka_regen.c_str(), &vars::base_for_magicka_regen, 10.0f, 500.0f, "%.2f"))
         Config::Settings::magicka_regen_base_calc.SetValue(vars::base_for_magicka_regen);
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::base_for_magicka_regen.c_str());
 
-    ImGui::NewLine();
-    ImGui::Separator();
-    ImGui::Text(Titles::magicka.c_str());
+    ImGuiMCP::NewLine();
+    ImGuiMCP::Separator();
+    ImGuiMCP::Text(Titles::magicka.c_str());
 
-    ImGui::SetNextItemWidth(200.0f);
-    if (ImGui::SliderFloat(Label::min_cast_speed.c_str(), &vars::min_cast_speed, 0.05, vars::max_cast_speed, " % .2f "))
+    ImGuiMCP::SetNextItemWidth(200.0f);
+    if (ImGuiMCP::SliderFloat(Label::min_cast_speed.c_str(), &vars::min_cast_speed, 0.05, vars::max_cast_speed, " % .2f "))
     {
         Config::Settings::min_cast_speed.SetValue(vars::min_cast_speed);
     }
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::min_cast_speed.c_str());
 
-    ImGui::SameLine();
-    ImGui::SetNextItemWidth(200.f);
-    if (ImGui::SliderFloat(Label::max_cast_speed.c_str(), &vars::max_cast_speed, vars::min_cast_speed, 7.0f, " % .2f "))
+    ImGuiMCP::SameLine();
+    ImGuiMCP::SetNextItemWidth(200.f);
+    if (ImGuiMCP::SliderFloat(Label::max_cast_speed.c_str(), &vars::max_cast_speed, vars::min_cast_speed, 7.0f, " % .2f "))
     {
         Config::Settings::max_cast_speed.SetValue(vars::max_cast_speed);
     }
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::max_cast_speed.c_str());
 
-    if (ImGui::Checkbox(Label::toggle_cast_speed.c_str(), &vars::toggle_cast_speed))
+    if (ImGuiMCP::Checkbox(Label::toggle_cast_speed.c_str(), &vars::toggle_cast_speed))
     {
         Config::Settings::enable_skill_based_cast_speed.SetValue(vars::toggle_cast_speed);
     }
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::toggle_cast_speed.c_str());
 
 
-    ImGui::SetNextItemWidth(300.f);
-    if (ImGui::SliderInt(Label::vanilla_attribute_leveling.c_str(), &vars::vanilla_attribute_leveling, 0, 10))
+    ImGuiMCP::SetNextItemWidth(300.f);
+    if (ImGuiMCP::SliderInt(Label::vanilla_attribute_leveling.c_str(), &vars::vanilla_attribute_leveling, 0, 10))
     {
         Config::Settings::vanilla_attribute_leveling.SetValue(vars::vanilla_attribute_leveling);
     }
 
-    ImGui::SameLine();
+    ImGuiMCP::SameLine();
     HelpMarker(Tooltip::vanilla_attribute_leveling.c_str());
 
     // === Save / Reset System ===
-    ImGui::NewLine();
-    ImGui::SeparatorText(Titles::system.c_str());
+    ImGuiMCP::NewLine();
+    ImGuiMCP::SeparatorText(Titles::system.c_str());
 
-    if (ImGui::Button(Label::save_settings.c_str())) {
+    if (ImGuiMCP::Button(Label::save_settings.c_str())) {
       Config::Settings::GetSingleton()->UpdateSettings(true);
       MiscUtil::SetGMST("iAVDhmsLevelUp", vars::vanilla_attribute_leveling);
     }
         
 
-    ImGui::SameLine();
-    if (ImGui::Button(Label::restore_defaults.c_str()))
+    ImGuiMCP::SameLine();
+    if (ImGuiMCP::Button(Label::restore_defaults.c_str()))
         RestoreDefaults(false, false, true);
 
     FontAwesome::Pop();

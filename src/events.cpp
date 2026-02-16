@@ -1,25 +1,25 @@
 #include "Events.h"
+#include "mod-storage.h"
 
 namespace Events
 {
-    EventResult HitEventHandler::ProcessEvent(const RE::TESHitEvent* a_event, RE::BSTEventSource<RE::TESHitEvent>* a_eventSource)
+    EventResult HitEventHandler::ProcessEvent(const RE::TESHitEvent* a_event, RE::BSTEventSource<RE::TESHitEvent>*)
     {
         using HitFlag = RE::TESHitEvent::Flag;
         if (!a_event || !a_event->target || !a_event->cause)
         {
             return EventResult::kContinue;
         }
-        auto defender = a_event->target ? a_event->target->As<RE::Actor>() : nullptr;
+        const auto defender = a_event->target ? a_event->target->As<RE::Actor>() : nullptr;
         if (!defender)
         {
             return EventResult::kContinue;
         }
-        auto aggressor = a_event->cause ? a_event->cause->As<RE::Actor>() : nullptr;
-        if (!aggressor)
+        if (const auto aggressor = a_event->cause ? a_event->cause->As<RE::Actor>() : nullptr; !aggressor)
         {
             return EventResult::kContinue;
         }
-        auto spell_item = RE::TESForm::LookupByID<RE::SpellItem>(a_event->source);
+        const auto spell_item = RE::TESForm::LookupByID<RE::SpellItem>(a_event->source);
 
         if (!a_event->flags.any(HitFlag::kHitBlocked)) {
             if (defender->IsCasting(nullptr) && Config::Settings::interupt_cast_on_hit.GetValue()) {
@@ -31,8 +31,7 @@ namespace Events
         if (!a_event->flags.any(HitFlag::kBashAttack))
         {
             if (defender->IsPlayerRef()) {
-                auto spellItem = RE::TESForm::LookupByID<RE::SpellItem>(a_event->source);
-                if (spellItem && Forms::FormLoader::GetSingleton()->disease_mod_active) {
+                if (const auto spellItem = RE::TESForm::LookupByID<RE::SpellItem>(a_event->source); spellItem && Forms::FormLoader::disease_mod_active) {
                     REX::DEBUG("Spell item is {}", spellItem->GetName());
                     auto chance = Config::Settings::curse_chance.GetValue();
                     if (spellItem->GetCastingType() == RE::MagicSystem::CastingType::kConcentration) {
@@ -44,8 +43,7 @@ namespace Events
                 }
             }
 
-            auto& tick = disease_timers[defender];
-            if (!tick.IsRunning() || tick.ElapsedSeconds() > 3.0f)
+            if (auto& tick = stweaks::ModStorage::GetSingleton()->disease_timers[defender]; !tick.IsRunning() || tick.ElapsedSeconds() > 3.0f)
             {
 				ManageCurse(defender);
                 tick.Reset();
@@ -90,26 +88,27 @@ namespace Events
     }
     void HitEventHandler::ManageCurse(RE::Actor* defender)
     {
-        if (Utility::ActiveEffectHasNewDiseaseKeyword(defender, Forms::FormConstants::diseases[0]))
+        auto store = stweaks::ModStorage::GetSingleton();
+        if (Utility::ActiveEffectHasNewDiseaseKeyword(defender, stweaks::keywords::disease_keywords[0].data()))
         {
             // storedHealth_disease = std::min(std::max(storedHealth_disease + 1.0f, 0.0f), 99.0f);
-            float decrease_value = CalculatePenaltyAndStoreIt(defender, RE::ActorValue::kHealth, storedHealth_disease);
-            REX::DEBUG("stored health disease is {}", storedHealth_disease);
+            float decrease_value = CalculatePenaltyAndStoreIt(defender, RE::ActorValue::kHealth, store->storedHealth_disease);
+            REX::DEBUG("stored health disease is {}", store->storedHealth_disease);
             defender->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kHealth, -decrease_value);
         }
-        if (Utility::ActiveEffectHasNewDiseaseKeyword(defender, Forms::FormConstants::diseases[1]))
+        if (Utility::ActiveEffectHasNewDiseaseKeyword(defender, stweaks::keywords::disease_keywords[1].data()))
         {
             // storedStamina_disease = std::min(std::max(storedStamina_disease + 1.0f, 0.0f), 99.0f);
-            float decrease_value_stam = CalculatePenaltyAndStoreIt(defender, RE::ActorValue::kStamina, storedStamina_disease);
-            REX::DEBUG("stored stamina disease is {}", storedStamina_disease);
+            float decrease_value_stam = CalculatePenaltyAndStoreIt(defender, RE::ActorValue::kStamina, store->storedStamina_disease);
+            REX::DEBUG("stored stamina disease is {}", store->storedStamina_disease);
             defender->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kStamina, -decrease_value_stam);
         }
-        if (Utility::ActiveEffectHasNewDiseaseKeyword(defender, Forms::FormConstants::diseases[2]))
+        if (Utility::ActiveEffectHasNewDiseaseKeyword(defender, stweaks::keywords::disease_keywords[2].data()))
         {
 
             // storedMagicka_disease = std::min(std::max(storedMagicka_disease + 1.0f, 0.0f), 99.0f);
-            float decrease_value_mag = CalculatePenaltyAndStoreIt(defender, RE::ActorValue::kMagicka, storedMagicka_disease);
-            REX::DEBUG("stored magicka disease is {}", storedMagicka_disease);
+            float decrease_value_mag = CalculatePenaltyAndStoreIt(defender, RE::ActorValue::kMagicka, store->storedMagicka_disease);
+            REX::DEBUG("stored magicka disease is {}", store->storedMagicka_disease);
             defender->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMagicka, -decrease_value_mag);
         }
     }
@@ -133,7 +132,7 @@ namespace Events
         auto effect = RE::TESForm::LookupByID<RE::EffectSetting>(a_event->magicEffect);
         if (!effect)
             return EventResult::kContinue;
-        if (!effect->HasKeywordByEditorID(Forms::FormConstants::cure_keyword))
+        if (!effect->HasKeywordByEditorID(stweaks::keywords::kCure))
             return EventResult::kContinue;
         auto target = a_event->target.get();
         auto targetActor = target ? target->As<RE::Actor>() : nullptr;
@@ -156,7 +155,7 @@ namespace Events
     
     void EquipManager::RegisterEquipEvent()
     {
-        if (auto src = RE::ScriptEventSourceHolder::GetSingleton(); src) {
+        if (const auto src = RE::ScriptEventSourceHolder::GetSingleton(); src) {
             src->AddEventSink<RE::TESEquipEvent>(GetSingleton());
             REX::INFO("Registered for EquipEvent");
         }
@@ -167,7 +166,7 @@ namespace Events
         if(!event || !event->actor)
             return RE::BSEventNotifyControl::kContinue;
 
-        auto act = event->actor.get()->As<RE::Actor>();
+        const auto act = event->actor.get() ? event->actor.get()->As<RE::Actor>() : nullptr;
         if(!act)
             return RE::BSEventNotifyControl::kContinue;
 
