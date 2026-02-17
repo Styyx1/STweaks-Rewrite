@@ -114,7 +114,7 @@ namespace Events
     }
     void RegisterEvents()
     {
-        if (Config::Settings::enable_diseases.GetValue())
+        if (Config::Settings::enable_curses.GetValue())
         {
             auto hitEventHandler = HitEventHandler::GetSingleton();
             hitEventHandler->RegisterHitEvent();

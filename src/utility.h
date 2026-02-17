@@ -77,7 +77,7 @@ public:
 
     // Credit: D7ry for getWieldingWeapon in ValhallaCombat
     // https://github.com/D7ry/valhallaCombat/blob/48fb4c3b9bb6bbaa691ce41dbd33f096b74c07e3/src/include/Utils.cpp#L10
-    inline static RE::TESObjectWEAP* getWieldingWeapon(RE::Actor* a_actor)
+    static RE::TESObjectWEAP* getWieldingWeapon(RE::Actor* a_actor)
     {
         auto weapon = a_actor->GetAttackingWeapon();
         if (weapon)
@@ -106,7 +106,7 @@ public:
         return std::roundf((distrib(gen) * 100)) / 100;
     }
 
-    inline static bool IsDualWielding(RE::Actor* a_actor)
+    static bool IsDualWielding(RE::Actor* a_actor)
     {
         auto weapon = a_actor->GetAttackingWeapon();
         auto rhs = a_actor->GetEquippedObject(false);
@@ -119,7 +119,7 @@ public:
             return false;
     }
 
-    inline static float GetMassFromInventory(RE::Actor* actor)
+    static float GetMassFromInventory(RE::Actor* actor)
     {
         //https://www.desmos.com/calculator/qxttj42mfl?lang=en
         //this helped me come up with the calcs
@@ -247,7 +247,7 @@ public:
         return false;
     }
 
-    inline static bool IsQuestItem(const RE::TESObjectREFR* a_ref)
+    static bool IsQuestItem(const RE::TESObjectREFR* a_ref)
     {
         if (const auto xAliases = a_ref->extraList.GetByType<RE::ExtraAliasInstanceArray>(); xAliases) {
             RE::BSReadLockGuard locker(xAliases->lock);
@@ -304,7 +304,7 @@ public:
         }
     }
 
-    inline static void ApplySpell(RE::Actor* caster, RE::Actor* target, RE::SpellItem* spell)
+    static void ApplySpell(RE::Actor* caster, RE::Actor* target, RE::SpellItem* spell)
     {
         if (IsPermanent(spell))
         {
@@ -374,6 +374,31 @@ public:
         }
         return false;
     }
+
+    static bool IsGod(const RE::Actor* actor)
+    {
+        return actor && actor->IsPlayerRef() && RE::PlayerCharacter::IsGodMode();
+    }
+
+    // Credits: https://github.com/shad0wshayd3-TES5/BakaBloodMagic/blob/10aa95c56244aff3f1c78c5584968e8a9f827341/src/BloodMagic/Utils.h#L142
+    static void InterruptActor(RE::Actor *a_actor, RE::MagicSystem::CastingSource a_castingSource)
+    {
+        switch (a_castingSource)
+        {
+        case RE::MagicSystem::CastingSource::kLeftHand:
+            RE::SourceActionMap::DoAction(a_actor, RE::DEFAULT_OBJECT::kActionLeftInterrupt);
+            break;
+        case RE::MagicSystem::CastingSource::kRightHand:
+            RE::SourceActionMap::DoAction(a_actor, RE::DEFAULT_OBJECT::kActionRightInterrupt);
+            break;
+        case RE::MagicSystem::CastingSource::kOther:
+            RE::SourceActionMap::DoAction(a_actor, RE::DEFAULT_OBJECT::kActionVoiceInterrupt);
+            break;
+        default:
+            break;
+        }
+    }
+
 
     class Timer
     {

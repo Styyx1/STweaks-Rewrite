@@ -16,7 +16,7 @@ void Listener(SKSE::MessagingInterface::Message* message) noexcept
         break;
     case SKSE::MessagingInterface::kPostLoadGame:
         Utility::Curses::PopulateActiveCursesAfterLoad(Cache::GetPlayerSingleton());
-        if (!Config::Settings::enable_diseases.GetValue()) {
+        if (!Config::Settings::enable_curses.GetValue()) {
             Utility::Curses::CleanseCurse(Cache::GetPlayerSingleton());
         }
         break;

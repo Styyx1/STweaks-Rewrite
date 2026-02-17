@@ -59,7 +59,7 @@ void Forms::FormLoader::LoadForms()
     if (!MiscUtil::IsModLoaded(stweaks::diseases_name))
     {
         REX::CRITICAL("{} not found, please either enable the esp or disable the diseases in the toml file of this mod. Curses are auto-disabled now!");
-        Config::Settings::enable_diseases.SetValue(false);
+        Config::Settings::enable_curses.SetValue(false);
     }
     else
     {

@@ -28,7 +28,7 @@ class OnEffectEndHook
 {
   private:
     static void OnEffectEnd(RE::ScriptEffect *a_this);
-    static inline REL::HookVFT _Hook5{RE::VTABLE_ScriptEffect[0], 0x15, &OnEffectEnd};
+    static inline REL::HookVFT _onScriptEffectEnd{RE::VTABLE_ScriptEffect[0], 0x15, &OnEffectEnd};
 };
 
 class NPCFade
@@ -38,7 +38,7 @@ class NPCFade
 
   private:
     static void ActorUpdate(RE::Character *a_actor, float a_delta);
-    static inline REL::HookVFT _Hook6{RE::VTABLE_Character[0], 0xAD, &ActorUpdate};
+    static inline REL::HookVFT _onActorUpdate{RE::VTABLE_Character[0], 0xAD, &ActorUpdate};
 };
 
 class PreventCast
@@ -47,16 +47,15 @@ class PreventCast
     static bool CheckCast(RE::ActorMagicCaster *a_this, RE::MagicItem *a_spell, bool a_dualCast,
                           float *a_effectStrength, RE::MagicSystem::CannotCastReason *a_reason,
                           bool a_useBaseValueForCost);
-    static void InterruptActor(RE::Actor *a_actor, RE::MagicSystem::CastingSource a_castingSource);
 
-    static inline REL::HookVFT _Hook7{RE::VTABLE_ActorMagicCaster[0], 0x0A, CheckCast};
+    static inline REL::HookVFT _checkCast{RE::VTABLE_ActorMagicCaster[0], 0x0A, CheckCast};
 };
 
 class PlayerPotionUsed
 {
   private:
     static void PlayerUsePotion(uint64_t self, RE::AlchemyItem *alch, uint64_t extralist);
-    static inline REL::Hook _Hook8{REL::ID(40690), 0x15, PlayerUsePotion};
+    static inline REL::Hook _playerUsePotion{REL::ID(40690), 0x15, PlayerUsePotion};
 };
 
 class HighGravityArrows
@@ -65,23 +64,19 @@ class HighGravityArrows
   private:
     static float GetGravityArrow(RE::Projectile *a_this);
 
-    static inline REL::HookVFT _Hook9{RE::VTABLE_ArrowProjectile[0], 0xB5, GetGravityArrow};
+    static inline REL::HookVFT _arrowGetGravity{RE::VTABLE_ArrowProjectile[0], 0xB5, GetGravityArrow};
 };
 
 class StaminaAttackCost
 {
 
   private:
-    static constexpr float MIN_COST = 5.0f;
-    static constexpr float MAX_COST = 50.0f;
-    static constexpr float AVERAGE_WEAPON_WEIGHT = 12.5f;
-    static constexpr float WEIGHT_SCALING = 1.15f;
-    static constexpr float SKILL_SCALING = 1.10f;
+
 
     static float GetAttackCost(RE::ActorValueOwner *a_owner, RE::BGSAttackData *attack);
     static float GetWeightMult(const RE::Actor *actor, float weight, RE::ActorValue av_to_use);
 
-    static inline REL::Hook _Hook12{REL::ID(38603), 0x171, &GetAttackCost};
+    static inline REL::Hook _getAttackCost{REL::ID(38603), 0x171, &GetAttackCost};
 };
 
 class LoadWithResistance
@@ -91,8 +86,8 @@ class LoadWithResistance
     static constexpr uint16_t LEVEL_CAP = 5;
     static RE::NiAVObject *LoadActor(RE::Actor *a_this, bool arg);
     static RE::NiAVObject *LoadPlayer(RE::Actor *a_this, bool arg);
-    static inline REL::HookVFT _Hook13{RE::VTABLE_Character[0], 0x06A, &LoadActor};
-    static inline REL::HookVFT _Hook14{RE::VTABLE_PlayerCharacter[0], 0x06A, &LoadPlayer};
+    static inline REL::HookVFT _loadActorHook{RE::VTABLE_Character[0], 0x06A, &LoadActor};
+    static inline REL::HookVFT _loadPlayerHook{RE::VTABLE_PlayerCharacter[0], 0x06A, &LoadPlayer};
 };
 
 class StaminaRegenAdjuster
@@ -100,14 +95,14 @@ class StaminaRegenAdjuster
   public:
   private:
     static float GetStamBase(RE::Character *a_char, RE::ActorValue a_av);
-    static inline REL::Hook _Hook21{REL::ID(38459), 0x26, &GetStamBase};
+    static inline REL::Hook _getBaseStamina{REL::ID(38459), 0x26, &GetStamBase};
 };
 
 class SpellCap
 {
     static void ApplyPerkEntrySpellMag(RE::BGSPerkEntry::EntryPoint a_entry, RE::Actor *caster, RE::SpellItem *spell,
                                        RE::Actor *target, float &damage);
-    static inline REL::Hook _Hook23{REL::ID(34053), 0x60, ApplyPerkEntrySpellMag};
+    static inline REL::Hook _applySpellMagPerkEntry{REL::ID(34053), 0x60, ApplyPerkEntrySpellMag};
 };
 
 class DamageOut
@@ -144,8 +139,8 @@ class EquipHandler
     static void OnItemEquippedPlayer(RE::PlayerCharacter *a_this, bool a_playAnim);
  
 
-    static inline REL::HookVFT _Hook26{RE::VTABLE_Character[0], 0x0b2, OnItemEquipped};
-    static inline REL::HookVFT _Hook27{RE::VTABLE_PlayerCharacter[0], 0x0b2, OnItemEquippedPlayer};
+    static inline REL::HookVFT _onItemEquippedActor{RE::VTABLE_Character[0], 0x0b2, OnItemEquipped};
+    static inline REL::HookVFT _onItemEquippedPlayer{RE::VTABLE_PlayerCharacter[0], 0x0b2, OnItemEquippedPlayer};
 
 };
 
@@ -155,7 +150,7 @@ class Detection
     static void DoCalculateDetection(RE::Actor *a_this, RE::Actor *target, std::int32_t &score, bool &spotted,
                                      bool &hasLOS, std::int32_t &reason, RE::NiPoint3 &lastPos, std::int32_t &soundLvl,
                                      float &unk8, float &unk9);
-    static inline REL::Hook _Hook28{REL::ID(42742), 0x67b, DoCalculateDetection};
+    static inline REL::Hook _doCalculateDetection{REL::ID(42742), 0x67b, DoCalculateDetection};
     static inline bool IsStandingInTallGrass(RE::Actor *target);
 };
 

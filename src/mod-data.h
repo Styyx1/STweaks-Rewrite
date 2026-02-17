@@ -48,6 +48,15 @@ namespace stweaks
     inline constexpr float FADE_LIGHT_LEVEL_THRESHOLD = 30.0f;
     inline constexpr float FADE_MIN_ALPHA = 0.05f;
 
+    namespace AttackStamina
+    {
+        static constexpr float MIN_COST = 5.0f;
+        static constexpr float AVERAGE_WEAPON_WEIGHT = 12.5f;
+        static constexpr float WEIGHT_SCALING = 1.2f;
+        static constexpr float SKILL_SCALING = 1.10f;
+    }
+
+
     namespace pepe
     {
         namespace SNEAK_STAMINA
@@ -59,6 +68,24 @@ namespace stweaks
         {
             static inline constexpr auto perkCategory = "ModJumpStamina";
             static inline constexpr RE::PerkEntryPoint perkEntry = RE::PerkEntryPoint::kModPowerAttackStamina;
+        }
+
+        namespace CASTING_STAMINA
+        {
+            static inline constexpr auto perkCategory = "ModCastStamina";
+            static inline constexpr RE::PerkEntryPoint perkEntry = RE::PerkEntryPoint::kModPowerAttackStamina;
+        }
+
+        namespace ATTACK_STAMINA
+        {
+            static inline constexpr auto perkCategory = "ModAttackStamina";
+            static inline constexpr RE::PerkEntryPoint perkEntry = RE::PerkEntryPoint::kModPowerAttackStamina;
+        }
+
+        namespace STEALTH_ARCHER
+        {
+            static inline constexpr auto perkCategory = "SetDrainWithBow";
+            static inline constexpr RE::PerkEntryPoint perkEntry = RE::PerkEntryPoint::kCanDualCastSpell;
         }
 
     }

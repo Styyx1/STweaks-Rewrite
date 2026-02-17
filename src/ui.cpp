@@ -43,7 +43,7 @@ void RestoreFromSettings(bool settings, bool toggles, bool attributes)
         mass_based_jump = set::enable_mass_based_jump_height.GetValue();
         fade_out_actors = set::enable_fading_actors.GetValue();
         quest_item_nerf = set::enable_quest_item_nerf.GetValue();
-        curses = set::enable_diseases.GetValue();
+        curses = set::enable_curses.GetValue();
         resist_change = set::enable_resist_changes.GetValue();
         interupt_cast = set::interupt_cast_on_hit.GetValue();
         follower_damage = set::enable_foll_change.GetValue();
@@ -133,7 +133,7 @@ void RestoreDefaults(bool settings, bool toggles, bool attributes)
         set::enable_mass_based_jump_height.SetValue(mass_based_jump);
         set::enable_fading_actors.SetValue(fade_out_actors);
         set::enable_quest_item_nerf.SetValue(quest_item_nerf);
-        set::enable_diseases.SetValue(curses);
+        set::enable_curses.SetValue(curses);
         set::enable_resist_changes.SetValue(resist_change);
         set::interupt_cast_on_hit.SetValue(interupt_cast);
         set::enable_foll_change.SetValue(follower_damage);
@@ -358,7 +358,7 @@ void __stdcall RenderToggles()
     ImGuiMCP::SameLine();
     if (ImGuiMCP::Checkbox(Label::curses.c_str(), &vars::curses))
     {
-        Config::Settings::enable_diseases.SetValue(vars::curses);
+        Config::Settings::enable_curses.SetValue(vars::curses);
         Utility::Curses::CleanseCurse(Cache::GetPlayerSingleton());
     }
     ImGuiMCP::SameLine();

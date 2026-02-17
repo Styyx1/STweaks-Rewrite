@@ -38,4 +38,12 @@ namespace stweaks
             return false;
         }
     };
+    struct JumpHeight
+    {
+        [[nodiscard]] static float GetMassModifier(const RE::Actor* a_actor);
+        [[nodiscard]] static float GetCurseModifier(RE::Actor* a_actor);
+        [[nodiscard]] static float GetSneakModifier(const RE::Actor* a_actor);
+        [[nodiscard]] static float GetTotalModifier(RE::Actor* a_actor);
+        [[nodiscard]] static bool HasEnoughStamina(const RE::AIProcess* a_proc);
+    };
 }
