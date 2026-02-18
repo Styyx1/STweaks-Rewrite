@@ -181,7 +181,7 @@ namespace Hooks
     RE::NiAVObject *LoadWithResistance::LoadActor(RE::Actor *a_this, bool arg)
     {
 
-        auto actor = _loadActorHook(a_this, arg);
+        const auto actor = _loadActorHook(a_this, arg);
         if (Config::Settings::enable_mass_equip_changes.GetValue())
         {
             // mass actor value changes with inventory weight. It's not too reliable, but reliable enough
@@ -203,10 +203,10 @@ namespace Hooks
                 {
                     a_this->SetActorValue(RE::ActorValue::kResistMagic,
                                           a_this->GetActorValue(RE::ActorValue::kResistMagic) -
-                                              Config::Settings::resist_reduction_value.GetValue());
+                                              static_cast<float>(Settings::resist_reduction_value.GetValue()));
                 }
             }
-            if (Config::Settings::level_up_low_levels.GetValue())
+            if (Settings::level_up_low_levels.GetValue())
             {
                 //levels NPCs up to min 10 levels below yours so you don't encounter level 5 enemies at level 50
                 auto npc_level = a_this->GetLevel();
