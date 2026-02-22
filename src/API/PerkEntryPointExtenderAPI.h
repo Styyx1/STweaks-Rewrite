@@ -1,5 +1,15 @@
 #pragma once
 
+#include <type_traits>
+
+
+#ifdef UNICODE
+#define PEPE_API_SOURCE L"PerkEntryPointExtender.dll"
+#else
+#define PEPE_API_SOURCE "PerkEntryPointExtender.dll"
+#endif
+
+
 namespace RE
 {
 	using PerkEntryPoint = BGSPerkEntry::EntryPoint;
@@ -21,21 +31,33 @@ namespace PEPE
 		NoActor,		//No perk owner
 		InvalidActor,	//Perk entry invalid on target
 		InvalidOut,		//Doesn't have an out when it should
-
-
+		UnknownFlags,	//Unrecognized flags used
+		BadExtraData,	//Used ExtraData when giving an object reference (it has an extra data already)
 
 
 		UnknownError//The last entry, if this is seen the API has an issue that's out of date to handle.
 
 	};
 
+	constexpr std::string_view inactiveCategory = "[:INACTIVE:]";
+
 	struct Scope_EntryPointFlag
 	{
 		enum Enum : uint64_t
 		{
 			None = 0,
-			ReverseOrder = 1 << 0,
-			UsesCollection = 1 << 1,
+			ReverseOrder = 1 << 0,				//Reverses the priority of the perk entries being read in
+			PRIVATE_UsesCollection = 1 << 1,	//PRIVATE: used to designate the form collection struct being used NOT to say that the out is a vector.
+
+			Paired = 1 << 2,					//Use means the argument count is doubled, with the lower count coresponding with the upper count.
+												// use pairs to enable automatically
+
+
+
+
+			PRIVATE_Last,	//Does nothing but helps see what last unused flag is.
+			PRIVATE_Total = (PRIVATE_Last - 1) << 1,//Flags after or equal to this will be seen as invalid
+
 		};
 	};
 
@@ -65,8 +87,8 @@ namespace PEPE
 
 		bool LoadForm(RE::TESForm* form) override
 		{
-			if (auto it = form->As<T>()) {
-				out.push_back(form);
+			if (auto it = form->As<std::remove_pointer_t<typename T::value_type>>()) {
+				out.push_back(it);
 				return true;
 			}
 
@@ -76,7 +98,66 @@ namespace PEPE
 		T& out;
 
 	};
+
+
+	struct Item
+	{
+		RE::TESBoundObject* object{};
+		RE::ExtraDataList* extraData{};
+	};
+
+	//Move this.
+	namespace detail
+	{
+		template <typename T>
+		concept item_object = std::same_as<T, std::nullptr_t> ||
+			(std::is_pointer_v<T> && std::derived_from<std::remove_pointer_t<T>, RE::TESForm>) ||
+			(std::is_pointer_v<T> && std::same_as<std::remove_pointer_t<T>, RE::InventoryEntryData>) ||
+			(!std::is_pointer_v<T> && std::same_as<T, PEPE::Item>);
+
+		template<item_object T>
+		inline RE::TESForm* extract_form(const T& arg)
+		{
+			if constexpr (std::is_pointer_v<T>)
+			{
+				if  constexpr (std::derived_from<std::remove_pointer_t<T>, RE::TESForm>) {
+					return arg;
+				}
+				else if constexpr (std::same_as<std::remove_pointer_t<T>, RE::InventoryEntryData>) {
+					if (arg) {
+						return arg->object;
+					}
+				}
+			}
+			else if constexpr (std::same_as<T, PEPE::Item>) {
+				return arg.object;
+			}
+
+
+			return nullptr;
+		}
+
+		template<item_object T>
+		inline RE::ExtraDataList* extract_list(const T& arg)
+		{
+			if constexpr (std::is_pointer_v<T>)
+			{
+				if constexpr (std::same_as<std::remove_pointer_t<T>, RE::InventoryEntryData>) {
+					if (arg && arg->extraLists && arg->extraLists->empty() != true) {
+						return arg->extraLists->front();
+					}
+				}
+			}
+			else if constexpr (std::same_as<T, PEPE::Item>) {
+				return arg.extraData;
+			}
+
+
+			return nullptr;
+		}
+	}
 }
+
 
 namespace PerkEntryPointExtenderAPI
 {
@@ -89,10 +170,10 @@ namespace PerkEntryPointExtenderAPI
 	{
 		Version1,
 		Version2,
+		Version3,
 
 
-
-		Current = Version2
+		Current = Version3
 	};
 
 	struct InterfaceVersion1
@@ -108,7 +189,7 @@ namespace PerkEntryPointExtenderAPI
 		virtual Version GetVersion() = 0;
 
 		[[deprecated("This version of ApplyPerkEntryPoint doesn't include entry point flags and uses the deprecated channel feature.")]]
-		virtual RequestResult ApplyPerkEntryPoint_Deprecated(RE::Actor* target, RE::PerkEntryPoint a_entryPoint, ABIContainer<RE::TESForm*> args, void* out,
+		virtual RequestResult ApplyPerkEntryPoint_Deprecated(RE::Actor* target, RE::PerkEntryPoint a_entryPoint, std::span<RE::TESForm*> args, void* out,
 			const char* category, uint8_t channel) = 0;
 
 	};
@@ -117,13 +198,35 @@ namespace PerkEntryPointExtenderAPI
 	{
 		inline static constexpr auto VERSION = Version::Version2;
 
-		virtual RequestResult ApplyPerkEntryPoint(RE::Actor* target, RE::PerkEntryPoint a_entryPoint, ABIContainer<RE::TESForm*> args, void* out,
+		[[deprecated("This version of ApplyPerkEntryPoint is no longer the main point of application due to not having an extra data array.")]]
+		virtual RequestResult ApplyPerkEntryPoint_Deprecated(RE::Actor* target, RE::PerkEntryPoint a_entryPoint, std::span<RE::TESForm*> args, void* out,
 			const char* category, uint8_t channel, EntryPointFlag flags) = 0;
 
 	};
 
+	struct InterfaceVersion3 : public InterfaceVersion2
+	{
+		inline static constexpr auto VERSION = Version::Version3;
 
-	using CurrentInterface = InterfaceVersion2;
+
+
+		virtual RequestResult ApplyPerkEntryPoint(RE::Actor* target, RE::PerkEntryPoint a_entryPoint,
+			std::span<RE::TESForm*> args, std::span<RE::ExtraDataList*> extras, void* out,
+			const std::string_view& category, uint8_t channel, EntryPointFlag flags) = 0;
+
+
+		/// <summary>
+		/// Pulls the currently loaded category being run.
+		/// </summary>
+		/// <returns></returns>
+		virtual std::string_view GetCurrentCategory() = 0;
+
+
+	};
+
+
+
+	using CurrentInterface = InterfaceVersion3;
 
 	inline CurrentInterface* Interface = nullptr;
 
@@ -139,26 +242,31 @@ namespace PerkEntryPointExtenderAPI
 	{
 		typedef void* (__stdcall* RequestFunction)(Version);
 
-		constexpr std::string_view plugin_name = "PerkEntryPointExtender.dll";
-
 		static RequestFunction request_interface = nullptr;
 
-		HINSTANCE API = GetModuleHandleW(L"PerkEntryPointExtender.dll");
+		HINSTANCE API = GetModuleHandle(PEPE_API_SOURCE);
 
 		if (API == nullptr) {
-			REX::CRITICAL("PerkEntryPointExtender.dll not found, API will remain non functional.");
+#ifdef SPDLOG_H
+			spdlog::critical("PerkEntryPointExtender.dll not found, API will remain non functional.");
+#endif
 			return nullptr;
 		}
 
 		request_interface = (RequestFunction)GetProcAddress(API, "PEPE_RequestInterfaceImpl");
 
 		if (request_interface) {
-			if (static unsigned int once = 0; once++)
-				REX::INFO("Successful module and request, PEPE");
+			if (static unsigned int once = 0; once++) {
+#ifdef SPDLOG_H
+				spdlog::info("Successful module and request, PEPE");
+#endif
+			}
 
 		}
 		else {
-			REX::CRITICAL("Unsuccessful module and request, PEPE");
+#ifdef SPDLOG_H
+			spdlog::critical("Unsuccessful module and request, PEPE");
+#endif
 			return nullptr;
 		}
 
@@ -190,23 +298,42 @@ namespace PerkEntryPointExtenderAPI
 }
 
 
-namespace RE
+namespace PEPE
 {
-	//&& strings will no longer count. Probably only string references, and string_views.
-
-	//Within the api function, I require the ability to know if the out parameter is a vector or not.
-
-	inline static PEPE::RequestResult HandleEntryPoint(RE::PerkEntryPoint a_entryPoint, RE::Actor* a_perkOwner,
-		PEPE::EntryPointFlag flags, void* out, const std::string_view& category, uint8_t channel, std::vector<RE::TESForm*> arg_list)
+	inline std::string_view GetCurrentCategory()
 	{
 		auto* intfc = PerkEntryPointExtenderAPI::RequestInterface();
 
+		assert(intfc);
+		//No interface. Bail.
+		if (!intfc)
+			return inactiveCategory;
+
+		return intfc->GetCurrentCategory();
+	}
+}
+
+
+
+namespace RE
+{
+	inline static PEPE::RequestResult HandleEntryPointImpl(RE::PerkEntryPoint a_entryPoint, RE::Actor* a_perkOwner,
+		PEPE::EntryPointFlag flags, void* out, const std::string_view& category, uint8_t channel, std::vector<RE::TESForm*> args, std::vector<RE::ExtraDataList*> extras)
+	{
+		auto* intfc = PerkEntryPointExtenderAPI::RequestInterface();
+
+		assert(intfc);
 		//No interface. Bail.
 		if (!intfc)
 			return PEPE::RequestResult::InvalidAPI;
 
-		return intfc->ApplyPerkEntryPoint(a_perkOwner, a_entryPoint, arg_list, out, category.data(), channel, flags);
+		auto res = intfc->ApplyPerkEntryPoint(a_perkOwner, a_entryPoint, args, extras, out, category, channel, flags);
+
+		assert(res == PEPE::RequestResult::Success);
+
+		return res;
 	}
+
 
 
 	//Combinations
@@ -228,71 +355,135 @@ namespace RE
 	/// <param name="category">The category to check for the entry point, preventing anything without that group from firing.</param>
 	/// <param name="...a_args">The condition targets for the entry point conditions tab of the perk.</param>
 	/// <returns>Returns the result of the function, and whether the call failed due to a parameter or API issue.</returns>
-	template <class O, std::derived_from<RE::TESForm>... Args>
+	template <class O, PEPE::detail::item_object... Args>
 	inline static PEPE::RequestResult HandleEntryPoint(RE::PerkEntryPoint a_entryPoint, RE::Actor* a_perkOwner, PEPE::EntryPointFlag flags, O& out,
-		const std::string_view& category, uint8_t channel, Args*... a_args)
+		const std::string_view& category, uint8_t channel, Args... args)
 	{
 
-		constexpr bool no_out = std::is_same_v<std::nullopt_t, O>;
 
-		if constexpr (no_out) {
-			//If no out is desired it will send it with a nullptr so the proper error can show
-			return HandleEntryPoint(a_entryPoint, a_perkOwner, flags, nullptr, category, channel, { a_args... });
+		std::vector<RE::ExtraDataList*> extras;
+
+		//If any of these don't derive from this.
+		if constexpr ((!std::derived_from<std::remove_pointer_t<Args>, RE::TESForm> || ...))
+		{
+			extras = { PEPE::detail::extract_list(args)... };
 		}
-		else {
-			PEPE::BasicFormCollection<O> collector{ out };
-			void* o;
-			constexpr bool valid_collect = !std::is_empty_v<decltype(collector)>;
 
+		PEPE::BasicFormCollection<O> collector{ out };
 
+		constexpr bool valid_collect = !std::is_empty_v<decltype(collector)>;
 
-			if constexpr (valid_collect) {
-				//Submit flags
-				flags = flags | PEPE::EntryPointFlag::UsesCollection;
-				o = &collector;
+		void* o;
 
+		if constexpr (valid_collect) {
+			//Submit flags
+			flags = (PEPE::EntryPointFlag)(flags | PEPE::EntryPointFlag::PRIVATE_UsesCollection);
+			o = &collector;
+
+		}
+		else if constexpr (!std::is_same_v<std::nullopt_t, O>) {
+			if  constexpr (std::is_pointer_v<O> && std::derived_from<std::remove_pointer_t<O>, RE::TESObjectREFR>) {
+				o = const_cast<RE::TESObjectREFR*>(out);
 			}
 			else {
 				o = const_cast<std::remove_const_t<O>*>(std::addressof(out));
 			}
+		}
+		else {
+			o = nullptr;
+		}
 
-			return HandleEntryPoint(a_entryPoint, a_perkOwner, flags, o, category, channel, { a_args... });
+		auto result = HandleEntryPointImpl(a_entryPoint, a_perkOwner, flags, o, category, channel, { PEPE::detail::extract_form(args)... }, extras);
 
-			if constexpr (valid_collect) {
-				//Submit flags
-				out = collector.out;
-			}
+		if constexpr (valid_collect) {
+			//Submit flags
+			out = collector.out;
+		}
+
+		return result;
+
+	}
+
+	namespace detail
+	{
+		//Not to be directly used, a function that has all the parameters so I don't accidentally use a different set.
+		template <class O, PEPE::detail::item_object... Args>
+		inline static PEPE::RequestResult HandleEntryPoint_Unpaired(RE::PerkEntryPoint a_entryPoint, RE::Actor* a_perkOwner, PEPE::EntryPointFlag flags, O& out,
+			const std::string_view& category, uint8_t channel, Args... a_args)
+		{
+			return ::RE::HandleEntryPoint(a_entryPoint, a_perkOwner, flags, out, category, channel, a_args...);
+		}
+
+
+		template <class O, PEPE::detail::item_object... Args1, PEPE::detail::item_object... Args2>
+		inline static PEPE::RequestResult HandleEntryPoint_Paired(RE::PerkEntryPoint a_entryPoint, RE::Actor* a_perkOwner, PEPE::EntryPointFlag flags, O& out,
+			const std::string_view& category, uint8_t channel, std::pair<Args1, Args2>... a_args)
+		{
+			flags = (PEPE::EntryPointFlag)(flags | PEPE::EntryPointFlag::Paired);
+
+			return ::RE::HandleEntryPoint(a_entryPoint, a_perkOwner, flags, out, category, channel, a_args.first..., a_args.second...);
 		}
 	}
 
-	template <class O, std::derived_from<RE::TESForm>... Args>
-	inline static PEPE::RequestResult HandleEntryPoint(RE::PerkEntryPoint a_entryPoint, RE::Actor* a_perkOwner, PEPE::EntryPointFlag flags, O& out, const std::string_view& category, Args*... a_args)
+	//With Flags/Category
+	template <class O, PEPE::detail::item_object... Args>
+	inline static PEPE::RequestResult HandleEntryPoint(RE::PerkEntryPoint a_entryPoint, RE::Actor* a_perkOwner, PEPE::EntryPointFlag flags, O& out, const std::string_view& category, Args... a_args)
 	{
-		return HandleEntryPoint(a_entryPoint, a_perkOwner, flags, out, category, 255, a_args...);
+		return detail::HandleEntryPoint_Unpaired(a_entryPoint, a_perkOwner, flags, out, category, 255, a_args...);
 	}
 
-	template <class O, std::derived_from<RE::TESForm>... Args>
-	inline static PEPE::RequestResult HandleEntryPoint(RE::PerkEntryPoint a_entryPoint, RE::Actor* a_perkOwner, O& out, const std::string_view& category, Args*... a_args)
+	//With Category
+	template <class O, PEPE::detail::item_object... Args>
+	inline static PEPE::RequestResult HandleEntryPoint(RE::PerkEntryPoint a_entryPoint, RE::Actor* a_perkOwner, O& out, const std::string_view& category, Args... a_args)
 	{
-		return HandleEntryPoint(a_entryPoint, a_perkOwner, PEPE::EntryPointFlag::None, out, category, 255, a_args...);
+		return detail::HandleEntryPoint_Unpaired(a_entryPoint, a_perkOwner, PEPE::EntryPointFlag::None, out, category, 255, a_args...);
 	}
 
 
-	//no cat nor cha
-	template <class O, std::derived_from<RE::TESForm>... Args>
-	inline static PEPE::RequestResult HandleEntryPoint(RE::PerkEntryPoint a_entryPoint, RE::Actor* a_perkOwner, PEPE::EntryPointFlag flags, O& out, Args*... a_args)
+	//With Flags
+	template <class O, PEPE::detail::item_object... Args>
+	inline static PEPE::RequestResult HandleEntryPoint(RE::PerkEntryPoint a_entryPoint, RE::Actor* a_perkOwner, PEPE::EntryPointFlag flags, O& out, Args... a_args)
 	{
-		return HandleEntryPoint(a_entryPoint, a_perkOwner, flags, out, "", 0, a_args...);
+		return detail::HandleEntryPoint_Unpaired(a_entryPoint, a_perkOwner, flags, out, "", 0, a_args...);
+	}
+	//Regular
+	template <class O, PEPE::detail::item_object... Args>
+	inline static PEPE::RequestResult HandleEntryPoint(RE::PerkEntryPoint a_entryPoint, RE::Actor* a_perkOwner, O& out, Args... a_args)
+	{
+		return detail::HandleEntryPoint_Unpaired(a_entryPoint, a_perkOwner, PEPE::EntryPointFlag::None, out, "", 0, a_args...);
 	}
 
-	template <class O, std::derived_from<RE::TESForm>... Args>
-	inline static PEPE::RequestResult HandleEntryPoint(RE::PerkEntryPoint a_entryPoint, RE::Actor* a_perkOwner, O& out, Args*... a_args)
+
+
+
+	//With Flags/Category, Paired
+	template <class O, PEPE::detail::item_object... Args1, PEPE::detail::item_object... Args2> requires(sizeof...(Args1) > 0)
+	inline static PEPE::RequestResult HandleEntryPoint(RE::PerkEntryPoint a_entryPoint, RE::Actor* a_perkOwner, PEPE::EntryPointFlag flags, O& out, const std::string_view& category, std::pair<Args1, Args2>... a_args)
 	{
-		return HandleEntryPoint(a_entryPoint, a_perkOwner, out, "", 0, a_args...);
+		return detail::HandleEntryPoint_Paired(a_entryPoint, a_perkOwner, flags, out, category, 255, a_args...);
 	}
 
-	//cat only
+	//With Category, Paried
+	template <class O, PEPE::detail::item_object... Args1, PEPE::detail::item_object... Args2> requires(sizeof...(Args1) > 0)
+	inline static PEPE::RequestResult HandleEntryPoint(RE::PerkEntryPoint a_entryPoint, RE::Actor* a_perkOwner, O& out, const std::string_view& category, std::pair<Args1, Args2>... a_args)
+	{
+		return detail::HandleEntryPoint_Paired(a_entryPoint, a_perkOwner, PEPE::EntryPointFlag::None, out, category, 255, a_args...);
+	}
 
+
+	//With Flags, Paired
+	template <class O, PEPE::detail::item_object... Args1, PEPE::detail::item_object... Args2> requires(sizeof...(Args1) > 0)
+	inline static PEPE::RequestResult HandleEntryPoint(RE::PerkEntryPoint a_entryPoint, RE::Actor* a_perkOwner, PEPE::EntryPointFlag flags, O& out, std::pair<Args1, Args2>... a_args)
+	{
+		return detail::HandleEntryPoint_Paired(a_entryPoint, a_perkOwner, flags, out, "", 0, a_args...);
+	}
+
+	//Regular, Paired
+	template <class O, PEPE::detail::item_object... Args1, PEPE::detail::item_object... Args2> requires(sizeof...(Args1) > 0)
+	inline static PEPE::RequestResult HandleEntryPoint(RE::PerkEntryPoint a_entryPoint, RE::Actor* a_perkOwner, O& out, std::pair<Args1, Args2>... a_args)
+	{
+		return detail::HandleEntryPoint_Paired(a_entryPoint, a_perkOwner, PEPE::EntryPointFlag::None, out, "", 0, a_args...);
+	}
 
 
 }

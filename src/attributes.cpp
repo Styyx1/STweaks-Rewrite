@@ -17,6 +17,40 @@ namespace stweaks
            a_player->GetActorValue(RE::ActorValue::kCarryWeight);
     }
 
+    float RegenChanges::GetNewRegeneration(RE::Actor* a_actor, RE::ActorValue a_av, float original_value)
+    {
+        if (!a_actor)
+            return original_value;
+
+        switch (a_av)
+        {
+            case RE::ActorValue::kStamina:
+            if (Config::Settings::stamina_regen_changes.GetValue())
+            {
+
+                float base = static_cast<float>(Config::Settings::stamina_regen_base_calc.GetValue()) / 100.f;
+                float rate = a_actor->GetActorValue(RE::ActorValue::kStaminaRate);
+                float rateMult = a_actor->GetActorValue(RE::ActorValue::kStaminaRateMult);
+                float combatRate = a_actor->IsInCombat() ? Utility::get_gmst("fCombatStaminaRegenRateMult")->GetFloat() : 1.0f;
+                return base * rate * rateMult * combatRate * 0.01f;
+            }
+            break;
+            case RE::ActorValue::kMagicka:
+            if (Config::Settings::magicka_regen_changes.GetValue())
+            {
+                float base = static_cast<float>(Config::Settings::magicka_regen_base_calc.GetValue()) / 100.f;
+                float rate = a_actor->GetActorValue(RE::ActorValue::kMagickaRate);
+                float rateMult = a_actor->GetActorValue(RE::ActorValue::kMagickaRateMult);
+                float combatRate = a_actor->IsInCombat() ? Utility::get_gmst("fCombatMagickaRegenRateMult")->GetFloat() : 1.0f;
+                return base * rate * rateMult * combatRate * 0.01f;;
+
+            }
+            break;
+        default: break;
+        }
+        return original_value;
+    }
+
     void Attributes::UpdateAttributes(RE::PlayerCharacter* player)
     {
         if (av_timer.ElapsedSeconds() >= 45)

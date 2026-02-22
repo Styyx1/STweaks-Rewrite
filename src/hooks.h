@@ -1,7 +1,7 @@
 #pragma once
 #include "Events.h"
 
-namespace Hooks
+namespace stweaks
 {
 
 class MainUpdate
@@ -13,7 +13,7 @@ class MainUpdate
     static inline REL::HookVFT _playerUpdateHook{RE::VTABLE_PlayerCharacter[0], 0xAD, &PlayerUpdateHook};
 };
 
-class JumpHeight
+class JumpHook
 {
   public:
     static float JumpHeightGetScale(RE::TESObjectREFR *refr);
@@ -26,24 +26,18 @@ class JumpHeight
 
 class OnEffectEndHook
 {
-  private:
     static void OnEffectEnd(RE::ScriptEffect *a_this);
     static inline REL::HookVFT _onScriptEffectEnd{RE::VTABLE_ScriptEffect[0], 0x15, &OnEffectEnd};
 };
 
 class NPCFade
 {
-  public:
-    static Utility::GameDifficulty g_cachedDifficulty;
-
-  private:
     static void ActorUpdate(RE::Character *a_actor, float a_delta);
     static inline REL::HookVFT _onActorUpdate{RE::VTABLE_Character[0], 0xAD, &ActorUpdate};
 };
 
 class PreventCast
 {
-  private:
     static bool CheckCast(RE::ActorMagicCaster *a_this, RE::MagicItem *a_spell, bool a_dualCast,
                           float *a_effectStrength, RE::MagicSystem::CannotCastReason *a_reason,
                           bool a_useBaseValueForCost);
@@ -53,37 +47,24 @@ class PreventCast
 
 class PlayerPotionUsed
 {
-  private:
     static void PlayerUsePotion(uint64_t self, RE::AlchemyItem *alch, uint64_t extralist);
     static inline REL::Hook _playerUsePotion{REL::ID(40690), 0x15, PlayerUsePotion};
 };
 
 class HighGravityArrows
 {
-
-  private:
     static float GetGravityArrow(RE::Projectile *a_this);
-
     static inline REL::HookVFT _arrowGetGravity{RE::VTABLE_ArrowProjectile[0], 0xB5, GetGravityArrow};
 };
 
 class StaminaAttackCost
 {
-
-  private:
-
-
     static float GetAttackCost(RE::ActorValueOwner *a_owner, RE::BGSAttackData *attack);
-    static float GetWeightMult(const RE::Actor *actor, float weight, RE::ActorValue av_to_use);
-
     static inline REL::Hook _getAttackCost{REL::ID(38603), 0x171, &GetAttackCost};
 };
 
 class LoadWithResistance
 {
-
-  private:
-    static constexpr uint16_t LEVEL_CAP = 5;
     static RE::NiAVObject *LoadActor(RE::Actor *a_this, bool arg);
     static RE::NiAVObject *LoadPlayer(RE::Actor *a_this, bool arg);
     static inline REL::HookVFT _loadActorHook{RE::VTABLE_Character[0], 0x06A, &LoadActor};
@@ -114,8 +95,6 @@ class DamageOut
 
     static inline REL::Hook _applyPerkEntryAttack{REL::ID(44016), 0x96, ApplyPerkEntryAttack};
     static inline REL::Hook _manageCombatHit{REL::ID(38627), 0x4a8, ManageCombatHit};
-
-    static float GetOpportunityModifier(RE::Actor *victim, RE::Actor *attacker, bool notification);
 };
 
 class CastingSpeed
@@ -151,7 +130,7 @@ class Detection
                                      bool &hasLOS, std::int32_t &reason, RE::NiPoint3 &lastPos, std::int32_t &soundLvl,
                                      float &unk8, float &unk9);
     static inline REL::Hook _doCalculateDetection{REL::ID(42742), 0x67b, DoCalculateDetection};
-    static inline bool IsStandingInTallGrass(RE::Actor *target);
+    static inline bool IsStandingInTallGrass(const RE::Actor *target);
 };
 
 

@@ -6,6 +6,10 @@
 
 namespace stweaks
 {
+    struct RegenChanges
+    {
+        static float GetNewRegeneration(RE::Actor* a_actor, RE::ActorValue a_av, float original_value);
+    };
     struct Attributes : REX::TSingleton<Attributes>
     {
         static void UpdateAttributes(RE::PlayerCharacter* player);

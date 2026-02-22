@@ -16,6 +16,11 @@ public:
         Legendary = 5
     };
 
+    static float GetPercentageDecrease(int a_percentage)
+    {
+        return 1.f - a_percentage / 100.f;
+    }
+
     static float CalcPerc(int a_input, bool a_high)
     {
         float result;
@@ -140,15 +145,23 @@ public:
     }
 
     static void AdjustMass(RE::Actor* a_actor) {
-        auto curr_mass = GetMassFromInventory(a_actor);
-        auto base_mass = a_actor->GetBaseActorValue(RE::ActorValue::kMass);
-        if(curr_mass < base_mass) {
-            curr_mass = base_mass;
-		}       
-        a_actor->SetActorValue(RE::ActorValue::kMass, base_mass);
-        float modi = a_actor->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass) - base_mass;
-        a_actor->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass, -(modi + base_mass));
-        a_actor->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass, curr_mass - base_mass);
+        if (Config::Settings::enable_mass_equip_changes.GetValue())
+        {
+            auto curr_mass = GetMassFromInventory(a_actor);
+            const auto base_mass = a_actor->GetBaseActorValue(RE::ActorValue::kMass);
+            if(curr_mass < base_mass) {
+                curr_mass = base_mass;
+            }
+            a_actor->SetActorValue(RE::ActorValue::kMass, base_mass);
+            const float modi = a_actor->GetActorValueModifier(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass) - base_mass;
+            a_actor->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass, -(modi + base_mass));
+            a_actor->ModActorValue(RE::ACTOR_VALUE_MODIFIER::kPermanent, RE::ActorValue::kMass, curr_mass - base_mass);
+        }
+        else
+        {
+            a_actor->SetActorValue(RE::ActorValue::kMass, a_actor->GetBaseActorValue(RE::ActorValue::kMass));
+        }
+
     }
 
     // https://github.com/powerof3/PapyrusExtenderSSE/blob/640b79d554da4a5392a05107560685621825568e/include/Papyrus/Functions/ObjectReference.h#L662

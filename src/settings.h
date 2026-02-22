@@ -59,6 +59,7 @@ struct Settings : REX::TSingleton<Settings>
     static inline REX::TOML::F64 magicka_regen_base_calc{stweaks::SETTINGS, "fMagickaBaseValue", 150.0};
     static inline REX::TOML::F64 max_cast_speed{stweaks::SETTINGS, "fMaxCastSpeedModifier", 2.0};
     static inline REX::TOML::F64 min_cast_speed{stweaks::SETTINGS, "fMinCastSpeedModifier", 0.33};
+    static inline REX::TOML::I32 max_damage_one_hit{stweaks::SETTINGS, "iMaxPercentageDamageFullHealth", 50};
 
     static void UpdateSettings(const bool save = false)
     {

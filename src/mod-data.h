@@ -48,6 +48,8 @@ namespace stweaks
     inline constexpr float FADE_LIGHT_LEVEL_THRESHOLD = 30.0f;
     inline constexpr float FADE_MIN_ALPHA = 0.05f;
 
+    static constexpr uint16_t LEVEL_CAP = 5;
+
     namespace AttackStamina
     {
         static constexpr float MIN_COST = 5.0f;
@@ -98,6 +100,7 @@ namespace stweaks
         inline constexpr std::string_view kSilence = "curse_silence";
         inline constexpr std::string_view kBow = "curse_bow";
         inline constexpr std::string_view kJump = "curse_jump";
+        inline constexpr std::string_view kAttack = "curse_weapons";
         inline constexpr std::array<std::string_view, 3> disease_keywords{"stweaksDisease_Health", "stweaksDisease_Stamina","stweaksDisease_Magicka"};
         inline std::vector<std::string> disease_vec{"stweaksDisease_Health", "stweaksDisease_Stamina","stweaksDisease_Magicka"};
 
